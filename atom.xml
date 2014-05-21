@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[My Octopress Blog]]></title>
+  <link href="http://letochagone.github.io/atom.xml" rel="self"/>
+  <link href="http://letochagone.github.io/"/>
+  <updated>2014-05-21T19:30:40+02:00</updated>
+  <id>http://letochagone.github.io/</id>
+  <author>
+    <name><![CDATA[Your Name]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Hello-world]]></title>
+    <link href="http://letochagone.github.io/blog/2014/05/21/hello-world/"/>
+    <updated>2014-05-21T19:18:07+02:00</updated>
+    <id>http://letochagone.github.io/blog/2014/05/21/hello-world</id>
+    <content type="html"><![CDATA[
+]]></content>
+  </entry>
+  
+</feed>
