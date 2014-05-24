@@ -3,9 +3,9 @@
 # ----------------------- #
 
 url: http://letochagone.github.io
-title: Le Blog de Philippe !
-subtitle: Un Blog  
-author: Torgue Philippe
+title: My Octopress Blog
+subtitle: A blogging framework for hackers.
+author: Your Name
 simple_search: https://www.google.com/search
 description:
 
@@ -70,7 +70,7 @@ github_skip_forks: true
 
 # Twitter
 twitter_user:
-twitter_tweet_button: false
+twitter_tweet_button: true
 
 # Google +1
 google_plus_one: false
@@ -97,4 +97,4 @@ disqus_show_comment_count: false
 google_analytics_tracking_id:
 
 # Facebook Like
-facebook_like: true
+facebook_like: false
