@@ -4,7 +4,7 @@
   <title><![CDATA[Le Blog de Philippe !]]></title>
   <link href="http://letochagone.github.io/atom.xml" rel="self"/>
   <link href="http://letochagone.github.io/"/>
-  <updated>2014-05-24T21:56:58+02:00</updated>
+  <updated>2014-05-24T22:00:22+02:00</updated>
   <id>http://letochagone.github.io/</id>
   <author>
     <name><![CDATA[Torgue Philippe]]></name>
@@ -18,7 +18,9 @@
     <link href="http://letochagone.github.io/blog/2014/05/24/samedi/"/>
     <updated>2014-05-24T21:02:13+02:00</updated>
     <id>http://letochagone.github.io/blog/2014/05/24/samedi</id>
-    <content type="html"><![CDATA[<p><img src="http://placekitten.com/890/280"></p>
+    <content type="html"><![CDATA[<p><img src="http://placekitten.com/890/280">
+Error processing input, expected syntax: {% img [class name(s)] [http[s]:/]/path/to/image [width [height]] [title text | &ldquo;title text&rdquo; [&ldquo;alt text&rdquo;]] %}
+<img src="images/email.png"></p>
 ]]></content>
   </entry>
   
