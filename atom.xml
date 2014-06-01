@@ -4,7 +4,7 @@
   <title><![CDATA[Le Blog de Philippe !]]></title>
   <link href="http://letochagone.github.io/atom.xml" rel="self"/>
   <link href="http://letochagone.github.io/"/>
-  <updated>2014-05-28T13:11:48+02:00</updated>
+  <updated>2014-06-01T20:09:38+02:00</updated>
   <id>http://letochagone.github.io/</id>
   <author>
     <name><![CDATA[Torgue Philippe]]></name>
@@ -18,7 +18,12 @@
     <link href="http://letochagone.github.io/blog/2014/05/24/samedi/"/>
     <updated>2014-05-24T21:02:13+02:00</updated>
     <id>http://letochagone.github.io/blog/2014/05/24/samedi</id>
-    <content type="html"><![CDATA[<p><img src="images/kiki.gif"></p>
+    <content type="html"><![CDATA[<p>Error processing input, expected syntax: {% img [class name(s)] [http[s]:/]/path/to/image [width [height]] [title text | &ldquo;title text&rdquo; [&ldquo;alt text&rdquo;]] %}
+Error processing input, expected syntax: {% img [class name(s)] [http[s]:/]/path/to/image [width [height]] [title text | &ldquo;title text&rdquo; [&ldquo;alt text&rdquo;]] %}
+Error processing input, expected syntax: {% img [class name(s)] [http[s]:/]/path/to/image [width [height]] [title text | &ldquo;title text&rdquo; [&ldquo;alt text&rdquo;]] %}
+Error processing input, expected syntax: {% img [class name(s)] [http[s]:/]/path/to/image [width [height]] [title text | &ldquo;title text&rdquo; [&ldquo;alt text&rdquo;]] %}
+Error processing input, expected syntax: {% img [class name(s)] [http[s]:/]/path/to/image [width [height]] [title text | &ldquo;title text&rdquo; [&ldquo;alt text&rdquo;]] %}
+Error processing input, expected syntax: {% img [class name(s)] [http[s]:/]/path/to/image [width [height]] [title text | &ldquo;title text&rdquo; [&ldquo;alt text&rdquo;]] %}</p>
 ]]></content>
   </entry>
   
