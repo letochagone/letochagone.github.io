@@ -8,9 +8,7 @@
     <style>
         body {
             margin: 0;
-            ximage-rendering: optimizespeed;
-            ximage-rendering: pixelated;
-            ximage-rendering: -webkit-crisp-edges;
+
 
         }
 
@@ -20,6 +18,7 @@
             background-color: green;
 
         }
+  
     </style>
 </head>
 
@@ -27,6 +26,15 @@
 
 
     <canvas id="c"></canvas>
+    <div id="toggle">
+            <input id="hidegui" type="button" value="hide" onclick="hidegui()">
+            <input id="showgui" type="button" value="show" onclick="showgui()">
+    </div>
+    <div id="gui">
+        <div>
+            <input id="taillepoint" type="range" min="1" max="18" value="1" step="1" oninput="taillepoint(this.value)"><label>taille pixel</label>
+        </div>
+    </div>
 
 
     <script id="2d-vertex-shader" type="notjs">
@@ -101,9 +109,9 @@
         //    graylevel = rand(rgb.xy+vec2(100.0,1000.0));
             float rq  = max( abs(cxy.x) , abs(cxy.y))-graylevel ;
 
-            r = dot(cxy, cxy);
-                      if (rq > 0.9) { discard;}
-                      if (rq > -0.1) couleur=black;
+           // r = dot(cxy, cxy);
+                      if (rq > 0.0  || graylevel < 0.05)  { discard;}
+                    //  if (rq > -0.1) couleur=black;
 
           //  if (r > 0.3+ 0.7*rand(    rgb.xy   )) { discard;}
          //  gl_FragColor = texture2D(image,vec2(x,y));
@@ -150,8 +158,8 @@
         // Get A WebGL context
         var canvas = document.getElementById("c",{alpha:false});
         
-        canvas.width = texSizeX * SIZE;
-        canvas.height = texSizeY * SIZE;
+        canvas.width    =   texSizeX * SIZE ;
+        canvas.height   =   texSizeY * SIZE ;
         
         
         // canvas.style.width = 320 + 'px';
@@ -163,13 +171,10 @@
             antialias: false,
             alpha:false
         });
-        gl.imageSmoothingEnabled = false;
+        //gl.imageSmoothingEnabled = false;
         if (!gl) {
             return;
         }
-
-
-
 
         // Get the strings for our GLSL shaders
         var vertexShaderSource = document.getElementById("2d-vertex-shader").text;
@@ -196,14 +201,7 @@
         // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-        var positions = [
-            0.0, 0.0,
-            1.0, 0.0,
-            2.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            2.0, 1.0
-        ];
+        var positions =[];
 
         for (var i = 0; i < texSizeX * texSizeY; i++) {
             positions[2 * i] = i % texSizeX;
@@ -275,9 +273,9 @@
 
     function success(stream) {
         const track = stream.getVideoTracks()[0];
-        console.log(stream.getTracks()[0].getCapabilities());
-        console.log(stream.getTracks()[0].getSettings());
-        console.log(stream.getTracks()[0].getConstraints());
+       // console.log(stream.getTracks()[0].getCapabilities());
+        //console.log(stream.getTracks()[0].getSettings());
+        //console.log(stream.getTracks()[0].getConstraints());
         video.srcObject = stream;
         //var vendorURL = window.URL || window.webkitURL;
 
@@ -317,8 +315,8 @@
     }
 
     var gl,program,texture;
-    var texSizeX = 320;
-    var texSizeY = 240;
+    var texSizeX = 640;
+    var texSizeY = 480;
     var SIZE = 10 ;
     var PS;
     var count = texSizeX * texSizeY ;
@@ -326,6 +324,7 @@
 
   
     const video = document.createElement('video');
+    video.muted = true;
     document.body.append(video);
     video.play();
 
@@ -351,6 +350,10 @@
     height: texSizeY
   }
 }).then(success, failure);
+    }
+    
+    function taillepoint(val) {
+        SIZE=val;
     }
 </script>
 
