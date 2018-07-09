@@ -2,12 +2,13 @@
 <html lang="fr">
 
 <head>
-    <title>CSS Template</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
             margin: 0;
+            image-rendering:pixelated;
+            
 
 
         }
@@ -32,7 +33,7 @@
     </div>
     <div id="gui">
         <div>
-            <input id="taillepoint" type="range" min="1" max="18" value="1" step="1" oninput="taillepoint(this.value)"><label>taille pixel</label>
+            <input id="taillepoint" type="range" min="1" max="40" value="10" step="1" oninput="taillepoint(this.value)"><label>taille pixel</label>
         </div>
     </div>
 
@@ -54,13 +55,16 @@
             
             float size = PS ;
             
-            float nby = floor((size)/2.0);
+            float nby = floor(size/2.0);
             float nbx = floor((size-1.0)/2.0);
-            float offx =  (2.0*(nbx))/canvasSize.x ;
-            float offy =  (2.0*(nby))/canvasSize.y ;
+            float offx =  (2.0*nbx)/canvasSize.x ;
+            float offy =  (2.0*nby)/canvasSize.y ;
 
             float p1 = -1.0 + (2.0*(a_position.x*size)+1.0)/canvasSize.x + offx;
             float p2 = -1.0 + (2.0*(a_position.y*size)+1.0)/canvasSize.y + offy ;
+            
+            
+  
 
 
 
@@ -91,41 +95,47 @@
             vec4 couleur =white;
             
   
-            vec2 f = gl_PointCoord;
-            float dist = distance( vec2(0.0,0.0), f );
+           // vec2 f = gl_PointCoord;
+            //float dist = distance( vec2(0.0,0.0), f );
             //if ( dist > 0.6 )
             //    discard;
             float x = vtexcoords.x / imageSize.x ;
-            float y = vtexcoords.y / imageSize.y ;
+            float y = vtexcoords.y / imageSize.y;
 
             float r = 0.0, delta = 0.0, alpha = 1.0;
             vec2 cxy = 2.0 * gl_PointCoord - 1.0;
             
             vec4 rgb = texture2D(image,vec2(x,y));
+            
             float graylevel = (rgb.x+rgb.y+rgb.z)/3.0;
-     //    graylevel = 3.0 / (1.0/rgb.x + 1.0/rgb.y + 1.0/rgb.z);
+        // graylevel = 3.0 / (1.0/rgb.x + 1.0/rgb.y + 1.0/rgb.z);
        //  graylevel = length(rgb)/length(vec3(1.0,1.0,1.0));
             
         //    graylevel = rand(rgb.xy+vec2(100.0,1000.0));
-            float rq  = max( abs(cxy.x) , abs(cxy.y))-graylevel ;
+            float rq  = max( abs(cxy.x) , abs(cxy.y)) ;
 
            // r = dot(cxy, cxy);
-                      if (rq > 0.0  || graylevel < 0.05)  { discard;}
+                      if (rq > (graylevel)  || graylevel < 0.05)  { discard;}
                     //  if (rq > -0.1) couleur=black;
 
           //  if (r > 0.3+ 0.7*rand(    rgb.xy   )) { discard;}
-         //  gl_FragColor = texture2D(image,vec2(x,y));
+        //   gl_FragColor = rgb;
         //    gl_FragColor= vec4(graylevel , graylevel , graylevel , 1.0);
+        
+        
          gl_FragColor = couleur; // return redish-purple
         }
 
     </script>
-    <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js">
-    </script>
-    <script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-helper.js"></script>
 
-<script>
+<script type="text/javascript">
+
     "use strict";
+    
+    var canvas = document.getElementById("c",{alpha:false});
+    var req = null;
+    var cs;
+    var hdpi=1;
 
     function createShader(gl, type, source) {
         var shader = gl.createShader(type);
@@ -156,25 +166,25 @@
 
     function main() {
         // Get A WebGL context
-        var canvas = document.getElementById("c",{alpha:false});
         
-        canvas.width    =   texSizeX * SIZE ;
-        canvas.height   =   texSizeY * SIZE ;
+        canvas.width    =   texSizeX * SIZE  * hdpi ;
+        canvas.height   =   texSizeY * SIZE  * hdpi;
         
         
-        // canvas.style.width = 320 + 'px';
+        canvas.style.width = texSizeX * SIZE + 'px';
 
-        //   canvas.style.height = 176 + 'px';
+        canvas.style.height = texSizeY * SIZE + 'px';
 
 
         gl = canvas.getContext("webgl", {
             antialias: false,
             alpha:false
         });
-        //gl.imageSmoothingEnabled = false;
-        if (!gl) {
+              if (!gl) {
             return;
         }
+        gl.imageSmoothingEnabled = false;
+  
 
         // Get the strings for our GLSL shaders
         var vertexShaderSource = document.getElementById("2d-vertex-shader").text;
@@ -187,7 +197,7 @@
         // Link the two shaders into a program
         program = createProgram(gl, vertexShader, fragmentShader);
 
-        var cs = gl.getUniformLocation(program, "canvasSize");
+        cs = gl.getUniformLocation(program, "canvasSize");
         var is = gl.getUniformLocation(program, "imageSize");
         PS = gl.getUniformLocation(program,"PS");
         
@@ -219,80 +229,50 @@
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-        // Set the parameters so we can render any size image.
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-        // Upload the image into the texture.
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
 
 
-
-
-
-
         // Tell WebGL how to convert from clip space to pixels
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+       gl.viewport(0, 0, canvas.width, canvas.height);
 
 
         // Clear the canvas
         gl.clearColor(0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+       // gl.clear(gl.COLOR_BUFFER_BIT);
 
-        // Tell it to use our program (pair of shaders)
         gl.useProgram(program);
 
         gl.uniform2f(cs, canvas.width, canvas.height);
         gl.uniform2f(is, texSizeX, texSizeY);
         gl.uniform1f(PS,SIZE);
 
-
-        // Turn on the attribute
         gl.enableVertexAttribArray(positionAttributeLocation);
-
-        // Bind the position buffer.
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-        // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-        var stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
-        var offset = 0; // start at the beginning of the buffer
-        gl.vertexAttribPointer(
-            positionAttributeLocation, 2, gl.FLOAT, false, stride, offset)
+        gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0)
 
-        // draw
-        var primitiveType = gl.POINTS;
-        var offset = 0;
-        gl.drawArrays(primitiveType, offset, count);
         
-        render();
+        req =requestAnimationFrame(render);
+
     }
 
    
 
-    function success(stream) {
-        const track = stream.getVideoTracks()[0];
-       // console.log(stream.getTracks()[0].getCapabilities());
-        //console.log(stream.getTracks()[0].getSettings());
-        //console.log(stream.getTracks()[0].getConstraints());
-        video.srcObject = stream;
-        //var vendorURL = window.URL || window.webkitURL;
 
-        //  video.srcObject = vendorURL.createObjectURL(stream);
-
-
-    }
 
     function render() {
 
-            gl.clearColor(0, 0, 0, 0);
-            gl.clear(gl.COLOR_BUFFER_BIT);
+           // gl.clearColor(0, 0, 0, 0);
+        //    gl.clear(gl.COLOR_BUFFER_BIT);
 
-            gl.useProgram(program);
-            gl.uniform1f(PS,SIZE);
+         //   gl.useProgram(program);
 
-            gl.bindTexture(gl.TEXTURE_2D, texture);
+         //   gl.bindTexture(gl.TEXTURE_2D, texture);
 
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
 
@@ -300,60 +280,64 @@
             gl.drawArrays(gl.POINTS, 0, count);
 
 
-
-            requestAnimationFrame(render);
+            req =requestAnimationFrame(render);
     }
     
     
-    //requestAnimationFrame(render);
-
-
-    
-
-    function failure(error) {
-        console.log("Something went wrong!");
-    }
-
     var gl,program,texture;
     var texSizeX = 640;
     var texSizeY = 480;
-    var SIZE = 1 ;
+    var SIZE = 10 ;
     var PS;
     var count = texSizeX * texSizeY ;
-
-
   
     const video = document.createElement('video');
     video.muted = true;
     document.body.append(video);
     video.play();
 
-    
     video.addEventListener("playing", function() {
-        copyVideo = true;
         main();
     }, true);
 
-   // main();
 
-
-
-    var copyVideo;
     navigator.getWebcam = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 
 
+    function failure(error) {
+        console.log("Something went wrong!");
+    }
+    function success(stream) {
+        video.srcObject = stream;
+    }
+    
     if (navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({
-  audio: false,
-  video: {
-    width: texSizeX,
-    height: texSizeY
-  }
-}).then(success, failure);
+            audio: false,
+            video: {
+                width: texSizeX,
+                height: texSizeY
+            }}).then(success, failure);
     }
     
     function taillepoint(val) {
         SIZE=val;
+                    gl.uniform1f(PS,SIZE);
+
+        canvas.width    =   texSizeX * SIZE *hdpi;
+        canvas.height   =   texSizeY * SIZE *hdpi;
+        
+        gl.uniform2f(cs, canvas.width, canvas.height);
+               gl.viewport(0, 0, canvas.width, canvas.height);
+
+
+        canvas.style.width = texSizeX * SIZE + 'px';
+
+        canvas.style.height = texSizeY * SIZE + 'px';
+        cancelAnimationFrame(req);
+                req =requestAnimationFrame(render);
+
+        
     }
 </script>
 
