@@ -46,8 +46,7 @@
 
         
         void main() {
-
-           vtexCoords = a_position.xy;
+            vtexCoords = a_position.xy;
             
             float size = PS ;
             
@@ -59,13 +58,7 @@
             float p1 = -1.0 + (2.0*(a_position.x*size)+1.0)/canvasSize.x + offx;
             float p2 = -1.0 + (2.0*(a_position.y*size)+1.0)/canvasSize.y + offy ;
             
-            
-  
-
-
-
-        gl_Position=vec4(p1,p2,0.0,1.0);
-            //gl_Position = vec4(-1.0+9.0/10.0,-1.0+1.0/10.0,0.0,1.0);
+            gl_Position=vec4(p1,p2,0.0,1.0);
             gl_PointSize= size ;
         }
 
@@ -79,14 +72,7 @@
         uniform vec2 canvasSizeFrag;
         
         varying vec2 vtexCoords;
-
-
         
-        float rand(vec2 co){
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
-
         void main() {
             vec4 white = vec4(1.0,1.0,1.0,1.0);
             vec4 black = vec4(0.0 , 0.0 , 0.0 , 1.0);
@@ -107,12 +93,10 @@
             float graylevel = (rgb.x+rgb.y+rgb.z)/3.0;
             
             float rq  = max( abs(cxy.x) , abs(cxy.y)) ;
-
-        if (rq > (graylevel)  || graylevel < 0.05)  { discard;}
-
-        
-        
-         gl_FragColor = rgb; 
+            
+            if (rq > (graylevel)  || graylevel < 0.05)  { discard;}
+            
+            gl_FragColor = couleur; 
         }
 
     </script>
@@ -169,10 +153,9 @@
     }
 
     function main() {
-        // Get A WebGL context
         
-        canvas.width    =   texSizeX * SIZE  *hdpi ;
-        canvas.height   =   texSizeY * SIZE *hdpi ;
+        canvas.width    =   texSizeX * SIZE * hdpi ;
+        canvas.height   =   texSizeY * SIZE * hdpi ;
         
         
         canvas.style.width = texSizeX * SIZE + 'px';
@@ -271,7 +254,7 @@ function render() {
         gl.uniform2f(csFrag, canvas.width, canvas.height);
 
         gl.uniform2f(is, texSizeX, texSizeY);
-        gl.uniform1f(PS,SIZE*2);
+        gl.uniform1f(PS,SIZE*hdpi);
 
 
 
@@ -289,8 +272,8 @@ function render() {
     
     
     var gl,program,texture;
-    var texSizeX = 32;
-    var texSizeY = 24;
+    var texSizeX = 64;
+    var texSizeY = 48;
     var SIZE = 10 ;
     var PS;
     var count = texSizeX * texSizeY ;
@@ -326,7 +309,7 @@ function render() {
     
     function taillepoint(val) {
         SIZE=val;
-                    gl.uniform1f(PS,SIZE);
+                    gl.uniform1f(PS,SIZE*hdpi);
 
         canvas.width    =   texSizeX * SIZE * hdpi ;
         canvas.height   =   texSizeY * SIZE  *hdpi;
