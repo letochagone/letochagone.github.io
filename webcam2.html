@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            margin: 0;
+            image-rendering:pixelated;
+            
+        }
+
+        canvas {
+
+            display: block;
+            background-color: green;
+
+        }
+  
+    </style>
+</head>
+
+<body>
+
+
+    <canvas id="c"></canvas>
+    <div id="toggle">
+            <input id="hidegui" type="button" value="hide" onclick="hidegui()">
+            <input id="showgui" type="button" value="show" onclick="showgui()">
+    </div>
+    <div id="gui">
+        <div>
+            <input id="taillepoint" type="range" min="1" max="80" value="10" step="1" oninput="taillepoint(this.value)"><label>taille pixel</label>
+        </div>
+    </div>
+
+
+    
+    <script id="2d-vertex-shader" type="notjs">
+
+        attribute vec4 a_position;
+        varying vec2 vtexCoords;
+        uniform vec2 canvasSize;
+        uniform float PS;
+
+        
+        void main() {
+
+           vtexCoords = a_position.xy;
+            
+            float size = PS ;
+            
+            float nby = floor(size/2.0);
+            float nbx = floor((size-1.0)/2.0);
+            float offx =  (2.0*nbx)/canvasSize.x ;
+            float offy =  (2.0*nby)/canvasSize.y ;
+
+            float p1 = -1.0 + (2.0*(a_position.x*size)+1.0)/canvasSize.x + offx;
+            float p2 = -1.0 + (2.0*(a_position.y*size)+1.0)/canvasSize.y + offy ;
+            
+            
+  
+
+
+
+        gl_Position=vec4(p1,p2,0.0,1.0);
+            //gl_Position = vec4(-1.0+9.0/10.0,-1.0+1.0/10.0,0.0,1.0);
+            gl_PointSize= size ;
+        }
+
+    </script>
+    <script id="2d-fragment-shader" type="notjs">
+
+        precision mediump float;
+  
+        uniform sampler2D image;
+        uniform vec2 imageSize;
+        uniform vec2 canvasSizeFrag;
+        
+        varying vec2 vtexCoords;
+
+
+        
+        float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+
+        void main() {
+            vec4 white = vec4(1.0,1.0,1.0,1.0);
+            vec4 black = vec4(0.0 , 0.0 , 0.0 , 1.0);
+            
+            vec4 couleur =white;
+            
+            float x = vtexCoords.x / imageSize.x ;
+            float y = vtexCoords.y / imageSize.y;
+            
+            vec4 rgb = texture2D(image,vec2(x,y));
+            
+  
+            float r = 0.0, delta = 0.0, alpha = 1.0;
+            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+            
+           // vec4 rgb = texture2D(image,gl_FragCoord.xy/canvasSizeFrag);
+            
+            float graylevel = (rgb.x+rgb.y+rgb.z)/3.0;
+            
+            float rq  = max( abs(cxy.x) , abs(cxy.y)) ;
+
+        if (rq > (graylevel)  || graylevel < 0.05)  { discard;}
+
+        
+        
+         gl_FragColor = rgb; 
+        }
+
+    </script>
+
+<script type="text/javascript">
+
+    "use strict";
+    
+    var canvas = document.getElementById("c",{alpha:false});
+    var req = null;
+    var cs,csFrag;
+    var hdpi=2;
+    var ext,ext5,ext4;
+    var pixels,pixels2;
+    var frameBuffer;
+    var copyVideo=false;
+    var copie;
+    var is;
+    var resolutionLocation;
+    var resolutionLocationF;
+
+    var positionAttributeLocation;
+    var positionBuffer;
+    var positions;
+    var locTexProgram;
+    var image;
+    
+
+    function createShader(gl, type, source) {
+        var shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+        if (success) {
+            return shader;
+        }
+
+        console.log(gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+    }
+
+    function createProgram(gl, vertexShader, fragmentShader) {
+        var program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        var success = gl.getProgramParameter(program, gl.LINK_STATUS);
+        if (success) {
+            return program;
+        }
+
+        console.log(gl.getProgramInfoLog(program));
+        gl.deleteProgram(program);
+    }
+
+    function main() {
+        // Get A WebGL context
+        
+        canvas.width    =   texSizeX * SIZE  *hdpi ;
+        canvas.height   =   texSizeY * SIZE *hdpi ;
+        
+        
+        canvas.style.width = texSizeX * SIZE + 'px';
+
+        canvas.style.height = texSizeY * SIZE + 'px';
+
+
+        gl = canvas.getContext("webgl", {
+            antialias: false,
+            alpha:false,
+            premultipliedAlpha: false
+        });
+        if (!gl) {
+            return;
+        }
+        
+
+
+        gl.imageSmoothingEnabled = false;
+  
+
+        var vertexShaderSource = document.getElementById("2d-vertex-shader").text;
+        var fragmentShaderSource = document.getElementById("2d-fragment-shader").text;
+        
+
+
+        var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+        var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+        
+        program = createProgram(gl, vertexShader, fragmentShader);
+        
+        
+    
+        positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+        cs              = gl.getUniformLocation(program, "canvasSize");
+        csFrag          = gl.getUniformLocation(program, "canvasSizeFrag");
+
+        is              = gl.getUniformLocation(program, "imageSize");
+        PS              = gl.getUniformLocation(program, "PS");
+        locTexProgram   = gl.getUniformLocation(program, "image");
+
+
+
+        
+
+        positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+        positions =[];
+
+        for (var i = 0; i < texSizeX * texSizeY; i++) {
+            positions[2 * i] = i % texSizeX;
+            positions[2 * i + 1] = Math.floor(i / texSizeX);
+        }
+        
+   
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+        
+        
+
+        texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+
+ 
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        
+        gl.useProgram(program);
+
+
+        
+        req =requestAnimationFrame(render);
+
+    }
+
+   
+
+var comp=0;
+    
+function render() {
+
+        gl.viewport(0, 0, canvas.width, canvas.height);
+
+
+        gl.uniform2f(cs, canvas.width, canvas.height);
+        gl.uniform2f(csFrag, canvas.width, canvas.height);
+
+        gl.uniform2f(is, texSizeX, texSizeY);
+        gl.uniform1f(PS,SIZE*2);
+
+
+
+
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+
+        
+        gl.drawArrays(gl.POINTS, 0, count);
+    
+        
+        req =requestAnimationFrame(render);
+        
+        
+    }
+    
+    
+    var gl,program,texture;
+    var texSizeX = 32;
+    var texSizeY = 24;
+    var SIZE = 10 ;
+    var PS;
+    var count = texSizeX * texSizeY ;
+  
+    const video = document.createElement('video');
+    video.muted = true;
+    video.play();
+
+    video.addEventListener("playing", function() {
+        copyVideo=true;
+        main();
+    }, true);
+    
+    
+    navigator.getWebcam = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+
+
+    function failure(error) {
+        console.log("Something went wrong!");
+    }
+    function success(stream) {
+        video.srcObject = stream;
+    }
+    
+    if (navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+                width: texSizeX,
+                height: texSizeY
+            }}).then(success, failure);
+    }
+    
+    function taillepoint(val) {
+        SIZE=val;
+                    gl.uniform1f(PS,SIZE);
+
+        canvas.width    =   texSizeX * SIZE * hdpi ;
+        canvas.height   =   texSizeY * SIZE  *hdpi;
+        
+        gl.uniform2f(cs, canvas.width, canvas.height);
+                gl.uniform2f(csFrag, canvas.width, canvas.height);
+
+               gl.viewport(0, 0, canvas.width, canvas.height);
+
+
+        canvas.style.width = texSizeX * SIZE + 'px';
+
+        canvas.style.height = texSizeY * SIZE + 'px';
+        cancelAnimationFrame(req);
+        req =requestAnimationFrame(render);
+
+        
+    }
+</script>
+
+</body>
+
+</html>
