@@ -14,7 +14,7 @@
         canvas {
 
             display: block;
-            background-color: green;
+            background-color: black;
 
         }
   
@@ -31,7 +31,7 @@
     </div>
     <div id="gui">
         <div>
-            <input id="taillepoint" type="range" min="1" max="80" value="10" step="1" oninput="taillepoint(this.value)"><label>taille pixel</label>
+            <input id="taillepoint" type="range" min="1" max="80" value="3" step="1" oninput="taillepoint(this.value)"><label>taille pixel</label>
         </div>
     </div>
 
@@ -73,7 +73,132 @@
         
         varying vec2 vtexCoords;
         
+      
+        
+        
+        
         void main() {
+        
+        
+          
+            
+            
+            float x = vtexCoords.x / imageSize.x ;
+        float y = vtexCoords.y / imageSize.y;
+            
+        vec4 rgb = texture2D(image,vec2(x,y));
+
+                    
+
+        
+        vec4 rouge      = vec4( rgb.x , 0. , 0. , 1. );
+        vec4 chartreuse = vec4( 1. , 1. , 0. , 1. );
+        vec4 green = vec4( 0. , rgb.y , 0. , 1. );
+        vec4 blue = vec4( 0. , 0. , rgb.z , 1. );
+
+
+        vec4 color ;
+        
+        color = chartreuse;
+        
+        vec2 sprite = gl_PointCoord;
+        // 1 2 3 4 5 6 7
+        // n3 n4 n6 n7 
+        // R V B 
+        float taille=6. ;
+        
+        float k = floor(taille/2.);
+        float r = 2. * (taille/2. - k);
+        float n;
+        
+        n= 2. ; 
+        float n2 = (n - r / 2.)/ taille;
+        
+        n = 3. ;  // n= 1 .. taille
+        float n3 = (n - r / 2.)/ taille;
+        
+        n= 6. ; 
+        float n6 = (n - r / 2.)/ taille;
+
+
+        n= 5. ; 
+        float n5 = (n - r / 2.)/ taille;
+        
+        if ( sprite.x < n3) color=rouge ;
+        if ( sprite.x > n2 && sprite.x < n6) color=green ;
+        if ( sprite.x > n5 ) color=blue ;
+        
+        
+        
+        taille = 3. ;
+        
+        k = floor(taille/2.);
+        r = 2. * (taille/2. - k);
+        
+        
+        n= 2. ; 
+        n2 = (n - r / 2.)/ taille;
+        
+        n = 1. ;  // n= 1 .. taille
+        float n1 = (n - r / 2.)/ taille;
+        
+        n= 3. ; 
+        n3 = (n - r / 2.)/ taille;
+
+
+        
+        if ( sprite.x < n2) color=rouge ;
+        if ( sprite.x > n1 && sprite.x < n3) color=green ;
+        if ( sprite.x > n2 ) color=blue ;
+
+
+
+    taille=9. ; // 1 2 3  4 5 6  7 8 9 //
+    
+        n = 4. ;  // n= 1 .. taille
+        float n4 = (n - r / 2.)/ taille;
+        
+        n = 3. ;  // n= 1 .. taille
+        n3 = (n - r / 2.)/ taille;
+        
+        n = 6. ;  // n= 1 .. taille
+         n6 = (n - r / 2.)/ taille;
+        
+        n = 7. ;  // n= 1 .. taille
+        float n7 = (n - r / 2.)/ taille;
+        
+        if ( sprite.x < n4) color=rouge ;
+        if ( sprite.x > n3 && sprite.x < n7) color=green ;
+        if ( sprite.x > n6 ) color=blue ;
+        
+
+
+        //9 12 
+       // 2 4 6 8 16 &
+					
+
+	//float scanline = sin(y*20.0)*0.04;
+	//color -= scanline;
+           gl_FragColor = color;
+        // gl_FragColor = vec4( gl_PointCoord,65536.,65536.);
+           
+        }
+        
+        /*
+        
+ 
+        
+        
+        
+        void main() {
+        
+        
+    
+        
+        
+        
+        
+        
             vec4 white = vec4(1.0,1.0,1.0,1.0);
             vec4 black = vec4(0.0 , 0.0 , 0.0 , 1.0);
             
@@ -90,14 +215,24 @@
             
            // vec4 rgb = texture2D(image,gl_FragCoord.xy/canvasSizeFrag);
             
-            float graylevel = (rgb.x+rgb.y+rgb.z)/3.0;
+            float graylevel = sqrt((rgb.x+rgb.y+rgb.z)/3.0);
+            
             
             float rq  = max( abs(cxy.x) , abs(cxy.y)) ;
             
-            if (rq > (graylevel)  || graylevel < 0.05)  { discard;}
+            if ( 
+                    (rq > graylevel)  
+                            || 
+                    (graylevel < 0.012)
+            )  { discard;}
             
             gl_FragColor = couleur; 
+            
+            
+            
         }
+        
+        */
 
     </script>
 
@@ -105,7 +240,7 @@
 
     "use strict";
     
-    var canvas = document.getElementById("c",{alpha:false});
+    var canvas = document.getElementById("c",{alpha:true});
     var req = null;
     var cs,csFrag;
     var hdpi=2;
@@ -123,6 +258,26 @@
     var positions;
     var locTexProgram;
     var image;
+    
+    var gl,program,texture;
+    var texSizeX = 160;
+    var texSizeY = 120;
+    var SIZE = 9 ;
+    var PS;
+    var count = texSizeX * texSizeY ;
+  
+    const video = document.createElement('video');
+    
+    video.muted = true;
+    video.play();
+
+    video.addEventListener("playing", function() {
+        copyVideo=true;
+        main();
+    }, true);
+    
+    
+    navigator.getWebcam = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
     
 
     function createShader(gl, type, source) {
@@ -154,18 +309,18 @@
 
     function main() {
         
-        canvas.width    =   texSizeX * SIZE * hdpi ;
-        canvas.height   =   texSizeY * SIZE * hdpi ;
+        canvas.width    =   texSizeX * SIZE  ;
+        canvas.height   =   texSizeY * SIZE ;
         
         
-        canvas.style.width = texSizeX * SIZE + 'px';
+        canvas.style.width = texSizeX * SIZE/2 + 'px';
 
-        canvas.style.height = texSizeY * SIZE + 'px';
+        canvas.style.height = texSizeY * SIZE/2 + 'px';
 
 
         gl = canvas.getContext("webgl", {
             antialias: false,
-            alpha:false,
+            alpha:true,
             premultipliedAlpha: false
         });
         if (!gl) {
@@ -254,12 +409,32 @@ function render() {
         gl.uniform2f(csFrag, canvas.width, canvas.height);
 
         gl.uniform2f(is, texSizeX, texSizeY);
-        gl.uniform1f(PS,SIZE*hdpi);
+        gl.uniform1f(PS,SIZE);
 
+    
+    /*
+        const level = 0;
+  const internalFormat = gl.RGBA;
+  const width = texSizeX;
+  const height = texSizeY;
+  const border = 0;
+  const srcFormat = gl.RGBA;
+  const srcType = gl.UNSIGNED_BYTE;
+  const pixel = new Uint8Array(width*height*4);
+    pixel[0]=200;
+        pixel[1]=200;
+    pixel[2]=200;
+    
+        pixel[4]=0;
+        pixel[5]=0;
+    pixel[6]=1;
 
+  gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                width, height, border, srcFormat, srcType,
+                pixel);
+*/
 
-
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
 
         
         gl.drawArrays(gl.POINTS, 0, count);
@@ -271,24 +446,7 @@ function render() {
     }
     
     
-    var gl,program,texture;
-    var texSizeX = 64;
-    var texSizeY = 48;
-    var SIZE = 10 ;
-    var PS;
-    var count = texSizeX * texSizeY ;
-  
-    const video = document.createElement('video');
-    video.muted = true;
-    video.play();
-
-    video.addEventListener("playing", function() {
-        copyVideo=true;
-        main();
-    }, true);
-    
-    
-    navigator.getWebcam = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+   
 
 
     function failure(error) {
@@ -309,7 +467,7 @@ function render() {
     
     function taillepoint(val) {
         SIZE=val;
-                    gl.uniform1f(PS,SIZE*hdpi);
+                    gl.uniform1f(PS,SIZE);
 
         canvas.width    =   texSizeX * SIZE * hdpi ;
         canvas.height   =   texSizeY * SIZE  *hdpi;
