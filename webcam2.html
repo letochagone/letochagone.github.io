@@ -75,7 +75,7 @@
         
       
         
-        
+        /*
         
         void main() {
         
@@ -184,9 +184,16 @@
            
         }
         
-        /*
+        
+        
+        
+        */
+        
         
  
+        
+        
+        
         
         
         
@@ -232,7 +239,7 @@
             
         }
         
-        */
+        
 
     </script>
 
@@ -243,7 +250,7 @@
     var canvas = document.getElementById("c",{alpha:true});
     var req = null;
     var cs,csFrag;
-    var hdpi=2;
+    var hdpi=1;
     var ext,ext5,ext4;
     var pixels,pixels2;
     var frameBuffer;
@@ -259,10 +266,10 @@
     var locTexProgram;
     var image;
     
-    var gl,program,texture;
+    var gl,program,texture,textureFloat;
     var texSizeX = 160;
     var texSizeY = 120;
-    var SIZE = 9 ;
+    var SIZE = 25 ;
     var PS;
     var count = texSizeX * texSizeY ;
   
@@ -327,6 +334,9 @@
             return;
         }
         
+        var ext = gl.getExtension("OES_texture_float");
+        var ext4 = gl.getExtension("EXT_color_buffer_half_float");
+        var ext5= gl.getExtension("WEBGL_color_buffer_float");
 
 
         gl.imageSmoothingEnabled = false;
@@ -367,24 +377,49 @@
             positions[2 * i + 1] = Math.floor(i / texSizeX);
         }
         
-   
-
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
         gl.enableVertexAttribArray(positionAttributeLocation);
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
         
         
-
-        texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.activeTexture(gl.TEXTURE0);
+        texture = gl.createTexture(); // on crée un texture objet
+        gl.bindTexture(gl.TEXTURE_2D, texture); // le texture objet 'texture' récemment crée devient le texture objet actif
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        
+        
+        const level = 0;
+        const internalFormat = gl.RGBA;
+        const width = texSizeX;
+        const height = texSizeY;
+        const border = 0;
+        const srcFormat = gl.RGBA;
+        const srcType = gl.UNSIGNED_BYTE;
+        const pixel = new Uint8Array(width*height*4);
+        pixel[0]=200;
+        pixel[1]=200;
+        pixel[2]=200;
+        pixel[4]=0;
+        pixel[5]=0;
+        pixel[6]=1;
 
-
+        gl.activeTexture(gl.TEXTURE1);
+        textureFloat = gl.createTexture();  // on crée un texture objet
+        gl.bindTexture(gl.TEXTURE_2D, textureFloat); // le texture objet 'textureFloat' récemment crée devient le texture objet actif
+        //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texSizeY, texSizeY, 0, gl.RGBA, gl.FLOAT, null);
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,width, height, border, srcFormat, srcType,pixel);
+        // l'objet texture actif contient l'image pixel[])
+        
  
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         
@@ -404,39 +439,29 @@ function render() {
 
         gl.viewport(0, 0, canvas.width, canvas.height);
 
-
         gl.uniform2f(cs, canvas.width, canvas.height);
         gl.uniform2f(csFrag, canvas.width, canvas.height);
 
         gl.uniform2f(is, texSizeX, texSizeY);
         gl.uniform1f(PS,SIZE);
+    
+        ////// select webcam
+        gl.uniform1i(locTexProgram,0); // la variable 'image' du shader utilise la TEXTURE_UNIT_0
+        // une TEXTURE_UNIT_xxx a besoin des données d'un objet texture.
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+        //////
+    
+        ///// select pixel image
+        gl.uniform1i(locTexProgram,1);
+        //gl.bindTexture(gl.TEXTURE_2D, textureFloat);
+
 
     
-    /*
-        const level = 0;
-  const internalFormat = gl.RGBA;
-  const width = texSizeX;
-  const height = texSizeY;
-  const border = 0;
-  const srcFormat = gl.RGBA;
-  const srcType = gl.UNSIGNED_BYTE;
-  const pixel = new Uint8Array(width*height*4);
-    pixel[0]=200;
-        pixel[1]=200;
-    pixel[2]=200;
-    
-        pixel[4]=0;
-        pixel[5]=0;
-    pixel[6]=1;
-
-  gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                width, height, border, srcFormat, srcType,
-                pixel);
-*/
-
-       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
-
+    //gl.bindTexture(gl.TEXTURE_2D, texture);gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
         
+        //gl.uniform1i(locTexProgram,0);
         gl.drawArrays(gl.POINTS, 0, count);
     
         
