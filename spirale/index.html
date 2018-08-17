@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <title>CSS Template</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                margin:0;
+            }
+
+            #toggle {
+                position:absolute;
+                left:1rem;
+                top:0;
+                line-height:2.5rem;
+                margin:0;
+                padding: 0;
+            }
+
+
+            #glcanvas {
+                height: 100vh;
+                width: 100vw;
+                display: block;
+                xposition: absolute;
+                left:0;
+                top:0;
+                image-rendering: pixelated;
+            }
+
+            .label {
+                display:inline-block;
+                padding:0;
+                xtext-align:left;
+                font-variant: small-caps;
+                font-size:1.2em;
+                margin:5px 0 5px 0;
+            }
+
+            input[type=number] {
+                width:5em;
+            }
+
+            #showgui {
+                height:2rem;
+
+
+                margin:0;
+                display:none;
+                background-color: green;
+            }
+
+            #hidegui {
+                height:2rem;
+               margin:0;
+                background-color: green;
+
+
+            }
+
+            #gui {
+                padding:5px;
+                margin:2.5rem 0 0 1rem;
+                font-family:monospace;
+                background-color:rgba(233, 233, 233, 44);
+                position: absolute;
+                left:0;
+                top:0;
+            }
+
+            input {
+                vertical-align:middle;
+                margin:5px 0 5px 0;
+                padding:0;
+                vertical-align:middle;
+                font-family: monospace;
+            }
+
+        </style>
+
+        <script id="copyVertex" type="x-shader/x-vertex">#version 300 es
+            in vec2 position;
+            uniform vec2 u_resolution;
+
+            void main() {
+                vec2 zeroToOne = position / u_resolution;
+                vec2 zeroToTwo = zeroToOne * 2.0;
+                vec2 clipSpace = zeroToTwo - 1.0;
+                gl_Position = vec4(clipSpace , 0, 1);
+                gl_PointSize= 1.0 ;
+            }
+        </script>
+
+        <script id="copyFragment" type="x-shader/x-fragment">#version 300 es
+            precision mediump float;
+            uniform sampler2D u_image;
+            uniform vec2 u_resolutionF;
+            out vec4 myOutputColor;
+
+            void main() {
+                myOutputColor = texture(u_image, gl_FragCoord.xy / u_resolutionF) ;
+            }
+        </script>
+
+
+        <script id="gridVertex" type="x-shader/x-vertex">#version 300 es
+            precision mediump float;
+
+            uniform sampler2D   pvTex;
+            uniform vec2        gridSize;
+            uniform int         PVS;
+
+
+            in vec2 position;
+
+            out vec2 vTexCoord;
+
+            void main() {
+
+                vec2 posPv = position / float(PVS);
+
+                vec4 pos = texture(pvTex, posPv);
+
+                gl_Position = vec4(pos.xy, 0.0, 1.0);
+
+                vTexCoord = pos.zw;
+
+                gl_PointSize = 1.0;
+            }
+        </script>
+
+        <script id="gridFragment" type="x-shader/x-fragment">#version 300 es
+            precision mediump float;
+
+            in vec2 vTexCoord;
+            out vec4 myOutputColor;
+
+
+            void main() {
+
+                myOutputColor = vec4(vTexCoord, 1.0, 1.0);
+                // RG = vitesse qui s'additionnent (blur ad hoc)
+                // B = compteur de particules (blur ad hoc)
+
+            }
+        </script>
+
+        <script id="afficheurVertex" type="x-shader/x-vertex">#version 300 es
+            uniform sampler2D pvTex;
+            uniform int PVS;
+            uniform sampler2D mapColor;
+
+            in vec2 position;
+
+            out vec4 color;
+
+            out vec2 vUv;
+
+            void main() {
+
+                vec2 posPv = position / float(PVS);
+                vec2 pos = texture(pvTex,posPv).xy ;
+
+                vUv = (pos.xy + 1.) / 2.;
+
+
+                gl_Position = vec4(pos, 0.0, 1.0); // position du pixel sur l'écran
+
+
+              //  vec2 resolution = vec2(1039. , 568.);
+                //vec2 posF = -1.0+ (2.0* floor((pos+1.0)/2.0*resolution)+1.0) / resolution;
+                //gl_Position = vec4(posF, 0.0, 1.0); // position du pixel sur l'écran
+
+                // gl_Position = vec4(-1.0 + 1.0/2.0,-1.0 + 1.0/2.0 ,0.0,1.0);
+                // vTexCoord = posPv ; // on passe au fragment les coords de la couleur dans la texture mapColor
+
+                gl_PointSize = 1.0;
+
+                color = texture(mapColor, posPv);
+
+            }
+        </script>
+
+        <script id="afficheurFragment" type="x-shader/x-fragment">#version 300 es
+
+            precision highp float;
+
+            in vec4 color;
+            out vec4 myOutputColor;
+            uniform sampler2D gridTex;
+
+            in vec2 vUv;
+
+
+            void main() {
+
+                //myOutputColor = color;
+
+
+                vec4 color = texture(gridTex, vUv);
+                float r=color.b;
+                if (r<1.0) r=1.0;
+                float theta=atan(color.g,color.r);
+                float s=sqrt(color.g*color.g+color.r*color.r)/(10.0*r);
+                if (s>1.0) s=1.0;
+                r=sqrt(r*0.04);
+                myOutputColor=vec4(r*(s*cos(theta)+0.5*(1.0-s)), r*(s*cos(theta+2.0*3.1415/3.0)+0.5*(1.0-s)), r*(s*cos(theta+4.0*3.1415/3.0)+0.5*(1.0-s)), 1.0);
+
+            }
+
+        </script>
+
+        <script id="main1Vertex" type="x-shader/x-vertex">#version 300 es
+            precision mediump float;
+
+            //in vec2 positionGl;
+            in vec2 position;
+
+            uniform int PVS;
+            uniform sampler2D pvTex;
+            uniform sampler2D destination;
+
+            out vec4 particle;
+            out vec2 posInit;
+
+            void main() {
+
+                vec2 texCoord = position / float(PVS);
+
+                particle    = texture( pvTex      , texCoord);
+                posInit     = texture( destination, texCoord).xy;
+
+                gl_Position = vec4((2.0 * position + 1.0) / float(PVS) - 1.0, 0.0, 1.0);
+
+                gl_PointSize = 1.0;
+
+
+            }
+        </script>
+
+        <script id="main1Fragment" type="x-shader/x-fragment">#version 300 es
+            precision mediump float;
+
+            uniform float dT;
+            uniform float damping;
+            uniform float forceMouse;
+            uniform float forceToOrigin;
+            uniform float slowdown;
+            uniform float seuil;
+            uniform float seuilOrigin;
+            uniform vec2 mouseCoords;
+            uniform int click;
+
+            in vec2 vTexCoord;
+            in vec4 particle;
+            in vec2 posInit;
+
+            out vec4 myOutputColor;
+
+
+            void main() {
+                float ert;
+                vec2 f2 = vec2(0.0, 0.0);
+
+                // vec2 p0      =  texture(backup,vTexCoord).xy;
+                vec2 pos = particle.xy;
+                vec2 vit = particle.zw;
+                vec2 posT = pos;
+
+                // pos = pos + vit ;
+
+
+                vec2 r2 = pos - mouseCoords;
+                float nr2 = length(r2);
+
+                if (nr2 < seuil) {
+                    nr2 = seuil;
+
+                    vit = vit * damping;
+
+                }
+
+                vec2 r = posInit - pos;
+                float nr = length(r);
+                if (nr < seuilOrigin) {
+                    nr = seuilOrigin;
+                    vit = vit * damping;
+
+                }
+
+                vec2 f =    forceToOrigin * r  / (nr  * nr  * nr  );
+                    f2 =    forceMouse    * r2 / (nr2 * nr2 * nr2 );
+
+                vec2 ftot = f + f2;
+
+              //  if (click) { f = f * -1.0 ; }
+
+                vit = vit + ftot * dT;
+                pos = pos + vit * dT;
+
+
+                vit = vit * slowdown;
+
+                if (pos.x > 1.0 || pos.x < -1.0) {
+                    pos = posT;
+                    vit.x = - vit.x;
+                }
+                if (pos.y > 1.0 || pos.y < -1.0) {
+                    pos = posT;
+                    vit.y = -vit.y;
+
+                }
+
+                myOutputColor = vec4(pos, vit);
+
+
+            }
+        </script>
+
+
+        <script id="main2Vertex" type="x-shader/x-vertex">#version 300 es
+            precision mediump float;
+
+            //in vec2 positionGl;
+            in vec2 position;
+
+            uniform int         PVS;
+            uniform sampler2D   pvTex;
+            uniform sampler2D   gridTex;
+            uniform sampler2D   T6;
+
+
+            out vec4 particle;
+            out vec4 gridTexel;
+            out vec2 p0;
+            out vec2 uv;
+
+            void main() {
+
+                vec2 vTexCoord = position / float(PVS);
+                uv = vTexCoord;
+
+
+                particle = texture( pvTex , vTexCoord)    ;
+                p0 =       texture( T6    , vTexCoord).xy ;
+
+
+                vec2 posgrid = (particle.xy + 1.) / 2.;
+                //vec2 resolutionGrid = gridSize;
+                //vec2 posgrid=  floor( resolutionGrid * (particle.xy + 1.0)/ 2.0)  / resolutionGrid ;
+
+                gridTexel = texture(gridTex, posgrid);
+
+                gl_Position = vec4((2.0 * position + 1.0) / float(PVS) - 1.0, 0.0, 1.0);
+                gl_PointSize = 1.0;
+
+
+
+            }
+        </script>
+
+
+        <script id="main2Fragment" type="x-shader/x-fragment">#version 300 es
+            #define PI 3.141519
+            precision mediump float;
+
+            uniform float vitAtt;
+            uniform vec2        gridSize;
+            //uniform sampler2D destination;
+            uniform vec2 resolution;
+            in vec4 particle;
+            in vec4 gridTexel;
+            in vec2 p0;
+            uniform float z1;
+            uniform float z2;
+            uniform float z3;
+            uniform float z4;
+            in vec2 uv;
+
+            out vec4 myOutputColor;
+
+
+            float random(vec2 co) {
+                return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+            }
+
+            void main() {
+
+
+                float att = vitAtt;
+                float angle, angle1, nbr, angle2, dr, newAngle;
+
+                vec2 pos = particle.xy;
+                vec2 vit = particle.zw;
+
+                //  vec2 posF = -1.0+ (2.0* floor((pos+1.0)/2.0*resolution)+1.0) / resolution;
+                //  vec2 posgrid=  floor( resolution * (pos + 1.0)/ 2.0)  / resolution ;
+
+                nbr = gridTexel.b;
+
+
+              // if (nbr == 2.0 )
+                if (nbr > 1.)
+                //if (false)
+                {
+                    vec2 vitS = gridTexel.xy;
+                    vec2 vit2 = vitS - vit;
+                    vit2 = vit2  / (nbr - 1.0);
+                    vec2 pr = vit - vit2;
+                    vec2 pg = vit + vit2;
+                    dr = length(pr);
+                    angle = gridTexel.a ;
+          /*
+        float dt=0.00025;
+        vec2 vbar = vitS/(nbr-1.);
+        float dtheta = random( vec2(z1*floor(pos.x*gridSize.x)+z3,z2*floor(pos.y*gridSize.y)+z4) )*6.283185307;
+
+        float theta2=random( vec2(97.*z2*uv.x+z1,45.3*z4*uv.y+z3) )*6.283185307;
+        float ct=cos(dtheta);
+        float st=sin(dtheta);
+        vit.x=(vit2.x*ct+vit2.y*st+vbar.x)*(1.0-0.0001*dt)+0.0025*sqrt(dt)*cos(theta2);
+        vit.y=(-vit2.x*st+vit2.y*ct+vbar.y)*(1.0-0.0001*dt)+0.0025*sqrt(dt)*sin(theta2);
+
+        */
+
+
+                    //angle = random(posGrid) * 6.28;
+                    angle1 = atan(pr.y, pr.x);
+                    // pour les points y>=0 atan retourne un angle entre 0 et PI
+                    // pour les points y<0 atan retourne un angle entre 0 et -PI
+                    // donc pour avoir un angle entre 0 et 2Pi, on ajoute 2Pi :
+                    // le point (1,-1) retourne un atan -Pi/4, on ajoute 2Pi, = -Pi/4 + 8Pi/4 = 7pi/4
+
+                    if (angle1 < 0.0) {
+                        angle1 = angle1 + PI * 2.0;
+                    }
+
+                    newAngle = angle + angle1;
+                    pr.x = cos(newAngle) * dr;
+                    pr.y = sin(newAngle) * dr;
+
+                    vit = (pg + pr) / att * (1.+nbr*0.001);
+
+                 // pos=p0;
+
+                }
+
+                myOutputColor = vec4(pos, vit);
+
+            }
+        </script>
+
+
+        <script id="copieVertex" type="x-shader/x-vertex">#version 300 es
+            in vec2 position;
+            in vec2 positionGl;
+
+            out vec2 vTexCoord;
+
+            void main() {
+                vTexCoord = position / float(512.0);
+                gl_Position = vec4(positionGl, 0.0, 1.0);
+                gl_PointSize = 1.0;
+            }
+        </script>
+
+        <script id="copieFragment" type="x-shader/x-fragment">#version 300 es
+            precision highp float;
+
+            uniform sampler2D toCopy;
+            in vec2 vTexCoord;
+
+            out vec4 myOutputColor;
+
+
+            void main() {
+                myOutputColor = texture(toCopy, vTexCoord);
+            }
+        </script>
+
+    </head>
+
+
+    <body>
+        <canvas id="glcanvas"></canvas>
+
+
+        <div id="toggle">
+            <input id="hidegui" type="button" value="hide" onclick="hidegui()">
+            <input id="showgui" type="button" value="show" onclick="showgui()">
+        </div>
+        <div id="gui">
+            <div>
+                <input id="ir1" type="range" min="-8" max="18" value="0" step="0.01" oninput="ir1(this.value)">
+                <input id="in1" type="number" min="-8" max="18" value="0" step="0.01" oninput="in1(this.value)">
+                <input id="reset" type="button" value="Reset" onclick="r1()">
+                <label>mouseforce</label>
+            </div>
+
+            <div>
+                <input id="ir2" type="range" min="0" max="2" value="1.0" step="0.01" oninput="ir2(this.value)">
+                <input id="in2" type="number" min="0" max="2" value="1.0" step="0.01" oninput="in2(this.value)">
+                <input id="reset" type="button" value="Reset" onclick="r2()">
+                <label>damping mouse</label>
+            </div>
+
+            <div>
+                <input id="ir3" type="range" min="-44" max="44" value="0" step="0.01" oninput="ir3(this.value)" />
+                <input id="in3" type="number" min="-44" max="44" value="0" step="0.01" oninput="in3(this.value)" />
+                <input id="reset" type="button" value="Reset" onclick="r3()">
+                <label>force to image</label>
+            </div>
+
+            <div>
+                <input id="ir4" type="range" min="0" max="2" value="1" step="0.01" oninput="ir4(this.value)" />
+                <input id="in4" type="number" min="0" max="2" value="1" step="0.01" oninput="in4(this.value)" />
+                <input id="reset" type="button" value="Reset" onclick="r4()">
+                <label>slowdown</label>
+            </div>
+
+            <div>
+                <input id="ir5" type="range" min="1" max="3" value="2" step="0.01" oninput="ir5(this.value)" />
+                <input id="in5" type="number" min="1" max="3" value="2" step="0.01" oninput="in5(this.value)" />
+                <input id="reset" type="button" value="Reset" onclick="r5()">
+                <label>vitt-att</label>
+            </div>
+
+            <div>
+                <input id="ir6" type="range" min="0.001" max="0.1" value="0.077" step="0.001" oninput="ir6(this.value)" />
+                <input id="in6" type="number" min="0.001" max="0.1" value="0.077" step="0.001" oninput="in6(this.value)" />
+                <input id="reset" type="button" value="Reset" onclick="r6()">
+                <label>seuil</label>
+            </div>
+
+            <div>
+                <input id="ir7" type="range" min="0.001" max="0.5" value="0.108" step="0.001" oninput="ir7(this.value)" />
+                <input id="in7" type="number" min="0.001" max="0.5" value="0.108" step="0.001" oninput="in7(this.value)" />
+                <input id="reset" type="button" value="Reset" onclick="r7()">
+                <label>seuil-origin</label>
+            </div>
+
+            <div>
+                <input id="ir8" type="range" min="0" max="0.1" value="0.001" step="0.001" oninput="ir8(this.value)" />
+                <input id="in8" type="number" min="0" max="0.1" value="0.001" step="0.001" oninput="in8(this.value)" />
+                <input id="reset" type="button" value="Reset" onclick="r8()">
+                <label>dt</label>
+            </div>
+
+            <div>
+                <input id="ir9" type="number" min="1"  value="1" onchange="ir9(this.value)" />
+                <label>scale</label>
+            </div>
+
+            <div>
+                <input id="ir10" type="range" min="1" max="200" value="21" onchange="ir10(this.value)" />
+                <label>rayon</label>
+            </div>
+
+            <div>
+                <input id="ir11" type="range" min="1" max="200" value="10" onchange="ir11(this.value)" />
+                <label>nbre de cercle</label>
+            </div>
+
+            <div>
+                <input id="ir12" type="range" min="1" max="200" value="47" onchange="ir12(this.value)" />
+                <label>delta cercle</label>
+            </div>
+
+            <div>
+                <input id="ir15" type="range" min="0" max="1" value="0" step="0.001" onchange="ir15(this.value)" />
+                <label>vitesse initiale</label>
+            </div>
+
+            <div>
+                <input id="taillePoint" type="range" min="1" max="20" value="1" step="1" onchange="taillePoint(this.value)" />
+                <label>taille point</label>
+            </div>
+
+            <div>
+                <input id="changeResolutionX" type="number" min="0" step="1" onchange="changeResolutionX(this.value)" />
+                <input id="changeResolutionY" type="number" min="0" step="1" oninput="changeResolutionY(this.value)" />
+                <label>resolution ecran</label>
+            </div>
+            <div>
+                <input id="in_retina" type="number" min="1" step="1" max="2" value="2" oninput="in_retina(this.value)" />
+                <label>retina</label>
+            </div>
+            <div>
+                <select id="menuImage" onchange="changeImage()">
+                    <option value="moi">moi</option>
+                    <option value="chat">cat</option>
+                        <option value="cloud">nuage</option>
+
+                </select>
+            </div>
+            <button type="button" onclick="ir13()">Click Me!</button>
+            <button type="button" onclick="ir14()">requestanimation</button>
+
+        </div>
+
+
+        <script src="webgl-demo.js" type="text/javascript"></script>
+    </body>
+
+</html>
