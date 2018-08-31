@@ -219,9 +219,9 @@
   float distance = length(fragmentPosition);
   float distanceSqrd = distance * distance;
   myOutputColor = vec4(
-    0.8/distanceSqrd,
-    0.7/distanceSqrd,
-    0.4, 0.006/distance);
+    color.r*0.8/distanceSqrd,
+    color.g*0.7/distanceSqrd,
+    color.b*0.4, 0.006/distance);
 
               //  myOutputColor = color;
 
