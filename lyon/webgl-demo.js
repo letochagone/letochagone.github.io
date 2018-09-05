@@ -459,7 +459,7 @@ function start(e, forceResolution) {
     var ctx = tempoCanvas.getContext("2d", {
         antialias: false,
         depth: false,
-        alpha: true,
+        alpha: false,
         premultipliedAlpha: false
     });
 
@@ -504,7 +504,7 @@ function start(e, forceResolution) {
 
     var imageData = ctx.getImageData(0, 0, CSW, CSH);
     var data = imageData.data;
-    console.log(data);
+    //console.log(data);
 
     NBRE = 0;
     
@@ -522,7 +522,7 @@ function start(e, forceResolution) {
             b =     data[k + 2] ; 
             alpha = data[k + 3] ;
 
-            if (!(r == fond.r && v == fond.v && b == fond.b)) {
+            if (!( (r == fond.r) && (v == fond.v) && (b == fond.b))) {
                 l = SCALE;
                 while (l--) {
                     NBRE++;
@@ -588,7 +588,6 @@ function start(e, forceResolution) {
 
     }
 
-    //Float32_imageDepart = shuffle(pvFloat32);
 
     var textureGeometry = [];
     var glGeometry = [];
@@ -609,7 +608,6 @@ function start(e, forceResolution) {
             j++;
         }
     }
-
     positionFastCopy = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionFastCopy);
     gl.bufferData(gl.ARRAY_BUFFER,
@@ -915,11 +913,11 @@ function animate() {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    gl.enable(gl.BLEND);
-    //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+   gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-    gl.clearColor(fond.r / 255, fond.v / 255, fond.b / 255, 1);
+    gl.clearColor(fond.r / 255, fond.v / 255, fond.b / 255, 0.5);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     //if (shizz)// gl.clear(gl.COLOR_BUFFER_BIT);
@@ -933,7 +931,6 @@ function animate() {
     gl.uniform1i(afficheurShader.mapColor,0);
     gl.drawArrays(gl.POINTS, 0, NBRE);
     gl.disable(gl.BLEND);   
-
 
 
 
@@ -1091,10 +1088,7 @@ function animate() {
     gl.uniform2f(main2Shader.gridSize, GRIDX, GRIDY);
     gl.uniform1f(main2Shader.vitAtt, vitAtt);
 
-        gl.uniform1f(main2Shader.z1, 200*Math.random()-100.0);
-        gl.uniform1f(main2Shader.z2, 200*Math.random()-100.0);
-        gl.uniform1f(main2Shader.z3, 200*Math.random()-100.0);
-        gl.uniform1f(main2Shader.z4, 200*Math.random()-100.0);
+
 
     gl.drawArrays(gl.POINTS, 0, NBRE);
 

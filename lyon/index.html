@@ -198,7 +198,7 @@
 
                 gl_Position = vec4(pos, 0.0, 1.0); // position du pixel sur l'écran
 
-                gl_PointSize = 16.0;
+                gl_PointSize = 5.0;
 
                 color = texelFetch(mapColor, ivec2(position), 0);
 
@@ -216,14 +216,20 @@
             void main() {
 
                                vec2 fragmentPosition = 2.0*gl_PointCoord - 1.0;
-  float distance = length(fragmentPosition);
-  float distanceSqrd = distance * distance;
+                               float s = gl_PointCoord.x ;
+                               float t = gl_PointCoord.y ;
+                               vec2 vd = vec2(s,t)-0.5 ;
+                               float d = length(vd) ;
+                               if (d > 0.5) discard;
+ 
+  
   myOutputColor = vec4(
-    color.r*0.8/distanceSqrd,
-    color.g*0.7/distanceSqrd,
-    color.b*0.4, 0.006/distance);
+    color.r ,
+    color.g ,
+    color.b  , 
+    .007/(d+0.001));
 
-              //  myOutputColor = color;
+              // myOutputColor = color;
 
 
             }
@@ -282,11 +288,8 @@
         </script>
 
         <script id="main1Vertex" type="x-shader/x-vertex">#version 300 es
-            precision mediump float;
 
-            //in uvec2 position;
             in vec2 position;
-
 
             void main() {
 
@@ -316,7 +319,6 @@
 
             uniform sampler2D imageDepart;
             uniform sampler2D imageArrivee;
-            uniform sampler2D obstacle;
             uniform sampler2D pvTex;
 
             out vec4 myOutputColor;
@@ -328,7 +330,6 @@
                 vec2 posInit =      texelFetch( imageDepart , ivec2(gl_FragCoord.xy), 0).xy;
                 vec2 posArrivee =   texelFetch( imageArrivee, ivec2(gl_FragCoord.xy), 0).xy;
 
-                //float collide = texelFetch( obstacle, ivec2( gl_FragCoord.xy) , 0).r ;
 
 
                 vec2 pos = particle.xy;
@@ -342,7 +343,7 @@
                 float initDist = length(arriVect);
 
                 if (mouseDist < seuil) {
-                  //  mouseDist = seuil;
+                    mouseDist = seuil;
 
 
                 }
@@ -350,24 +351,26 @@
                 float coef=1.0;
 
                 if (initDist < seuilOrigin) {
-                    //initDist = seuilOrigin;
-                   pos = posInit;
-                   vit=vec2(0.0,0.0);
-                   coef=0. ;
+                    initDist = seuilOrigin;
+
+                //   pos = posInit;
+                 //  vit=vec2(0.0,0.0);
+                  // coef=0. ;
 
 
                 }
+                                    vit = vit * slowdown;
 
-                vec2 f =    coef * forceToOrigin * arriVect  / (initDist * initDist  * initDist  );
+                vec2 f =     forceToOrigin * arriVect  / (initDist * initDist  * initDist  );
                 vec2 f2 =   forceMouse  * mouseVect / (mouseDist * mouseDist * mouseDist );
 
                 vec2 ftot = f + f2;
 
+              // ftot=vec2(0.,0.);
 
                 vit = vit + ftot * dT ;
                 pos = pos + vit  * dT ;
 
-                vit = vit * slowdown;
 
                 if (pos.x >= 1.0 || pos.x <= -1.0) {
                     pos = posT;
@@ -476,7 +479,7 @@
 
              // if (nbr == -0.5) pos=p0;
                 if (nbr > 1.)
-              //  if (false)
+               // if (false)
                 {
                     vec2 vitS = gridTexel.xy;
                     vec2 vit2 = vitS - vit;
@@ -485,21 +488,10 @@
                     vec2 pg = vit + vit2;
                     dr = length(pr);
                     angle = gridTexel.a ;
-          /*
-        float dt=0.00025;
-        vec2 vbar = vitS/(nbr-1.);
-        float dtheta = random( vec2(z1*floor(pos.x*gridSize.x)+z3,z2*floor(pos.y*gridSize.y)+z4) )*6.283185307;
-
-        float theta2=random( vec2(97.*z2*uv.x+z1,45.3*z4*uv.y+z3) )*6.283185307;
-        float ct=cos(dtheta);
-        float st=sin(dtheta);
-        vit.x=(vit2.x*ct+vit2.y*st+vbar.x)*(1.0-0.0001*dt)+0.0025*sqrt(dt)*cos(theta2);
-        vit.y=(-vit2.x*st+vit2.y*ct+vbar.y)*(1.0-0.0001*dt)+0.0025*sqrt(dt)*sin(theta2);
-
-        */
+        
 
 
-                    //angle = random(posGrid) * 6.28;
+                   angle = random(pos.xy*gridTexel.a) * 6.28;
                     angle1 = atan(pr.y, pr.x);
                     // pour les points y>=0 atan retourne un angle entre 0 et PI
                     // pour les points y<0 atan retourne un angle entre 0 et -PI
@@ -566,8 +558,8 @@
         </div>
         <div id="gui">
             <div>
-                <input id="ir1" type="range" min="-8" max="18" value="0" step="0.01" oninput="ir1(this.value)">
-                <input id="in1" type="number" min="-8" max="18" value="0" step="0.01" oninput="in1(this.value)">
+                <input id="ir1" type="range" min="-8" max="18" value="-33" step="0.01" oninput="ir1(this.value)">
+                <input id="in1" type="number" min="-8" max="18" value="-33" step="0.01" oninput="in1(this.value)">
                 <input id="reset" type="button" value="Reset" onclick="r1()">
                 <label>mouseforce</label>
             </div>
@@ -587,22 +579,22 @@
             </div>
 
             <div>
-                <input id="ir4" type="range" min="0" max="2" value="1" step="0.01" oninput="ir4(this.value)" />
-                <input id="in4" type="number" min="0" max="2" value="1" step="0.01" oninput="in4(this.value)" />
+                <input id="ir4" type="range" min="0" max="2" value="0.92" step="0.01" oninput="ir4(this.value)" />
+                <input id="in4" type="number" min="0" max="2" value="0.92" step="0.01" oninput="in4(this.value)" />
                 <input id="reset" type="button" value="Reset" onclick="r4()">
                 <label>slowdown</label>
             </div>
 
             <div>
-                <input id="ir5" type="range" min="1" max="3" value="2" step="0.01" oninput="ir5(this.value)" />
-                <input id="in5" type="number" min="1" max="3" value="2" step="0.01" oninput="in5(this.value)" />
+                <input id="ir5" type="range" min="1" max="3" value="1.72" step="0.01" oninput="ir5(this.value)" />
+                <input id="in5" type="number" min="1" max="3" value="1.72" step="0.01" oninput="in5(this.value)" />
                 <input id="reset" type="button" value="Reset" onclick="r5()">
                 <label>vitt-att</label>
             </div>
 
             <div>
-                <input id="ir6" type="range" min="0.001" max="0.1" value="0.077" step="0.001" oninput="ir6(this.value)" />
-                <input id="in6" type="number" min="0.001" max="0.1" value="0.077" step="0.001" oninput="in6(this.value)" />
+                <input id="ir6" type="range" min="0.001" max="0.1" value="0.3" step="0.001" oninput="ir6(this.value)" />
+                <input id="in6" type="number" min="0.001" max="0.1" value="0.3" step="0.001" oninput="in6(this.value)" />
                 <input id="reset" type="button" value="Reset" onclick="r6()">
                 <label>seuil</label>
             </div>
@@ -615,8 +607,8 @@
             </div>
 
             <div>
-                <input id="ir8" type="range" min="0" max="0.1" value="0.001" step="0.001" oninput="ir8(this.value)" />
-                <input id="in8" type="number" min="0" max="0.1" value="0.001" step="0.001" oninput="in8(this.value)" />
+                <input id="ir8" type="range" min="0" max="0.1" value="0.002" step="0.001" oninput="ir8(this.value)" />
+                <input id="in8" type="number" min="0" max="0.1" value="0.002" step="0.001" oninput="in8(this.value)" />
                 <input id="reset" type="button" value="Reset" onclick="r8()">
                 <label>dt</label>
             </div>
