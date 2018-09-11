@@ -9,6 +9,9 @@
                 margin:0;
             }
 
+            .cursor {
+                height: 1.1rem;
+            }
             #toggle {
                 position:absolute;
                 left:1rem;
@@ -80,9 +83,9 @@
         </style>
 
 
-        <script id="fastCopyVertex" type="x-shader/x-vertex">#version 300 es
+        <script id="fastCopyVertex" type="x-shader/x-vertex">
 
-        in vec2 position;
+        attribute vec2 position;
         
         void main() {
             gl_Position = vec4(position,0.,1.);
@@ -91,126 +94,102 @@
 
         </script>
 
-        <script id="fastCopyFragment" type="x-shader/x-fragment">#version 300 es
-        precision mediump float;
-        uniform sampler2D image;
-        out vec4 color;
+        <script id="fastCopyFragment" type="x-shader/x-fragment">
+            precision mediump float;
+            uniform sampler2D image;
+            uniform int PVS;
 
-
-        void main() {
-
-            color = texelFetch( image, ivec2(gl_FragCoord.xy), 0);
-
-        }
-
-        </script>
-
-        <script id="copyVertex" type="x-shader/x-vertex">#version 300 es
-            in uvec2 position;
-            uniform vec2 u_resolution;
 
             void main() {
-                vec2 posf= vec2(float(position.x),float(position.y));
-                vec2 zeroToOne = posf / u_resolution;
-                vec2 zeroToTwo = zeroToOne * 2.0;
-                vec2 clipSpace = zeroToTwo - 1.0;
-                gl_Position = vec4(clipSpace , 0, 1);
-                gl_PointSize= 1.0 ;
-            }
-        </script>
 
-        <script id="copyFragment" type="x-shader/x-fragment">#version 300 es
-            precision mediump float;
-            uniform sampler2D u_image;
-            uniform vec2 u_resolutionF;
-            out vec4 myOutputColor;
+                gl_FragColor = texture2D(image, gl_FragCoord.xy/float(PVS));
 
-            void main() {
-                myOutputColor = texture(u_image, gl_FragCoord.xy / u_resolutionF) ;
             }
+
         </script>
 
 
-        <script id="gridVertex" type="x-shader/x-vertex">#version 300 es
-            precision mediump float;
+
+
+        <script id="gridVertex" type="x-shader/x-vertex">
 
             uniform sampler2D   pvTex;
             uniform vec2        gridSize;
             uniform int         PVS;
 
 
-            in uvec2 position;
+            attribute vec2 position;
 
-            out vec2 vTexCoord;
+            varying vec2 vitesse;
 
             void main() {
 
                 //vec2 posPv = position / float(PVS);
 
-                //vec4 pos = texture(pvTex, posPv);
-                vec4 pos = texelFetch(pvTex, ivec2(position), 0);
+                vec4 pos = texture2D(pvTex, position/float(PVS));
+                //vec4 pos = texelFetch(pvTex, ivec2(position), 0);
 
 
                 gl_Position = vec4(pos.xy, 0.0, 1.0);
 
-                vTexCoord = pos.zw;
+                vitesse = pos.zw;
 
                 gl_PointSize = 1.0;
             }
         </script>
 
-        <script id="gridFragment" type="x-shader/x-fragment">#version 300 es
+        <script id="gridFragment" type="x-shader/x-fragment">
             precision mediump float;
 
-            in vec2 vTexCoord;
-            out vec4 myOutputColor;
-
-            uniform sampler2D obstacle;
+            varying vec2 vitesse;
 
 
             void main() {
-                float obs = 1.0;
 
-                float collide =   texelFetch( obstacle, ivec2(gl_FragCoord.xy), 0).a;
-                if (collide < 1.0) obs=-0.5 ;
-
-                myOutputColor = vec4(vTexCoord, obs, 1.0);
+                gl_FragColor = vec4(vitesse, 1.0, 1.0);
                 // RG = vitesse qui s'additionnent (blur ad hoc)
                 // B = compteur de particules (blur ad hoc)
 
             }
         </script>
 
-        <script id="afficheurVertex" type="x-shader/x-vertex">#version 300 es
+        <script id="afficheurVertex" type="x-shader/x-vertex">
             uniform sampler2D pvTex;
             uniform int PVS;
             uniform sampler2D mapColor;
+            uniform float pointSize;
 
-            in uvec2 position;
+            attribute vec2 position;
 
-            out vec4 color;
+            varying vec4 color;
 
             //out vec2 vUv;
 
             void main() {
 
-                vec2 pos = texelFetch(pvTex, ivec2(position), 0).xy;
+               // vec2 pos = texelFetch(pvTex, ivec2(position), 0).xy;
+                //vec2 posPv = position / float(PVS);
+                vec2 pos = texture2D(pvTex,position/float(PVS)).xy ;
+                //webgl1 vec2 pos = texture2D(pvTex,position/float(PVS)).xy ;
 
-                gl_Position = vec4(pos, 0.0, 1.0); // position du pixel sur l'écran
 
-                gl_PointSize = 5.0;
+                gl_Position = vec4(pos, 0.0, 1.0); 
+                gl_PointSize = pointSize;
 
-                color = texelFetch(mapColor, ivec2(position), 0);
+                //color = texelFetch(mapColor, ivec2(position), 0);
+                color = texture2D(mapColor, position/float(PVS));
 
             }
         </script>
 
-        <script id="afficheurFragment" type="x-shader/x-fragment">#version 300 es
+        <script id="afficheurFragment" type="x-shader/x-fragment">
 
             precision mediump float;
 
-            in vec4 color;
-            out vec4 myOutputColor;
+            varying vec4 color;
+
+            uniform float delta1 ;
+            uniform float delta2 ;
 
 
             void main() {
@@ -220,76 +199,28 @@
                                float t = gl_PointCoord.y ;
                                vec2 vd = vec2(s,t)-0.5 ;
                                float d = length(vd) ;
-                               if (d > 0.5) discard;
+                              if (d > 0.5) discard;
  
   
-  myOutputColor = vec4(
+  gl_FragColor = vec4(
     color.r ,
     color.g ,
     color.b  , 
-    .007/(d+0.001));
+    delta1 / ( d * delta2 + delta1) );
+  //  .07/(d*32.1+.07));
 
-              // myOutputColor = color;
-
-
-            }
-
-        </script>
-
-        <script id="afficheurFullQuadVertex" type="x-shader/x-vertex">#version 300 es
-            uniform sampler2D pvTex;
-            uniform sampler2D mapColor;
-
-            in vec2 position;
-
-            out vec4 color;
-
-            void main() {
-
-
-
-                vec2 resolution= vec2(4. , 4.);
-
-
-                vec2 posgrid=  floor( resolution * position )  / resolution ;
-                vec2 pos = texture(pvTex,posgrid).xy ;
-
-
-                color = texture(mapColor, position);
-                color = vec4(posgrid,0.0,1.);
-                color = texture(pvTex,vec2(0.0+4./4.,0.));
-
-              color=vec4(posgrid,position);
-
-                gl_Position = vec4(position,0.,1.); 
-                gl_PointSize = 1.0;
-
-            }
-        </script>
-
-        <script id="afficheurFullQuadFragment" type="x-shader/x-fragment">#version 300 es
-
-            precision mediump float;
-
-            in vec4 color;
-            out vec4 myOutputColor;
-
-            void main() {
-
-
-
-                myOutputColor = color;
-                           //   myOutputColor = vec4(gl_FragCoord.xy,0.0,1.);
-             // myOutputColor = vec4(0.5,0.5,0.0,1.);
+          //    gl_FragColor = color;
 
 
             }
 
         </script>
 
-        <script id="main1Vertex" type="x-shader/x-vertex">#version 300 es
+   
 
-            in vec2 position;
+        <script id="main1Vertex" type="x-shader/x-vertex">
+
+            attribute vec2 position;
 
             void main() {
 
@@ -304,7 +235,7 @@
             }
         </script>
 
-        <script id="main1Fragment" type="x-shader/x-fragment">#version 300 es
+        <script id="main1Fragment" type="x-shader/x-fragment">
             precision mediump float;
 
             uniform float dT;
@@ -316,19 +247,29 @@
             uniform float seuilOrigin;
             uniform vec2 mouseCoords;
             uniform int click;
+            uniform int PVS;
 
             uniform sampler2D imageDepart;
             uniform sampler2D imageArrivee;
             uniform sampler2D pvTex;
 
-            out vec4 myOutputColor;
-
 
             void main() {
 
-                vec4 particle =     texelFetch( pvTex       , ivec2(gl_FragCoord.xy), 0);
-                vec2 posInit =      texelFetch( imageDepart , ivec2(gl_FragCoord.xy), 0).xy;
-                vec2 posArrivee =   texelFetch( imageArrivee, ivec2(gl_FragCoord.xy), 0).xy;
+                
+                //vec4 particle =     texelFetch( pvTex       , ivec2(gl_FragCoord.xy), 0);
+                vec4 particle  = texture2D(pvTex,gl_FragCoord.xy/float(PVS)) ;
+                //webgl1 vec4 particle  = texture2D(pvTex,gl_FragCoord.xy/float(PVS)) ;
+
+                //vec2 posInit =      texelFetch( imageDepart , ivec2(gl_FragCoord.xy), 0).xy;
+                vec2 posInit  =     texture2D(imageDepart,gl_FragCoord.xy/float(PVS)).xy ;
+                //webgl1 vec2 posInit  =     texture2D(imageDepart,gl_FragCoord.xy/float(PVS)).xy ;
+
+
+                //vec2 posArrivee =   texelFetch( imageArrivee, ivec2(gl_FragCoord.xy), 0).xy;
+                vec2 posArrivee  =     texture2D(imageArrivee,gl_FragCoord.xy/float(PVS)).xy ;
+                //webgl1 vec2 posArrivee  =     texture2D(imageArrivee,gl_FragCoord.xy/float(PVS)).xy ;
+
 
 
 
@@ -337,40 +278,32 @@
                 vec2 posT = pos;
 
                 vec2 mouseVect = pos - mouseCoords;
-                float mouseDist = length(mouseVect);
+                float mouseDist = length(mouseVect)+seuil;
 
                 vec2 arriVect = posArrivee - pos;
                 float initDist = length(arriVect);
 
-                if (mouseDist < seuil) {
-                    mouseDist = seuil;
 
 
+                if (initDist < seuil) {
+                    initDist = seuil;
+                    pos = posInit;
+                    vit=vec2(0.,0.);
                 }
+                
+                vit = vit * slowdown;
 
-                float coef=1.0;
-
-                if (initDist < seuilOrigin) {
-                    initDist = seuilOrigin;
-
-                //   pos = posInit;
-                 //  vit=vec2(0.0,0.0);
-                  // coef=0. ;
-
-
-                }
-                                    vit = vit * slowdown;
-
-                vec2 f =     forceToOrigin * arriVect  / (initDist * initDist  * initDist  );
+                vec2 f =    forceToOrigin * arriVect  / (initDist * initDist  * initDist  );
                 vec2 f2 =   forceMouse  * mouseVect / (mouseDist * mouseDist * mouseDist );
 
                 vec2 ftot = f + f2;
 
-              // ftot=vec2(0.,0.);
 
                 vit = vit + ftot * dT ;
                 pos = pos + vit  * dT ;
 
+
+                
 
                 if (pos.x >= 1.0 || pos.x <= -1.0) {
                     pos = posT;
@@ -381,19 +314,24 @@
                     vit.y = -vit.y;
 
                 }
+                    
 
-                myOutputColor = vec4(pos, vit);
+    
+
+                
+         
+                gl_FragColor = vec4(pos, vit);
+
 
 
             }
         </script>
 
 
-        <script id="main2Vertex" type="x-shader/x-vertex">#version 300 es
+        <script id="main2Vertex" type="x-shader/x-vertex">
             precision mediump float;
 
-            //in vec2 positionGl;
-            in uvec2 position;
+            attribute vec2 position;
 
             uniform int         PVS;
             uniform sampler2D   pvTex;
@@ -401,34 +339,29 @@
             uniform sampler2D   T6;
 
 
-            out vec4 particle;
-            out vec4 gridTexel;
-            out vec2 p0;
+            varying vec4 particle;
+            varying vec4 gridTexel;
+            varying vec2 p0;
             //out vec2 uv;
 
             void main() {
 
-                //vec2 vTexCoord = position / float(PVS);
-                //uv = vTexCoord;
+                vec2 pos = position / float(PVS);
+
+                particle = texture2D( pvTex , pos)   ;
 
 
-                //particle = texture( pvTex , vTexCoord)    ;
-                //p0 =       texture( T6    , vTexCoord).xy ;
-                particle = texelFetch( pvTex , ivec2(position),0)   ;
-                p0 =       texelFetch( T6    , ivec2(position),0).xy;
+                p0 = texture2D( T6, pos).xy;
+
 
                 vec2 posgrid = (particle.xy + 1.) / 2.;
-                //vec2 resolutionGrid = gridSize;
-                //vec2 posgrid=  floor( resolutionGrid * (particle.xy + 1.0)/ 2.0)  / resolutionGrid ;
 
-                gridTexel = texture(
-                                gridTex,
-                                (particle.xy + 1.) / 2.
-                            );
-                //gridTexel = texelFetch( gridTex    , ivec2(position),0).xy;
+               gridTexel = texture2D( gridTex, posgrid);
+                //gridTexel=vec4(1.0,1.0,1.0,1.0);
 
+                            
+                gl_Position = vec4(   2. * pos + 1./float(PVS)  - 1. , 0. , 1. );
 
-                gl_Position = vec4((2.0 * vec2(float(position.x),float(position.y)) + 1.0) / float(PVS) - 1.0, 0.0, 1.0);
                 gl_PointSize = 1.0;
 
 
@@ -437,24 +370,18 @@
         </script>
 
 
-        <script id="main2Fragment" type="x-shader/x-fragment">#version 300 es
+        <script id="main2Fragment" type="x-shader/x-fragment">
             #define PI 3.141519
             precision mediump float;
 
             uniform float vitAtt;
             uniform vec2        gridSize;
             uniform vec2 resolution;
-            in vec4 particle;
-            in vec4 gridTexel;
-            in vec2 p0;
-            uniform float z1;
-            uniform float z2;
-            uniform float z3;
-            uniform float z4;
-            //in vec2 uv;
+            uniform float rebond;
 
-            out vec4 myOutputColor;
-
+            varying vec4 particle;
+            varying vec4 gridTexel;
+            varying vec2 p0;
 
 
 
@@ -477,7 +404,6 @@
 
                 nbr = gridTexel.b;
 
-             // if (nbr == -0.5) pos=p0;
                 if (nbr > 1.)
                // if (false)
                 {
@@ -491,7 +417,6 @@
         
 
 
-                   angle = random(pos.xy*gridTexel.a) * 6.28;
                     angle1 = atan(pr.y, pr.x);
                     // pour les points y>=0 atan retourne un angle entre 0 et PI
                     // pour les points y<0 atan retourne un angle entre 0 et -PI
@@ -506,44 +431,20 @@
                     pr.x = cos(newAngle) * dr;
                     pr.y = sin(newAngle) * dr;
 
-                    vit = (pg + pr) / att ;
+                    vit = (pg + pr) / (att-(nbr-2.0)*rebond) ;
 
                     //pos=p0;
+                   // if (nbr > 20.) pos=p0;
 
                 }
 
-                myOutputColor = vec4(pos, vit);
+                gl_FragColor = vec4(pos, vit);
 
             }
         </script>
 
 
-        <script id="copieVertex" type="x-shader/x-vertex">#version 300 es
-            in vec2 position;
-            in vec2 positionGl;
-
-            out vec2 vTexCoord;
-
-            void main() {
-                vTexCoord = position / float(512.0);
-                gl_Position = vec4(positionGl, 0.0, 1.0);
-                gl_PointSize = 1.0;
-            }
-        </script>
-
-        <script id="copieFragment" type="x-shader/x-fragment">#version 300 es
-            precision highp float;
-
-            uniform sampler2D toCopy;
-            in vec2 vTexCoord;
-
-            out vec4 myOutputColor;
-
-
-            void main() {
-                myOutputColor = texture(toCopy, vTexCoord);
-            }
-        </script>
+   
 
     </head>
 
@@ -557,98 +458,132 @@
             <input id="showgui" type="button" value="show" onclick="showgui()">
         </div>
         <div id="gui">
-            <div>
-                <input id="ir1" type="range" min="-8" max="18" value="-33" step="0.01" oninput="ir1(this.value)">
-                <input id="in1" type="number" min="-8" max="18" value="-33" step="0.01" oninput="in1(this.value)">
+
+
+            <div class="cursor">
+                <input id="delta1Curseur" type="range"  min="0" max="1" value="0.07" step="0.01" oninput="delta1Curseur(this.value)" />
+                <input id="delta1Text"    type="number" min="0" max="1" value="0.07" step="0.01" oninput="delta1Text(this.value)" />
+                <label>delta1</label>
+            </div>
+
+            <div class="cursor">
+                <input id="delta2Curseur" type="range"  min="0" max="60" value="32" step="0.1" oninput="delta2Curseur(this.value)" />
+                <input id="delta2Text"    type="number" min="0" max="60" value="32" step="0.1" oninput="delta2Text(this.value)" />
+                <label>delta2</label>
+            </div>
+
+
+            <div class="cursor">
+                <input id="rebondCurseur" type="range"  min="0" max="1" value="0" step="0.005" oninput="rebondCurseur(this.value)" />
+                <input id="rebondText"    type="number" min="0" max="1" value="0" step="0.005" oninput="rebondText(this.value)" />
+                <label>rebond</label>
+            </div>
+
+            <div class="cursor">
+                <input id="maxAngleCurseur" type="range" min="0" max="6.29" value="6.28" step="0.1" oninput="maxAngleCurseur(this.value)" />
+                <input id="maxAngleText" type="number" min="0" max="6.29" value="6.28" step="0.1" oninput="maxAngleText(this.value)" />
+                <label>Alea</label>
+            </div>
+
+            <div class="cursor">
+                <input id="taillePointCurseur" type="range" min="1" max="50" value="1" step="1" oninput="taillePointCurseur(this.value)">
+                <input id="taillePointText" type="number" min="1" max="50" value="1" step="1" oninput="taillePointText(this.value)">
+                <label>pointSize</label>
+            </div>
+            <div class="cursor">
+                <input id="ir1" type="range" min="-8" max="18" value="0" step="0.01" oninput="ir1(this.value)">
+                <input id="in1" type="number" min="-8" max="18" value="0" step="0.01" oninput="in1(this.value)">
                 <input id="reset" type="button" value="Reset" onclick="r1()">
                 <label>mouseforce</label>
             </div>
 
-            <div>
+            <div class="cursor">
                 <input id="ir2" type="range" min="0" max="2" value="1.0" step="0.01" oninput="ir2(this.value)">
                 <input id="in2" type="number" min="0" max="2" value="1.0" step="0.01" oninput="in2(this.value)">
                 <input id="reset" type="button" value="Reset" onclick="r2()">
                 <label>damping mouse</label>
             </div>
 
-            <div>
-                <input id="ir3" type="range" min="-44" max="44" value="0" step="0.01" oninput="ir3(this.value)" />
-                <input id="in3" type="number" min="-44" max="44" value="0" step="0.01" oninput="in3(this.value)" />
+            <div class="cursor">
+                <input id="ir3" type="range" min="-44" max="444" value="0" step="0.1" oninput="ir3(this.value)" />
+                <input id="in3" type="number" min="-44" max="444" value="0" step="0.1" oninput="in3(this.value)" />
                 <input id="reset" type="button" value="Reset" onclick="r3()">
                 <label>force to image</label>
             </div>
 
-            <div>
-                <input id="ir4" type="range" min="0" max="2" value="0.92" step="0.01" oninput="ir4(this.value)" />
-                <input id="in4" type="number" min="0" max="2" value="0.92" step="0.01" oninput="in4(this.value)" />
+            <div class="cursor">
+                <input id="ir4" type="range" min="0" max="2" value="1" step="0.01" oninput="ir4(this.value)" />
+                <input id="in4" type="number" min="0" max="2" value="1" step="0.01" oninput="in4(this.value)" />
                 <input id="reset" type="button" value="Reset" onclick="r4()">
                 <label>slowdown</label>
             </div>
 
-            <div>
-                <input id="ir5" type="range" min="1" max="3" value="1.72" step="0.01" oninput="ir5(this.value)" />
-                <input id="in5" type="number" min="1" max="3" value="1.72" step="0.01" oninput="in5(this.value)" />
+            <div class="cursor">
+                <input id="ir5" type="range" min="1" max="3" value="2" step="0.01" oninput="ir5(this.value)" />
+                <input id="in5" type="number" min="1" max="3" value="2" step="0.01" oninput="in5(this.value)" />
                 <input id="reset" type="button" value="Reset" onclick="r5()">
                 <label>vitt-att</label>
             </div>
 
-            <div>
-                <input id="ir6" type="range" min="0.001" max="0.1" value="0.3" step="0.001" oninput="ir6(this.value)" />
-                <input id="in6" type="number" min="0.001" max="0.1" value="0.3" step="0.001" oninput="in6(this.value)" />
+            <div class="cursor">
+                <input id="ir6" type="range" min="0.001" max="1" value="0.150" step="0.001" oninput="ir6(this.value)" />
+                <input id="in6" type="number" min="0.001" max="1" value="0.150" step="0.001" oninput="in6(this.value)" />
                 <input id="reset" type="button" value="Reset" onclick="r6()">
                 <label>seuil</label>
             </div>
 
-            <div>
+            <div class="cursor">
                 <input id="ir7" type="range" min="0.001" max="0.5" value="0.108" step="0.001" oninput="ir7(this.value)" />
                 <input id="in7" type="number" min="0.001" max="0.5" value="0.108" step="0.001" oninput="in7(this.value)" />
                 <input id="reset" type="button" value="Reset" onclick="r7()">
                 <label>seuil-origin</label>
             </div>
 
-            <div>
-                <input id="ir8" type="range" min="0" max="0.1" value="0.002" step="0.001" oninput="ir8(this.value)" />
-                <input id="in8" type="number" min="0" max="0.1" value="0.002" step="0.001" oninput="in8(this.value)" />
+            <div class="cursor">
+                <input id="ir8" type="range" min="0" max="1" value="0.001" step="0.001" oninput="ir8(this.value)" />
+                <input id="in8" type="number" min="0" max="1" value="0.001" step="0.001" oninput="in8(this.value)" />
                 <input id="reset" type="button" value="Reset" onclick="r8()">
                 <label>dt</label>
             </div>
 
-            <div>
+
+
+            <div class="cursor">
                 <input id="ir9" type="number" min="1"  value="1" onchange="ir9(this.value)" />
                 <label>scale</label>
             </div>
 
-            <div>
+            <div class="cursor">
                 <input id="ir10" type="range" min="1" max="200" value="21" onchange="ir10(this.value)" />
                 <label>rayon</label>
             </div>
 
-            <div>
+            <div class="cursor">
                 <input id="ir11" type="range" min="1" max="200" value="10" onchange="ir11(this.value)" />
                 <label>nbre de cercle</label>
             </div>
 
-            <div>
+            <div class="cursor">
                 <input id="ir12" type="range" min="1" max="200" value="47" onchange="ir12(this.value)" />
                 <label>delta cercle</label>
             </div>
 
-            <div>
+            <div class="cursor">
                 <input id="ir15" type="range" min="0" max="1" value="0" step="0.001" onchange="ir15(this.value)" />
                 <label>vitesse initiale</label>
             </div>
 
-            <div>
+            <div class="cursor">
                 <input id="taillePoint" type="range" min="1" max="20" value="1" step="1" onchange="taillePoint(this.value)" />
                 <label>taille point</label>
             </div>
 
-            <div>
+            <div class="cursor">
                 <input id="changeResolutionX" type="number" min="0" step="1" onchange="changeResolutionX(this.value)" />
                 <input id="changeResolutionY" type="number" min="0" step="1" oninput="changeResolutionY(this.value)" />
                 <label>resolution ecran</label>
             </div>
-            <div>
+            <div class="cursor">
                 <input id="in_retina" type="number" min="1" step="1" max="2" value="2" oninput="in_retina(this.value)" />
                 <label>retina</label>
             </div>
@@ -656,7 +591,7 @@
                 <select id="menuImage" onchange="changeImage()">
                     <option value="moi">moi</option>
                     <option value="chat">cat</option>
-                        <option value="cloud">nuage</option>
+                    <option value="cloud">nuage</option>
 
                 </select>
             </div>
