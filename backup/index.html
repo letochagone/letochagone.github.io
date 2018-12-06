@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <title>CSS Template</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                margin:0;
+                font-size:11px;
+            }
+
+
+            .cursor {
+                height: 1rem;
+            }
+            #toggle {
+                position:absolute;
+                left:1rem;
+                top:0;
+                line-height:2.5rem;
+                margin:0;
+                padding: 0;
+            }
+
+
+            #glcanvas {
+                height: 100vh;
+                width: 100vw;
+                display: block;
+                xposition: absolute;
+                left:0;
+                top:0;
+                //delete_uncomment
+                image-rendering: pixelated;
+            }
+
+
+
+            #showgui {
+                height:2rem;
+
+
+                margin:0;
+                display:none;
+                background-color: green;
+            }
+
+            #hidegui {
+                height:2rem;
+               margin:0;
+                background-color: green;
+
+
+            }
+
+            #gui {
+                padding:5px;
+                margin:2.5rem 0 0 1rem;
+                font-family:monospace;
+                background-color:rgba(233, 233, 233, 0.5);
+                position: absolute;
+                left:0;
+                top:0;
+            }
+
+
+
+.blender {
+    height:100%;
+}
+select {
+    height:100%;
+}
+
+.deroule {
+  display:inline-block;
+  height:100%;
+  xdisplay:flex;
+  border:1px solid;
+    xborder:0;
+  margin:0;
+  box-sizing: border-box;
+  
+}
+
+select {
+  height:100%;
+  font-size:100%;
+  width:100%;
+  border:0;
+  margin:0;
+  padding:0;
+}
+#buttonbackup {
+    width:100%;
+}
+
+div.param {
+
+  display:flex;
+  
+ height:25px;
+}
+
+.glider {
+  width:155px;
+  padding:0;
+  margin:auto 0;
+}
+input[type=range] {
+ -webkit-appearance: none;     
+  padding: 0;  
+  outline: none;
+  opacity:0.9;
+  cursor: pointer;
+  background-color : pink; 
+  height:100%;
+
+}
+.button {
+    padding: 3px;
+    background: bisque;
+    text-decoration: none;
+    border: 1px solid black;
+}
+.recordbutton {
+    height:100%;
+}
+.lesglisseurs .param:nth-child(even) .glider
+{
+      opacity: .8;
+  background-color: #ABC; 
+
+}
+.lesglisseurs .param:nth-child(even) .label
+{
+  xbackground-color: #ABC4; 
+
+}
+.texte {
+  padding:0;
+  width: 5em;
+  font-size:100%;
+  height:100%;
+  margin:0;
+  box-sizing: border-box;
+}
+input::-webkit-inner-spin-button {
+ -webkit-appearance: none;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+.label {
+  margin:auto 0;
+  height:100%;
+  line-height: 100%;
+  padding:0 0 0 15px;
+  font-size: large;
+    xtext-align:center;
+
+}
+.label:before {
+  content: "";
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+  line-height: normal;
+}
+.buttonPM {
+  width:2em;
+  font-size:100%;
+  padding:0;
+}
+
+
+        </style>
+
+
+        <script id="fastCopyVertex" type="x-shader/x-vertex">
+
+        attribute vec2 position;
+        
+        void main() {
+            gl_Position = vec4(position,0.,1.);
+            gl_PointSize= 1.0 ;
+        }
+
+        </script>
+
+        <script id="fastCopyFragment" type="x-shader/x-fragment">
+            
+        precision mediump float;
+        uniform sampler2D image;
+        uniform int PVS;
+
+
+        void main() {
+
+            gl_FragColor = texture2D(image, gl_FragCoord.xy/float(PVS));
+
+        }
+
+        </script>
+
+
+        <script id="gridVertex" type="x-shader/x-vertex">
+
+        uniform sampler2D   pvTex;
+        uniform vec2        gridSize;
+        uniform int         PVS;
+
+        attribute vec2 position;
+
+        varying vec2 vitesse;
+
+        void main() {
+
+            vec4 pos = texture2D(pvTex, position/float(PVS));
+
+            gl_Position = vec4(pos.xy, 0.0, 1.0);
+
+            vitesse = pos.zw;
+
+            gl_PointSize = 1.0;
+        }
+
+        </script>
+
+        <script id="gridFragment" type="x-shader/x-fragment">
+        
+        precision mediump float;
+
+        varying vec2 vitesse;
+
+
+        void main() {
+
+            gl_FragColor = vec4(vitesse, 1.0, 1.0);
+                // RG = vitesse qui s'additionnent (blur ad hoc)
+                // B = compteur de particules (blur ad hoc)
+
+        }
+        </script>
+
+        <script id="afficheurVertex" type="x-shader/x-vertex">
+            uniform sampler2D pvTex;
+            uniform int PVS;
+            uniform sampler2D mapColor;
+            uniform float pointSize;
+            uniform vec2 resolution;
+
+            attribute vec2 position;
+
+            varying vec4 color;
+
+
+            //out vec2 vUv;
+
+            void main() {
+
+               // vec2 pos = texelFetch(pvTex, ivec2(position), 0).xy;
+                //vec2 posPv = position / float(PVS);
+
+                vec2 pos = texture2D(pvTex,position/float(PVS)).xy ;
+
+
+                //webgl1 vec2 pos = texture2D(pvTex,position/float(PVS)).xy ;
+
+               // pos= -1.0 + (2.0 * floor((pos+1.0) / 2.0 * resolution) + 1.0) / resolution; 
+
+                gl_Position = vec4(pos, 0.0, 1.0); 
+                gl_PointSize = pointSize;
+
+                //color = texelFetch(mapColor, ivec2(position), 0);
+
+
+
+                color = texture2D(mapColor, position/float(PVS));
+
+
+
+
+            }
+        </script>
+
+        <script id="afficheurFragment" type="x-shader/x-fragment">
+
+            precision mediump float;
+
+            varying vec4 color;
+
+            uniform float delta2 ;
+            uniform float alpha;
+            uniform float lumi;
+            uniform float flamme;
+
+
+            void main() {
+
+                //vec2 fp = 2.0 * gl_PointCoord - 1.0;
+                //float d = length(fp);
+                // if (d > 1.) discard;
+                //vec3 col1 = vec3 ( 1. , 0.27 , 0.);
+                //vec3 col2 = vec3 ( 1. , 0.79 , 0.);
+      
+
+
+
+                float transp;
+                vec3 col1 = vec3(delta2 , lumi * 2., lumi) ;
+                vec2 fp = 2.0 * gl_PointCoord - 1.0;
+                float d = length(fp);
+                if (d > 0.) transp=alpha; else transp=d;
+                gl_FragColor =  vec4(col1,transp);
+                if (flamme > 0.) gl_FragColor = vec4( color.rgb * flamme,d);
+
+            }
+
+        </script>
+
+   
+
+     
+
+
+        <script id="main2Vertex" type="x-shader/x-vertex">
+            precision mediump float;
+            precision mediump int;
+
+            attribute vec2 position;
+
+            uniform int         PVS;
+            uniform sampler2D   pvTex;
+            uniform sampler2D   gridTex;
+            //uniform sampler2D   T6;
+
+            uniform vec2 gridSize;
+            varying vec4 particle;
+            varying vec4 gridTexel;
+            //varying vec2 p0;
+            //out vec2 uv;
+
+            void main() {
+
+                vec2 pos = position / float(PVS);
+
+                particle = texture2D( pvTex , pos)   ;
+
+
+                //p0 = texture2D( T6, pos).xy;
+
+              //    vec2 posgrid=  floor( gridSize * (particle.xy + 1.0)/ 2.0)  / gridSize ;
+
+                vec2 posgrid = (particle.xy + 1.) / 2.;
+
+               gridTexel = texture2D( gridTex, posgrid);
+                //gridTexel=vec4(1.0,1.0,1.0,1.0);
+
+                            
+                gl_Position = vec4(   2. * pos + 1./float(PVS)  - 1. , 0. , 1. );
+
+                gl_PointSize = 1.0;
+
+
+
+            }
+        </script>
+
+
+        <script id="main2Fragment" type="x-shader/x-fragment">
+            #define PI 3.141519
+            precision mediump float;
+            precision mediump int;
+
+
+            uniform float choc;
+            uniform vec2 gridSize;
+            uniform vec2 resolution;
+            uniform float maxAngle;
+            uniform float angleBase;
+
+            varying vec4 particle;
+            varying vec4 gridTexel;
+            //varying vec2 p0;
+
+
+            uniform float dt;
+            uniform float force2;
+            uniform float force1;
+            uniform float force2s;
+            uniform float force1s;
+            uniform float forceMouse ;
+            uniform float slowdown;
+            uniform float gravity ;
+            uniform float seuil2;
+            uniform float seuil1;
+            uniform float seuilMouse ;
+            uniform vec2 mouseCoords;
+            uniform int click;
+            uniform int PVS;
+            uniform float fontaine;
+            uniform int collisionMax;
+
+            uniform sampler2D image1;
+            uniform sampler2D image2;
+            uniform sampler2D image1s;
+            uniform sampler2D image2s;
+
+
+
+            float random(vec2 co) {
+                return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+            }
+
+            void main() {
+
+
+             
+                float angle, angle1, nbr, angle2, dr, newAngle;
+
+
+                vec2 pos = particle.xy;
+                vec2 vit = particle.zw;
+
+
+                vec2 pos1     =     texture2D(image1 , gl_FragCoord.xy / float(PVS) ).xy ;
+                vec2 pos2     =     texture2D(image2 , gl_FragCoord.xy / float(PVS) ).xy ;
+
+                vec2 pos1s     =     texture2D(image1s , gl_FragCoord.xy / float(PVS) ).xy ;
+                vec2 pos2s     =     texture2D(image2s , gl_FragCoord.xy / float(PVS) ).xy ;
+
+                //  vec2 posF = -1.0+ (2.0* floor((pos+1.0)/2.0*resolution)+1.0) / resolution;
+                //  vec2 posgrid=  floor( resolution * (pos + 1.0)/ 2.0)  / resolution ;
+
+
+
+                vec2 mouseForce = vec2(0. , 0.) ;
+                if (click == 1 && forceMouse != 0.) {
+                    vec2 mouseVect = pos - mouseCoords;
+                    vec2 n_mouseVect = normalize(mouseVect);
+                    float mouseDist = dot(mouseVect,mouseVect);
+                    
+                    mouseDist = clamp(mouseDist,seuilMouse,10000.);
+
+
+                    mouseForce =   forceMouse  * n_mouseVect / mouseDist;
+
+                }
+                
+                vec2 f1= vec2(0. , 0.);
+                if (force1 != 0.) {
+                    vec2 v1 = pos1 - pos;
+                    vec2 nv1 = normalize(v1);
+                    float l1 = dot(v1,v1);
+                    l1 = clamp(l1,seuil1,10000.);
+
+
+                   // if (l1 < seuil1) { l1=seuil1; } 
+
+                    f1 = force1 * nv1 / l1;
+                }
+
+
+                vit = vit + (f1+mouseForce) * dt ;
+
+                pos = pos + vit  * dt ;
+                vit = vit * slowdown;
+
+
+                if (pos.x >= 1.0 || pos.x <= -1.0 || pos.y >=1.0 || pos.y <= -1.0) {
+                    if ( fontaine == 1.) pos = pos1 ; else pos = pos2;
+                    vit=vec2(0.,0.);
+                }
+
+                nbr = gridTexel.b;
+
+                if (nbr > float(collisionMax))
+                {
+                    vec2 vitS = gridTexel.xy;
+                    vec2 vit2 = vitS - vit;
+                    vit2 = vit2  / (nbr - 1.0);
+                    vec2 pr = vit - vit2;
+                    vec2 pg = vit + vit2;
+                    dr = length(pr);
+                    angle = gridTexel.a;// * maxAngle + angleBase ;
+        
+                    angle1 = atan(pr.y, pr.x);
+                    // pour les points y>=0 atan retourne un angle entre 0 et PI
+                    // pour les points y<0 atan retourne un angle entre 0 et -PI
+                    // donc pour avoir un angle entre 0 et 2Pi, on ajoute 2Pi :
+                    // le point (1,-1) retourne un atan -Pi/4, on ajoute 2Pi, = -Pi/4 + 8Pi/4 = 7pi/4
+
+                    if (angle1 < 0.0) {
+                        angle1 = angle1 + PI * 2.0;
+                    }
+
+                    newAngle = angle + angle1 ;
+                    pr.x = cos(newAngle) * dr;
+                    pr.y = sin(newAngle) * dr;
+
+                    vit = (pg + pr) / choc;
+
+
+                }
+
+                gl_FragColor = vec4(pos, vit);
+
+            }
+        </script>
+
+
+   
+
+    </head>
+
+
+    <body>
+        <canvas id="glcanvas"></canvas>
+
+
+        <div id="toggle">
+            <input id="hidegui" type="button" value="hide" onclick="hidegui()">
+            <input id="showgui" type="button" value="show" onclick="showgui()">
+        </div>
+
+        <div id="gui">
+
+            <div class="lesglisseurs">
+                <div class="param">
+                    <input id="alphaCurseur" class="glider" type=range min="0" max="1"    step="0.01" oninput="alphaCurseur(this.valueAsNumber)">
+                    <input id="alphaText" class="texte" type="number" oninput="alphaText(    this.valueAsNumber)">
+                    <button class="buttonPM" onclick="alpha_up(0.01,2,1)">+</button>
+                    <button class="buttonPM" onclick="alpha_up(0.01,2,-1)">-</button>
+                    <div class="label">alpha</div>
+                </div>
+  
+                <div class="param">
+                    <input  id="lumiCurseur" class="glider" type=range min="0" max="2" step="0.01" oninput="lumiCurseur( this.valueAsNumber)">
+                    <input  id="lumiText"    class="texte" type="number" oninput="lumiText(    this.valueAsNumber)">
+                    <button class="buttonPM" onclick="lumi_up(0.01,2,1)" >+</button>
+                    <button class="buttonPM" onclick="lumi_up(0.01,2,-1)">-</button>
+                    <div class="label">lumi</div>
+                </div>
+
+                <div class="param">
+                    <input  id="flammeCurseur" class="glider" type=range min="0" max="1" step="0.01" oninput="flammeCurseur( this.valueAsNumber)">
+                    <input  id="flammeText"    class="texte" type="number" oninput="flammeText(    this.valueAsNumber)">
+                    <button class="buttonPM" onclick="flamme_up(0.01,2,1)">+</button>
+                    <button class="buttonPM" onclick="flamme_up(0.01,2,-1)">-</button>
+                    <div class="label">flamme</div>
+                </div>
+
+
+                <div class="param">
+                    <input  id="force1Curseur" class="glider" type=range min="-8000" max="8000" step="0.01" oninput="force1Curseur( this.valueAsNumber)">
+                    <input  id="force1Text"    class="texte" type="number" oninput="force1Text(    this.valueAsNumber)">
+                    <button class="buttonPM" onclick="force1_up(1,1,1)">+</button>
+                    <button class="buttonPM" onclick="force1_up(1,1,-1)">-</button>
+                    <button class="buttonPM" onclick="resetForce1()">C</button>
+                    <div class="label">force1</div>
+                </div>
+
+                <div class="param">
+                    <input  id="force2Curseur" class="glider" type=range min="-800" max="800" oninput="force2Curseur( this.valueAsNumber)">
+                    <input  id="force2Text"    class="texte" type="number" oninput="force2Text(    this.valueAsNumber)">
+                    <button class="buttonPM" onclick="force2_up(1,1,1)">+</button>
+                    <button class="buttonPM" onclick="force2_up(1,1,-1)">-</button>
+                    <button class="buttonPM" onclick="resetForce2()">C</button>
+                    <div class="label">force2</div>
+                </div>
+
+                <div class="param">
+                    <input  id="gravityCurseur" class="glider" type=range min="-800" max="800" oninput="gravityCurseur( this.valueAsNumber)">
+                    <input  id="gravityText" class="texte" type="number" min="-800" max="800" oninput="gravityText( this.valueAsNumber)">
+                    <button class="buttonPM" onclick="resetGravity()">C</button>
+                    <div class="label">gravity</div>
+                </div>
+
+                <div class="param">
+                    <input  id="force1sCurseur" class="glider" type=range min="-800" max="800" oninput="force1sCurseur( this.valueAsNumber)">
+                    <input  id="force1sText"    class="texte" type="number" oninput="force1sText(    this.valueAsNumber)">
+                    <button class="buttonPM" onclick="force1s_up(1,1,1)">+</button>
+                    <button class="buttonPM" onclick="force1s_up(1,1,-1)">-</button>
+                    <button class="buttonPM" onclick="resetForce1s()">C</button>
+                    <div class="label">force1s</div>
+                </div>  
+
+                <div class="param">
+                    <input  id="force2sCurseur" class="glider" type=range min="-800" max="800" oninput="force2sCurseur( this.valueAsNumber)">
+                    <input  id="force2sText"    class="texte" type="number" oninput="force2sText(    this.valueAsNumber)">
+                    <button class="buttonPM" onclick="force2s_up(1,1,1)">+</button>
+                    <button class="buttonPM" onclick="force2s_up(1,1,-1)">-</button>
+                    <button class="buttonPM" onclick="resetForce2s()">C</button>
+                    <div class="label">force2s</div>
+                </div> 
+
+                <div class="param">
+                    <input  id="forceMouseCurseur" class="glider" type=range  step="0.01" min="-8000" max="8000" oninput="forceMouseCurseur( this.valueAsNumber)">
+                    <input  id="forceMouseText"    class="texte" type="number" oninput="forceMouseText(    this.valueAsNumber)">
+                    <button class="buttonPM" onclick="forceMouse_up(1,1,1)">+</button>
+                    <button class="buttonPM" onclick="forceMouse_up(1,1,-1)">-</button>
+                    <button class="buttonPM" onclick="resetForceMouse()" >C</button>
+                    <div class="label">forceMouse</div>
+                </div> 
+
+                <div class="param">
+                    <input  id="maxAngleCurseur" class="glider" type=range min="0" max="1" step="0.01" oninput="maxAngleCurseur( this.valueAsNumber)">
+                    <input  id="maxAngleText"    class="texte" type="number" oninput="maxAngleText(    this.valueAsNumber)">
+                    <div class="label">maxAngle</div>
+                </div>  
+
+
+                <div class="param">
+                    <input  id="angleBaseCurseur" class="glider" type="range"  min="0" max="6.3"  step="0.01" oninput="angleBaseCurseur(    this.valueAsNumber)">
+                    <input  id="angleBaseText"    class="texte"  type="number" oninput="angleBaseText(    this.valueAsNumber)">
+                    <div class="label">angleBase</div>
+                </div>
+
+                <div class="param">
+                    <input  id="slowdownCurseur" class="glider" type=range min="0" max="2" step="0.001" oninput="slowdownCurseur( this.valueAsNumber)">
+                    <input  id="slowdownText"    class="texte" type="number" oninput="slowdownText(    this.valueAsNumber)">
+                    <button class="buttonPM" onclick="slowdown_up(0.001,3,1)">+</button>
+                    <button class="buttonPM" onclick="slowdown_up(0.001,3,-1)">-</button>
+                    <button class="buttonPM" onclick="resetSlowdown()">C</button>
+                    <div class="label">slowdown</div>
+                </div> 
+
+                <div class="param">
+                    <input  id="chocCurseur" class="glider" type=range min="1" max="3" step="0.001" oninput="chocCurseur( this.valueAsNumber)">
+                    <input  id="chocText"    class="texte" type="number" oninput="chocText(    this.valueAsNumber)">
+                    <button class="buttonPM" onclick="choc_up(0.001,3,1)" >+</button>
+                    <button class="buttonPM" onclick="choc_up(0.001,3,-1)">-</button>
+                    <button class="buttonPM" onclick="resetChoc()">C</button>
+                    <div class="label">choc</div>
+                </div> 
+
+                <div class="param">
+                    <input  id="seuil1Curseur" class="glider" type=range min="0.001" max="1" step="0.001" oninput="seuil1Curseur( this.valueAsNumber)">
+                    <input  id="seuil1Text"    class="texte" type="number" oninput="seuil1Text(    this.valueAsNumber)">
+                    <button class="buttonPM">+</button>
+                    <button class="buttonPM">-</button>
+                    <div class="label">seuil1</div>
+                </div>
+
+                <div class="param">
+                    <input  id="seuil2Curseur" class="glider" type=range min="0.001" max="1" step="0.001" oninput="seuil2Curseur( this.valueAsNumber)">
+                    <input  id="seuil2Text"    class="texte" type="number" oninput="seuil2Text(    this.valueAsNumber)">
+                    <button class="buttonPM">+</button>
+                    <button class="buttonPM">-</button>
+                    <div class="label">seuil2</div>
+                </div>
+
+                <div class="param">
+                    <input  id="seuilMouseCurseur" class="glider" type=range min="0.001" max="1" step="0.001" oninput="seuilMouseCurseur( this.valueAsNumber)">
+                    <input  id="seuilMouseText"    class="texte" type="number" oninput="seuilMouseText(    this.valueAsNumber)">
+                    <button class="buttonPM">+</button>
+                    <button class="buttonPM">-</button>
+                    <div class="label">seuilMouse</div>
+                </div>
+
+                <div class="param">
+                    <input  id="dtCurseur" class="glider" type=range min="0.0001" max="4" step="0.0001" oninput="dtCurseur(this.valueAsNumber)">
+                    <input  id="dtText"    class="texte" type="number" oninput="dtText(this.valueAsNumber)">
+                    <button class="buttonPM" >+</button>
+                    <button class="buttonPM" >-</button>
+                    <div class="label">dt</div>
+                </div>
+
+                <div class="param">
+                    <input  id="scaleText"    class="texte" type="number" >
+                    <button class="buttonPM" onclick="scale_up(1,1,1)" >+</button>
+                    <button class="buttonPM" onclick="scale_up(1,1,-1)" >-</button>
+                    <div class="label">scale</div>
+                </div>
+
+                <div class="param">
+                    <input  id="gridStepText"    class="texte"  type="number" >
+                    <button class="buttonPM" onclick="grid_up(1,1,1)" >+</button>
+                    <button class="buttonPM" onclick="grid_up(1,1,-1)">-</button>
+                    <div class="label">gridStep</div>
+                </div>
+
+                <div class="param">
+                    <input  id="delta2Curseur" class="glider" type="range"  min="0" max="1"  step="0.01" oninput="delta2Curseur(    this.valueAsNumber)">
+                    <input  id="delta2Text"    class="texte"  type="number" oninput="delta2Text(    this.valueAsNumber)">
+                    <button class="buttonPM">+</button>
+                    <button class="buttonPM">-</button>
+                    <div class="label">delta2</div>
+                </div>
+
+                <div class="param">
+                    <input  id="pointSizeText" class="texte" type="number"  min="1" max="40"  step="1" >
+                    <button class="buttonPM" onclick="pointSize_up(1,1,1)">+</button>
+                    <button class="buttonPM" onclick="pointSize_up(1,1,-1)">-</button>
+                    <div class="label">pointSize</div>
+                </div>
+
+
+                <div class="param">
+                    <input  id="collisionMaxText" class="texte" type="number"  min="1" max="40"  step="1" onchange="collisionMaxText(this.valueAsNumber)" >
+                    <div class="label">collisionMax</div>
+                </div>
+                <div class="param">
+                    <input  id="vit0Curseur" class="glider" type="range"  min="0" max="1"  step=".01" oninput="vit0Curseur(this.valueAsNumber)" >
+                    <div class="label">vit0</div>
+                </div>
+
+                <div class="param">
+                    <div class="deroule">
+                        <select id="blend1" onchange="blend1()">
+                            <option value="ZERO">ZERO</option>
+                            <option value="ONE">ONE</option>
+                            <option value="SRC_COLOR">SRC_COLOR</option>
+                            <option value="ONE_MINUS_SRC_COLOR">ONE_MINUS_SRC_COLOR</option>
+                            <option value="DST_COLOR">DST_COLOR</option>
+                            <option value="ONE_MINUS_DST_COLOR">ONE_MINUS_DST_COLOR</option>
+                            <option value="SRC_ALPHA">SRC_ALPHA</option>
+                            <option value="ONE_MINUS_SRC_ALPHA">ONE_MINUS_SRC_ALPHA</option>
+                            <option value="CONSTANT_COLOR">CONSTANT_COLOR</option>
+                            <option value="ONE_MINUS_CONSTANT_ALPHA">ONE_MINUS_CONSTANT_ALPHA</option>
+                            <option value="SRC_ALPHA_SATURATE">SRC_ALPHA_SATURATE</option>
+                        </select>
+                    </div>
+                    <div class="deroule">
+                        <select id="blend2" onchange="blend2()">
+                            <option value="ZERO">ZERO</option>
+                            <option value="ONE">ONE</option>
+                            <option value="SRC_COLOR">SRC_COLOR</option>
+                            <option value="ONE_MINUS_SRC_COLOR">ONE_MINUS_SRC_COLOR</option>
+                            <option value="DST_COLOR">DST_COLOR</option>
+                            <option value="ONE_MINUS_DST_COLOR">ONE_MINUS_DST_COLOR</option>
+                            <option value="SRC_ALPHA">SRC_ALPHA</option>
+                            <option value="ONE_MINUS_SRC_ALPHA">ONE_MINUS_SRC_ALPHA</option>
+                            <option value="CONSTANT_COLOR">CONSTANT_COLOR</option>
+                            <option value="ONE_MINUS_CONSTANT_ALPHA">ONE_MINUS_CONSTANT_ALPHA</option>
+                            <option value="SRC_ALPHA_SATURATE">SRC_ALPHA_SATURATE</option>
+                        </select>
+                    </div>
+                </div>
+              
+                <div class="param">
+                    <div class="deroule">
+                        <select id="menuPreset" oninput="menuPreset()">
+                            <option value="start">start</option>
+                            <option value="potj">potj</option>
+                            <option value="potk">potk</option>
+                            <option value="potl">potl</option>
+                            <option value="potm">potm</option>
+                            <option value="potn">potn</option>
+                            <option value="potp">potp</option>
+                            <option value="potq">potq</option>
+                            <option value="potr">potr</option>
+                            <option value="pots">pots</option>
+                            <option value="pott">pott</option>
+                            <option value="potu">potu</option>
+                            <option value="potv">potv</option>
+                            <option value="potw">potw</option>
+                        </select>
+                    </div>
+                    <div class="label">preset</div>
+                </div>
+                
+                <div class="param">
+                    <button id="buttonbackup" onclick="backuparam()" >Backup parameters</button>
+                </div>
+
+                <div class="param">
+                    <a  class="button" href="#" id="start-capturing-button">Start recording</a>
+                    <a  class="button" href="#" id="download-video-button" >Stop recording and view capture</a>
+                </div>
+
+                <div class="param">
+                    <div id="record">
+                        <button class="recordbutton" id="record" >Start Recording</button>
+                        <button class="recordbutton"  id="play" disabled>Play</button>
+                        <button class="recordbutton"  id="download" disabled>Download</button>
+                    </div>
+                </div>
+
+
+
+            </div>           
+
+            
+
+
+
+        </div>
+
+    <xvideo id="recorded" playsinline loop></xvideo>
+
+
+    <script src="CCapture.all.min.js"></script>
+
+    <script src="webgl-demo.js" ></script>
+</body>
+
+</html>
