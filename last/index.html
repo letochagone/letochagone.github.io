@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <title>CSS Template</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+        <style>
+            body {
+                margin:0;
+            }
+
+            input[type="number"] {
+                font-family: courier;
+                width:15ch;
+
+            }
+            .step[type="number"] {
+                width:9ch;
+            }
+
+    
+            #toggle {
+                position:absolute;
+                left:1rem;
+                top:0;
+                line-height:2.5rem;
+                margin:0;
+                padding: 0;
+            }
+
+
+            #glcanvas {
+        
+                xdisplay: block;
+                xposition: absolute;
+                xleft:0;
+                xtop:0;
+                image-rendering: pixelated;
+            }
+
+            #telecran {
+                display:none;
+
+            }
+
+   
+            #showgui {
+                height:2rem;
+
+                margin:0;
+                display:none;
+                background-color: green;
+            }
+
+            #hidegui {
+                height:2rem;
+                margin:0;
+                background-color: green;
+
+
+            }
+
+            #gui {
+                padding:5px;
+                margin:2.5rem 0 0 1rem;
+                font-family:monospace;
+                background-color:rgba(233, 233, 233, 0.5);
+                position: fixed;
+                right:0;
+                bottom:0;
+            }
+            video {
+                xdisplay:none;
+            }
+            
+
+
+
+
+
+
+        </style>
+
+
+
+       
+
+
+
+        <script id="gridVertex" type="x-shader/x-vertex">
+
+        uniform sampler2D   pvTex;
+        uniform vec2        gridSize;
+        uniform float         PVS;
+
+        attribute vec2 position;
+
+        varying vec2 vitesse;
+
+        void main() {
+
+            vec4 pos = texture2D(pvTex, position/PVS);
+
+
+            gl_Position = vec4(pos.xy, 0, 1);
+
+            vitesse = pos.zw;
+
+            gl_PointSize = 1.0;
+        }
+
+        </script>
+
+        <script id="gridFragment" type="x-shader/x-fragment">
+        
+        precision mediump float;
+
+        varying vec2 vitesse;
+
+
+        void main() {
+
+            gl_FragColor = vec4(vitesse, 1,0);
+                // RG = vitesse qui s'additionnent (blur ad hoc)
+                // B = compteur de particules (blur ad hoc)
+
+        }
+        </script>
+
+        <script id="afficheurVertex" type="x-shader/x-vertex">
+            uniform sampler2D pvTex;
+            uniform float PVS;
+            uniform sampler2D mapColor;
+            uniform float pointSize;
+            uniform vec2 resolution;
+
+            attribute vec2 position;
+
+            varying vec4 color;
+
+
+            //out vec2 vUv;
+
+            void main() {
+
+               // vec2 pos = texelFetch(pvTex, ivec2(position), 0).xy;
+                //vec2 posPv = position / PVS;
+
+                vec2 pos = texture2D(pvTex,position/PVS).xy ;
+
+
+                //webgl1 vec2 pos = texture2D(pvTex,position/float(PVS)).xy ;
+
+               // pos= -1.0 + (2.0 * floor((pos+1.0) / 2.0 * resolution) + 1.0) / resolution; 
+
+                gl_Position = vec4(pos.x, -pos.y,0, 1); 
+                gl_PointSize = pointSize;
+
+                //color = texelFetch(mapColor, ivec2(position), 0);
+
+
+
+                color = texture2D(mapColor, position/PVS);
+
+
+
+
+            }
+        </script>
+
+        <script id="afficheurFragment" type="x-shader/x-fragment">
+
+            precision mediump float;
+
+            varying vec4 color;
+
+            uniform float delta2 ;
+            uniform float alpha;
+            uniform float lumi;
+            uniform float flamme;
+            //uniform sampler2D particle; //delete
+
+
+
+            void main() {
+
+        
+      
+
+
+
+                //float transp;
+                //vec3 col1 = vec3(delta2 , lumi * 2., lumi) ;
+                //vec2 fp = 2.0 * gl_PointCoord - 1.0;
+                //float d = length(fp);
+                //if (d > 0.) transp=alpha; else transp=d;
+               // gl_FragColor =  vec4(col1,transp);
+              //  if (flamme > 0.) gl_FragColor = vec4( color.rgb * flamme,d); //décommenter
+               // gl_FragColor = texture2D(particle, gl_PointCoord) * vec4(color.rgb,lumi); //delete
+             // gl_FragColor=vec4(color.rgb * lumi,alpha);
+            //  gl_FragColor=vec4(1,0,0,1);
+float distanceFromCenter = distance( gl_PointCoord, vec2(0.5,0.5) );
+if ( distanceFromCenter >= 0.5 ) {
+   discard;  // don't draw this pixel!
+}
+       //    gl_FragColor=vec4( lumi,flamme,delta2,alpha) ;
+
+           gl_FragColor = vec4(lumi , flamme, delta2, distanceFromCenter * 2.0 );
+
+                    //  gl_FragColor=vec4( 1.,1.,1.,1.);
+
+            }
+
+        </script>
+
+   
+
+     
+
+
+        <script id="main2Vertex" type="x-shader/x-vertex">
+            precision highp float;
+            precision highp int;
+
+            attribute vec2 position;
+
+            uniform float         PVS;
+            uniform sampler2D   pvTex;
+            uniform sampler2D   gridTex;
+            uniform vec2        gridSize;
+
+            varying vec4 particle;
+            varying vec4 gridTexel;
+
+            void main() {
+
+                vec2 pos = position / PVS;
+
+                particle = texture2D( pvTex , pos);
+
+                vec2 posgrid = (particle.xy + 1.) / 2. ;     //  =  floor( gridSize * (particle.xy + 1.0)/ 2.0)  / gridSize ;
+
+                gridTexel = texture2D( gridTex, posgrid);
+            
+                gl_Position = vec4(   2. * pos + 1./PVS  - 1. , 0 , 1 );
+
+                gl_PointSize = 1.0;
+            }
+        </script>
+
+
+        <script id="main2Fragment" type="x-shader/x-fragment">
+            #define PI 3.141519
+            precision highp float;
+            precision highp int;
+
+            uniform float choc;
+            uniform vec2 gridSize;
+            uniform vec2 resolution;
+            uniform float maxAngle;
+            uniform float angleBase;
+            uniform float dt;
+            uniform float force;
+            uniform float forceMouse ;
+            uniform float slowdown;
+            uniform float gravity ;
+            uniform float seuil;
+            uniform float seuilMouse ;
+            uniform float uVelocityMax;
+            uniform float normalForce;
+
+
+            uniform vec2 mouseCoords;
+            uniform int click;
+            uniform float PVS;
+            uniform float collisionMax;
+            uniform sampler2D image1;
+            uniform sampler2D textureInput;
+
+            varying vec4 particle;
+            varying vec4 gridTexel;
+
+            float random(vec2 co) {
+                return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+            }
+
+
+
+            vec4 threshold(sampler2D image, vec2 uv, float threshold, float smoothness) {
+                
+                vec4 px = texture2D(image, uv);
+
+                float lum = dot(px, vec4(0.299,0.587,0.114,0.0));
+
+                return vec4(vec3(smoothstep(threshold, threshold + smoothness, lum)), 1.0);
+            }
+
+            vec4 normalMap(sampler2D image, vec2 uv) {
+                const vec3 offsets = vec3(0.0, 1., -1.);
+                vec4 left   = texture2D(image, uv + offsets.zx / resolution);
+                vec4 right  = texture2D(image, uv + offsets.yx / resolution);
+                vec4 top    = texture2D(image, uv + offsets.xz / resolution);
+                vec4 bottom = texture2D(image, uv + offsets.xy / resolution);
+                vec4 color  = vec4(1.0) - vec4((left.r - right.r) * 0.5 + 0.5, (top.r - bottom.r) * 0.5 + 0.5, 0., 1.0);
+              //  color  =  vec4((left.r - right.r) * 0.5 +0.5, (top.r - bottom.r) * 0.5 + 0.5, 0., 1.0);
+
+                return color;
+            }
+
+
+
+
+
+            void main() {
+
+                float angle, angle1, nbr, angle2, dr, newAngle;
+
+                vec2 pos = particle.xy;
+                vec2 vit = particle.zw;
+
+                vec4 pos1  =     texture2D( image1 ,  gl_FragCoord.xy / PVS ) ;
+                vec2 mm = normalMap(textureInput , (pos+1.)/2. ).xy  - 0.5;
+
+
+                //  vec2 posF = -1.0+ (2.0* floor((pos+1.0)/2.0*resolution)+1.0) / resolution;
+                //  vec2 posgrid=  floor( resolution * (pos + 1.0)/ 2.0)  / resolution ;
+
+                vec2 mouseForce = vec2(0) ;
+                if (click == 1 && forceMouse != 0.) {
+                    vec2 mouseVect = pos - mouseCoords;
+                    vec2 n_mouseVect = normalize(mouseVect);
+                    float mouseDist = max(  dot(mouseVect,mouseVect), seuilMouse );
+                    
+                   // mouseDist = clamp(mouseDist,seuilMouse,1000000.);
+
+                    mouseForce =   forceMouse  * n_mouseVect / mouseDist;
+
+                }
+                
+                vec2 f1= vec2(0);
+                if (force != 0.) {
+
+                    vec2 v1 = pos1.xy - pos;
+                    vec2 nv1 = normalize(v1);
+                    float l1 = max(  dot(v1,v1),seuil )  ;
+                    f1 = force * nv1 / l1;
+
+
+                }
+
+
+                vec2  force_totale =   f1 + mouseForce + vec2(0,gravity) ;
+   
+
+
+                nbr = gridTexel.b;
+                if (nbr > collisionMax)
+                {
+                    vec2 vitS = gridTexel.xy;
+                    vec2 vit2 = (vitS - vit)/(nbr-1.0);
+                    vec2 pr = vit - vit2;
+                    vec2 pg = vit + vit2;
+                    dr = length(pr);
+                    angle = gridTexel.a * maxAngle; // + angleBase;  
+        
+                    angle1 = atan(pr.y, pr.x);
+                    // pour les points y>=0 atan retourne un angle entre 0 et PI
+                    // pour les points y<0 atan retourne un angle entre 0 et -PI
+                    // donc pour avoir un angle entre 0 et 2Pi, on ajoute 2Pi :
+                    // le point (1,-1) retourne un atan -Pi/4, on ajoute 2Pi, = -Pi/4 + 8Pi/4 = 7pi/4
+
+                    if (angle1 < 0.0) {
+                        angle1 = angle1 + PI * 2.0;
+                    }
+
+                    newAngle = angle + angle1 ;
+                    pr = vec2( cos(newAngle) , sin(newAngle)) * dr ;
+
+                    vit = (pg + pr) / choc;
+
+
+
+                }
+
+                vit += mm * normalForce + force_totale * dt ;
+                
+                if(vit.x > uVelocityMax || vit.x < -uVelocityMax || vit.y > uVelocityMax || vit.y < -uVelocityMax)
+                    vit *= slowdown;
+             
+                pos += vit * dt ;
+
+
+                if (pos.x >= 1.0 || pos.x <= -1.0 || pos.y >=1.0 || pos.y <= -1.0) {
+               //   pos = pos1.xy+vec2((2.*random(pos.xy)-1.)*.001,(2.*random(pos.yx)-1.)*.001);
+              pos=pos1.xy;
+                 // pos = vec2(0);
+                 pos= vec2( (random(vit) - 0.5)*2.0 , (random(pos) - 0.5)*2.0);  
+              vit=vec2(0);
+                }
+
+   
+
+                gl_FragColor = vec4(pos, vit);
+
+            }
+        </script>
+
+
+        <script id="sobelVertex" type="x-shader/x-vertex">
+            attribute vec2 coordinates;
+
+            void main() {
+                gl_Position = vec4(coordinates,0.0,1.0);
+                gl_PointSize=1.0;
+            }
+
+        </script>
+
+
+
+        <script id="sobelFragment" type="x-shader/x-fragment">
+            #extension GL_OES_standard_derivatives : enable
+
+            precision mediump float;
+            uniform sampler2D texture;
+            uniform vec2 resolution;
+            uniform float brightness ;
+            uniform float contrast ;
+            uniform float saturation ;
+            uniform float threshold ;
+
+            #define M_PI 3.1415926535897932384626433832795
+
+
+
+            float sigmoid(float a, float f) {
+                return 1.0/(1.0+exp(-f*a));
+            }
+ 
+
+            mat4 brightnessMatrix( float brightness ) {
+                return mat4( 1, 0, 0, 0,
+                             0, 1, 0, 0,
+                            0, 0, 1, 0,
+                            brightness, brightness, brightness, 1 );
+            }
+
+            mat4 contrastMatrix( float contrast ) {
+                float t = ( 1.0 - contrast ) / 2.0;
+    
+                return mat4( contrast, 0, 0, 0,
+                             0, contrast, 0, 0,
+                 0, 0, contrast, 0,
+                 t, t, t, 1 );
+
+            }
+
+            mat4 saturationMatrix( float saturation ) {
+                vec3 luminance = vec3( 0.3086, 0.6094, 0.0820 );
+    
+                float oneMinusSat = 1.0 - saturation;
+    
+                vec3 red = vec3( luminance.x * oneMinusSat );
+                red+= vec3( saturation, 0, 0 );
+    
+                vec3 green = vec3( luminance.y * oneMinusSat );
+                green += vec3( 0, saturation, 0 );
+    
+                vec3 blue = vec3( luminance.z * oneMinusSat );
+                blue += vec3( 0, 0, saturation );
+    
+                return mat4( red,     0,
+                     green,   0,
+                    blue,    0,
+                    0, 0, 0, 1 );
+            }
+
+
+
+
+            void main() {
+                float arg= 1. ;
+                float dx = 1.0/resolution.x;
+                float dy = 1.0/resolution.y;
+                vec2 vTexCoord = gl_FragCoord.xy / resolution;
+
+
+                vec3 c1 = texture2D(texture, vTexCoord + vec2( dx, -dy)).rgb
+                    + texture2D(texture, vTexCoord + vec2( dx, 0.0)).rgb * 2.0
+                    + texture2D(texture, vTexCoord + vec2( dx,  dy)).rgb
+                    - texture2D(texture, vTexCoord + vec2(-dx, -dy)).rgb
+                    - texture2D(texture, vTexCoord + vec2(-dx, 0.0)).rgb * 2.0
+                    - texture2D(texture, vTexCoord + vec2(-dx,  dy)).rgb;
+
+                vec3 c2 = texture2D(texture, vTexCoord + vec2(-dx,  dy)).rgb
+                    + texture2D(texture, vTexCoord + vec2(0.0,  dy)).rgb * 2.0
+                    + texture2D(texture, vTexCoord + vec2( dx,  dy)).rgb
+                    - texture2D(texture, vTexCoord + vec2(-dx, -dy)).rgb
+                    - texture2D(texture, vTexCoord + vec2(0.0, -dy)).rgb * 2.0
+                    - texture2D(texture, vTexCoord + vec2( dx, -dy)).rgb;
+
+                float a = texture2D(texture, vTexCoord).a;
+                gl_FragColor = vec4(1.-max(vec3(0), sqrt(c1*c1+c2*c2)-(1.0-arg))/arg, a);
+                
+                
+                vec4 color = texture2D(texture,vTexCoord);
+                vec3 color_resolution = vec3(5.0, 5.0, 5.0);
+                vec3 color_bands = floor(color.rgb * color_resolution) / (color_resolution - 1.0);
+            //    gl_FragColor = vec4(min(color_bands, 1.0), color.a);
+
+
+                    float v = (0.2126*color.r + 0.7152*color.g + 0.0722*color.b >= threshold) ? 1.0 : 0.0;
+                //    color = vec4(v);
+   gl_FragColor = brightnessMatrix( brightness ) * contrastMatrix( contrast ) *  saturationMatrix( saturation ) * color;
+
+
+/*
+    
+    float col = gl_FragColor.r - threshold;
+    
+    vec2 grad;
+    grad.x = dFdx(col);
+    grad.y = dFdy(col);
+    const float spread = 1.0;
+
+    // Dividing by the gradient was inspired by Inigo :) Thought it would be cool to try it
+    float result = smoothstep(-spread, spread, col / length(grad));
+    
+    gl_FragColor = vec4(result * vec3(1.0), 1.0);
+    */
+
+            }
+
+
+
+        </script>
+  
+
+       
+   
+    </head>
+
+
+    <body>
+        <canvas id="glcanvas"></canvas>
+        <canvas id="telecran"></canvas>
+        <canvas id="traitement"></canvas>
+
+
+
+
+        <div id="toggle">
+            <input id="hidegui" type="button" value="hide" onclick="hidegui()">
+            <input id="showgui" type="button" value="show" onclick="showgui()">
+        </div>
+
+        <div id="gui">
+
+            <form       class= "f"       id=   "alpha">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >alpha</label>
+            </form>
+
+            <form       class= "f"       id=   "lumi">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >lumi</label>
+            </form>
+
+            <form       class= "f"       id=   "flamme">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >flamme</label>
+            </form>
+
+            <form       class= "f"       id=   "delta2">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >delta2</label>
+            </form>
+
+            <form       class= "f"       id=   "force">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >force</label>
+            </form>
+
+            <form       class= "f"       id=   "gravity">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >gravity</label>
+            </form>
+
+            <form       class= "f"       id=   "forceMouse">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >forceMouse</label>
+            </form>
+
+            <form       class= "f"       id=   "seuilMouse">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >seuilMouse</label>
+            </form>
+
+            <form       class= "f"       id=   "maxAngle">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >maxAngle</label>
+            </form>
+
+            <form       class= "f"       id=   "angleBase">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >angleBase</label>
+            </form>
+
+            <form       class= "f"       id=   "slowdown">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >slowdown</label>
+            </form>
+
+            <form       class= "f"       id=   "choc">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >choc</label>
+            </form>
+
+            <form       class= "f"       id=   "seuil">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >seuil</label>
+            </form>
+
+
+
+            <form       class= "f"       id=   "dt">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >dt</label>
+            </form>
+
+            <form       class= "f"       id=   "collisionMax">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >collisionMax</label>
+            </form>
+ 
+            <form       class= "f"       id=   "vit0">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >vit0</label>
+            </form>
+
+            <form       class= "f"       id=   "pointSize">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >pointSize</label>
+            </form>   
+
+            <form       class= "f"       id=   "uVelocityMax">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >uVelocityMax</label>
+            </form>
+
+
+            <form       class= "f"       id=   "normalForce">
+                <input  class= "curseur" type= "range"    >
+                <input  class= "valeur"  type= "number"   >
+                <input  class= "min"     type= "number"   >
+                <input  class= "max"     type= "number"   >
+                <input  class= "step"    type= "number"   >
+                <button class= "reset"                    >reset</button>
+                <label  class= "label"                    >normalForce</label>
+            </form>
+
+
+            <form       class= "f"       id=   "scale"    >
+                <input  class= "valeur"  type= "number" min="1" max="1000" >
+                <label  class= "label"                    >scale</label>
+            </form>
+
+            <form       class= "f"       id=   "gridStep" >
+                <input  class= "valeur"  type= "number"  min="1" max="20">
+                <label  class= "label"                    >gridStep</label>
+            </form>
+
+            <form       class= "f"       id= "brightness" >
+                <input  class= "curseur"  type= "range"  min="0" max="1" step="0.01">
+                <label  class= "label"  >BRI.</label>
+
+            </form>
+            <form       class= "f"       id= "contrast" >
+                <input  class= "curseur"  type= "range"  min="0" max="1" step="0.01">
+                <label  class= "label"  >CONT.</label>
+
+            </form>
+             <form       class= "f"       id= "saturation" >
+                <input  class= "curseur"  type= "range"  min="0" max="1" step="0.01">
+                <label  class= "label"  >SAT.</label>
+            </form>
+            
+            <form       class= "f"       id= "threshold" >
+                <input  class= "curseur"  type= "range"  min="0" max="1" step="0.01">
+                <label  class= "label"  >threshold</label>
+            </form>
+            <form id="blend" class="f">
+                <select id="blend1">
+                            <option value= "ZERO"                     >ZERO</option>
+                            <option value= "ONE"                      >ONE</option>
+                            <option value= "SRC_COLOR"                >SRC_COLOR</option>
+                            <option value= "ONE_MINUS_SRC_COLOR"      >ONE_MINUS_SRC_COLOR</option>
+                            <option value= "DST_COLOR"                >DST_COLOR</option>
+                            <option value= "ONE_MINUS_DST_COLOR"      >ONE_MINUS_DST_COLOR</option>
+                            <option value= "SRC_ALPHA"                >SRC_ALPHA</option>
+                            <option value= "ONE_MINUS_SRC_ALPHA"      >ONE_MINUS_SRC_ALPHA</option>
+                            <option value= "DST_ALPHA"                >DST_ALPHA</option>
+                            <option value= "ONE_MINUS_DST_ALPHA"      >ONE_MINUS_DST_ALPHA</option>
+                            <option value= "CONSTANT_COLOR"           >CONSTANT_COLOR</option>
+                            <option value= "ONE_MINUS_CONSTANT_COLOR" >ONE_MINUS_CONSTANT_COLOR</option>
+                            <option value= "CONSTANT_ALPHA"           >CONSTANT_ALPHA</option>
+                            <option value= "ONE_MINUS_CONSTANT_ALPHA" >ONE_MINUS_CONSTANT_ALPHA</option>
+                            <option value= "SRC_ALPHA_SATURATE"       >SRC_ALPHA_SATURATE</option>
+                </select>
+                <select id="blend2">
+                            <option value= "ZERO"                     >ZERO</option>
+                            <option value= "ONE"                      >ONE</option>
+                            <option value= "SRC_COLOR"                >SRC_COLOR</option>
+                            <option value= "ONE_MINUS_SRC_COLOR"      >ONE_MINUS_SRC_COLOR</option>
+                            <option value= "DST_COLOR"                >DST_COLOR</option>
+                            <option value= "ONE_MINUS_DST_COLOR"      >ONE_MINUS_DST_COLOR</option>
+                            <option value= "SRC_ALPHA"                >SRC_ALPHA</option>
+                            <option value= "ONE_MINUS_SRC_ALPHA"      >ONE_MINUS_SRC_ALPHA</option>
+                            <option value= "DST_ALPHA"                >DST_ALPHA</option>
+                            <option value= "ONE_MINUS_DST_ALPHA"      >ONE_MINUS_DST_ALPHA</option>
+                            <option value= "CONSTANT_COLOR"           >CONSTANT_COLOR</option>
+                            <option value= "ONE_MINUS_CONSTANT_COLOR" >ONE_MINUS_CONSTANT_COLOR</option>
+                            <option value= "CONSTANT_ALPHA"           >CONSTANT_ALPHA</option>
+                            <option value= "ONE_MINUS_CONSTANT_ALPHA" >ONE_MINUS_CONSTANT_ALPHA</option>
+                            <option value= "SRC_ALPHA_SATURATE"       >SRC_ALPHA_SATURATE</option>
+
+                </select>
+                <label class="label">blend mode</label>
+            </form>
+
+            <form id="preset" class="f">
+                <select>
+                    <option value="start">start</option>
+                    <option value="potj">potj</option>
+                    <option value="potw">potw</option>
+                </select>
+                <label class="label">preset</label>
+            </form>
+
+            <form class= "f" id= "saveModel">
+                <button>CONSOLE</button>
+            </form>
+  
+            <a  class="button" href="#" id="start-capturing-button">Start recording</a>
+            <a  class="button" href="#" id="download-video-button" >Stop recording and view capture</a>     
+
+        </div>
+
+   <!-- <script src="glue.js" async></script> -->
+
+    <script src="CCapture.all.min.js" async></script>
+    <script src="parametresGUI.js"></script>
+    <script src="webgl-demo.js" ></script>
+</body>
+</html>
