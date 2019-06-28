@@ -17,7 +17,7 @@ function updateModel() {
 
 
         gl.useProgram(afficheurShader);
-        gl.uniform1f(afficheurShader.PVS ,          PVS );
+        gl.uniform1f(afficheurShader.PVS ,          model.PVS.valeur.courante );
         gl.uniform1f(afficheurShader.alpha ,        model.alpha.valeur.courante);
         gl.uniform1f(afficheurShader.lumi ,         model.lumi.valeur.courante);
         gl.uniform1f(afficheurShader.flamme ,       model.flamme.valeur.courante);
@@ -38,7 +38,7 @@ function updateModel() {
         gl.uniform1f(main2Shader.seuilMouse,    model.seuilMouse.valeur.courante );
         gl.uniform1f(main2Shader.dt,            model.dt.valeur.courante       );
         gl.uniform1f(main2Shader.collisionMax,  model.collisionMax.valeur.courante );
-        gl.uniform1f(main2Shader.PVS ,          PVS             );
+        gl.uniform1f(main2Shader.PVS ,          model.PVS.valeur.courante             );
         gl.uniform1i(main2Shader.gridTex ,      2               );
         gl.uniform2f(main2Shader.gridSize ,     GRIDX, GRIDY    );
         gl.uniform2f(main2Shader.resolution ,   CSW, CSH        );
@@ -49,7 +49,7 @@ function updateModel() {
 
 
         gl.useProgram(gridShader);
-        gl.uniform1f(gridShader.PVS, PVS);
+        gl.uniform1f(gridShader.PVS, model.PVS.valeur.courante);
 
         gl_Traitement.useProgram(sobelShader);
         gl_Traitement.uniform1i(sobelShader.texture,7);
@@ -135,7 +135,7 @@ function fillGui() {
 
 
         if (!curseur && eventClass === 'valeur') { // le parametre n'a pas de curseur
-console.log("a");
+                console.log("a");
                 model[id].valeur.courante   = valeur.valueAsNumber ;
                 cancelAnimationFrame(req);
                 req = undefined ;
@@ -216,10 +216,26 @@ console.log("a");
           //  console.log(model);
 
         });
+    let resolution = document.querySelector("#resolution");
+    resolution.addEventListener('change', e => {
+        //start();
+        console.log("res");
+        cancelAnimationFrame(req);
+        req = undefined ;
+        CSW=640;
+        CSH=480;
+        webcamConstraints = vgaConstraints ;
+
+                 start();
+
+           // efface();
+           // DOM_LOADED_AND_LISTENING();
+          //  console.log(model);
+
+        });
 
 
-
-    for (let i=0; i < 26 ; i++) {
+    for (let i=0; i < 29 ; i++) {
 
         let id          = Object.keys(model)[i];
         let parametre   = document.querySelector("#"+id);
