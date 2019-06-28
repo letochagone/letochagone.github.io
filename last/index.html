@@ -206,9 +206,9 @@ float distanceFromCenter = distance( gl_PointCoord, vec2(0.5,0.5) );
 if ( distanceFromCenter >= 0.5 ) {
    discard;  // don't draw this pixel!
 }
-       //    gl_FragColor=vec4( lumi,flamme,delta2,alpha) ;
+          gl_FragColor=vec4( lumi,flamme,delta2,alpha) ;
 
-           gl_FragColor = vec4(lumi , flamme, delta2, distanceFromCenter * 2.0 );
+        //   gl_FragColor = vec4(lumi , flamme, delta2, distanceFromCenter * 2.0 );
 
                     //  gl_FragColor=vec4( 1.,1.,1.,1.);
 
@@ -548,6 +548,7 @@ if ( distanceFromCenter >= 0.5 ) {
         <canvas id="glcanvas"></canvas>
         <canvas id="telecran"></canvas>
         <canvas id="traitement"></canvas>
+        <video id="webcam"></video>
 
 
 
@@ -758,6 +759,10 @@ if ( distanceFromCenter >= 0.5 ) {
                 <label  class= "label"                    >scale</label>
             </form>
 
+            <form       class= "f"       id=   "PVS"    >
+                <input  class= "valeur"  type= "number"  >
+                <label  class= "label"                    >PVS</label>
+            </form>
             <form       class= "f"       id=   "gridStep" >
                 <input  class= "valeur"  type= "number"  min="1" max="20">
                 <label  class= "label"                    >gridStep</label>
@@ -781,6 +786,12 @@ if ( distanceFromCenter >= 0.5 ) {
             <form       class= "f"       id= "threshold" >
                 <input  class= "curseur"  type= "range"  min="0" max="1" step="0.01">
                 <label  class= "label"  >threshold</label>
+            </form>
+
+            <form class="f" id="resolution">
+                <input  class= "curseur"  type= "range"  min="1" max="3" step="1">
+                <label  class= "label"  >resolution</label>
+
             </form>
             <form id="blend" class="f">
                 <select id="blend1">
