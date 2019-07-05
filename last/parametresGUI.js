@@ -53,12 +53,24 @@ function updateModel() {
 
         gl_Traitement.useProgram(sobelShader);
         gl_Traitement.uniform1i(sobelShader.texture,7);
-        gl_Traitement.uniform2f(sobelShader.resolution, CSW  , CSH);
+        gl_Traitement.uniform2f(sobelShader.resolution, CSW_T  , CSH_T);
         gl_Traitement.uniform1f(sobelShader.brightness ,  model.brightness.valeur.courante );
         gl_Traitement.uniform1f(sobelShader.contrast ,    model.contrast.valeur.courante );
         gl_Traitement.uniform1f(sobelShader.saturation ,  model.saturation.valeur.courante );
         gl_Traitement.uniform1f(sobelShader.threshold ,   model.threshold.valeur.courante );
+var a=0.1;
+        gl_Traitement.uniform2f(sobelShader.px ,   1/ CSW , 1/CSH );
+        gl_Traitement.uniform1fv(sobelShader.m ,   new Float32Array(
 
+   [
+            1,  1, 1,
+            1, 1, 1,
+            1, 1, 1
+        ]
+            ) );
+
+
+        gl_Traitement.uniform1f(sobelShader.threshold ,   model.threshold.valeur.courante );
 
     
 }
@@ -121,7 +133,6 @@ function fillGui() {
             model[event.target.id].valeur.courante = event.target.value;
             return;
         }
-
         console.log("trace event");
         let id = event.target.parentNode.id ;
                 console.log(id);

@@ -93,7 +93,6 @@
         <script id="gridVertex" type="x-shader/x-vertex">
 
         uniform sampler2D   pvTex;
-        uniform vec2        gridSize;
         uniform float         PVS;
 
         attribute vec2 position;
@@ -147,9 +146,10 @@
             void main() {
 
                // vec2 pos = texelFetch(pvTex, ivec2(position), 0).xy;
-                //vec2 posPv = position / PVS;
+                
+                vec2 posPv = position / PVS;
 
-                vec2 pos = texture2D(pvTex,position/PVS).xy ;
+                vec2 pos = texture2D( pvTex , posPv ).xy ;
 
 
                 //webgl1 vec2 pos = texture2D(pvTex,position/float(PVS)).xy ;
@@ -163,8 +163,8 @@
 
 
 
-                color = texture2D(mapColor, position/PVS);
-
+               // color = texture2D(mapColor, posPv  );
+               color = vec4(1);
 
 
 
@@ -181,37 +181,15 @@
             uniform float alpha;
             uniform float lumi;
             uniform float flamme;
-            //uniform sampler2D particle; //delete
 
 
 
             void main() {
-
-        
-      
-
-
-
-                //float transp;
-                //vec3 col1 = vec3(delta2 , lumi * 2., lumi) ;
-                //vec2 fp = 2.0 * gl_PointCoord - 1.0;
-                //float d = length(fp);
-                //if (d > 0.) transp=alpha; else transp=d;
-               // gl_FragColor =  vec4(col1,transp);
-              //  if (flamme > 0.) gl_FragColor = vec4( color.rgb * flamme,d); //décommenter
-               // gl_FragColor = texture2D(particle, gl_PointCoord) * vec4(color.rgb,lumi); //delete
-             // gl_FragColor=vec4(color.rgb * lumi,alpha);
-            //  gl_FragColor=vec4(1,0,0,1);
-float distanceFromCenter = distance( gl_PointCoord, vec2(0.5,0.5) );
-if ( distanceFromCenter >= 0.5 ) {
-   discard;  // don't draw this pixel!
-}
-          gl_FragColor=vec4( lumi,flamme,delta2,alpha) ;
-
-        //   gl_FragColor = vec4(lumi , flamme, delta2, distanceFromCenter * 2.0 );
-
-                    //  gl_FragColor=vec4( 1.,1.,1.,1.);
-
+                float distanceFromCenter = distance( gl_PointCoord, vec2(0.5,0.5) );
+                if ( distanceFromCenter >= 0.5 ) {
+                    discard;  // don't draw this pixel!
+                }
+                gl_FragColor=vec4( lumi,flamme,delta2,alpha) ;
             }
 
         </script>
@@ -253,6 +231,8 @@ if ( distanceFromCenter >= 0.5 ) {
 
 
         <script id="main2Fragment" type="x-shader/x-fragment">
+            #extension GL_OES_standard_derivatives : enable
+
             #define PI 3.141519
             precision highp float;
             precision highp int;
@@ -299,22 +279,29 @@ if ( distanceFromCenter >= 0.5 ) {
             }
 
             vec4 normalMap(sampler2D image, vec2 uv) {
-                const vec3 offsets = vec3(0.0, 1., -1.);
-                vec4 left   = texture2D(image, uv + offsets.zx / resolution);
-                vec4 right  = texture2D(image, uv + offsets.yx / resolution);
-                vec4 top    = texture2D(image, uv + offsets.xz / resolution);
-                vec4 bottom = texture2D(image, uv + offsets.xy / resolution);
-                vec4 color  = vec4(1.0) - vec4((left.r - right.r) * 0.5 + 0.5, (top.r - bottom.r) * 0.5 + 0.5, 0., 1.0);
-              //  color  =  vec4((left.r - right.r) * 0.5 +0.5, (top.r - bottom.r) * 0.5 + 0.5, 0., 1.0);
+            
+            
+                const vec3 offsets = vec3(0.0, 1., -1.); 
+                vec4 left   = texture2D(image, uv + offsets.zx / resolution); 
+
+                vec4 right  = texture2D(image, uv + offsets.yx / resolution); 
+                vec4 top    = texture2D(image, uv + offsets.xz / resolution); 
+                vec4 bottom = texture2D(image, uv + offsets.xy / resolution); 
+                
+                vec4 color = vec4(1.0)-vec4(
+                0.0,
+                ((left.b - right.g ) * 0.5) + 0.5 ,
+                ((top.b  - bottom.g) * 0.5) + 0.5 ,
+                1.0
+                );
+        
 
                 return color;
             }
 
 
-
-
-
             void main() {
+
 
                 float angle, angle1, nbr, angle2, dr, newAngle;
 
@@ -322,7 +309,8 @@ if ( distanceFromCenter >= 0.5 ) {
                 vec2 vit = particle.zw;
 
                 vec4 pos1  =     texture2D( image1 ,  gl_FragCoord.xy / PVS ) ;
-                vec2 mm = normalMap(textureInput , (pos+1.)/2. ).xy  - 0.5;
+                vec2 mm = normalMap(textureInput , (pos+1.)/2. ).gb  - 0.5;
+
 
 
                 //  vec2 posF = -1.0+ (2.0* floor((pos+1.0)/2.0*resolution)+1.0) / resolution;
@@ -364,7 +352,7 @@ if ( distanceFromCenter >= 0.5 ) {
                     vec2 pr = vit - vit2;
                     vec2 pg = vit + vit2;
                     dr = length(pr);
-                    angle = gridTexel.a * maxAngle; // + angleBase;  
+                    angle = gridTexel.a * maxAngle+ angleBase;  
         
                     angle1 = atan(pr.y, pr.x);
                     // pour les points y>=0 atan retourne un angle entre 0 et PI
@@ -385,20 +373,17 @@ if ( distanceFromCenter >= 0.5 ) {
 
                 }
 
+
                 vit += mm * normalForce + force_totale * dt ;
                 
-                if(vit.x > uVelocityMax || vit.x < -uVelocityMax || vit.y > uVelocityMax || vit.y < -uVelocityMax)
-                    vit *= slowdown;
+                if (vit.x > uVelocityMax || vit.x < -uVelocityMax || vit.y > uVelocityMax || vit.y < -uVelocityMax) vit *= slowdown;
              
                 pos += vit * dt ;
 
 
                 if (pos.x >= 1.0 || pos.x <= -1.0 || pos.y >=1.0 || pos.y <= -1.0) {
-               //   pos = pos1.xy+vec2((2.*random(pos.xy)-1.)*.001,(2.*random(pos.yx)-1.)*.001);
-              pos=pos1.xy;
-                 // pos = vec2(0);
-                 pos= vec2( (random(vit) - 0.5)*2.0 , (random(pos) - 0.5)*2.0);  
-              vit=vec2(0);
+                    pos= vec2( (random(vit) - 0.5)*2.0 , (random(pos) - 0.5)*2.0);  
+                    vit=vec2(0);
                 }
 
    
@@ -432,7 +417,17 @@ if ( distanceFromCenter >= 0.5 ) {
             uniform float saturation ;
             uniform float threshold ;
 
+
+            uniform vec2 px;
+            uniform float m[9];
+
             #define M_PI 3.1415926535897932384626433832795
+
+
+
+
+
+
 
 
 
@@ -479,45 +474,47 @@ if ( distanceFromCenter >= 0.5 ) {
             }
 
 
-
-
             void main() {
-                float arg= 1. ;
-                float dx = 1.0/resolution.x;
-                float dy = 1.0/resolution.y;
+
                 vec2 vTexCoord = gl_FragCoord.xy / resolution;
 
 
-                vec3 c1 = texture2D(texture, vTexCoord + vec2( dx, -dy)).rgb
-                    + texture2D(texture, vTexCoord + vec2( dx, 0.0)).rgb * 2.0
-                    + texture2D(texture, vTexCoord + vec2( dx,  dy)).rgb
-                    - texture2D(texture, vTexCoord + vec2(-dx, -dy)).rgb
-                    - texture2D(texture, vTexCoord + vec2(-dx, 0.0)).rgb * 2.0
-                    - texture2D(texture, vTexCoord + vec2(-dx,  dy)).rgb;
 
-                vec3 c2 = texture2D(texture, vTexCoord + vec2(-dx,  dy)).rgb
-                    + texture2D(texture, vTexCoord + vec2(0.0,  dy)).rgb * 2.0
-                    + texture2D(texture, vTexCoord + vec2( dx,  dy)).rgb
-                    - texture2D(texture, vTexCoord + vec2(-dx, -dy)).rgb
-                    - texture2D(texture, vTexCoord + vec2(0.0, -dy)).rgb * 2.0
-                    - texture2D(texture, vTexCoord + vec2( dx, -dy)).rgb;
+            vec4 c11 = texture2D(texture, vTexCoord - px); // top left
+            vec4 c12 = texture2D(texture, vec2(vTexCoord.x, vTexCoord.y - px.y)); // top center
+            vec4 c13 = texture2D(texture, vec2(vTexCoord.x + px.x, vTexCoord.y - px.y)); // top right
 
-                float a = texture2D(texture, vTexCoord).a;
-                gl_FragColor = vec4(1.-max(vec3(0), sqrt(c1*c1+c2*c2)-(1.0-arg))/arg, a);
-                
+            vec4 c21 = texture2D(texture, vec2(vTexCoord.x - px.x, vTexCoord.y) ); // mid left
+            vec4 c22 = texture2D(texture, vTexCoord); // mid center
+            vec4 c23 = texture2D(texture, vec2(vTexCoord.x + px.x, vTexCoord.y) ); // mid right
+
+            vec4 c31 = texture2D(texture, vec2(vTexCoord.x - px.x, vTexCoord.y + px.y) ); // bottom left
+            vec4 c32 = texture2D(texture, vec2(vTexCoord.x, vTexCoord.y + px.y) ); // bottom center
+            vec4 c33 = texture2D(texture, vTexCoord + px ); // bottom right
+
+            gl_FragColor = 
+                c11 * m[0] + c12 * m[1] + c22 * m[2] +
+                c21 * m[3] + c22 * m[4] + c23 * m[5] +
+                c31 * m[6] + c32 * m[7] + c33 * m[8] ;
+            gl_FragColor.a = c22.a;
+        
+
+            
+                float arg= 1. ;
+                float dx = 1.0/resolution.x;
+                float dy = 1.0/resolution.y;
+
                 
                 vec4 color = texture2D(texture,vTexCoord);
-                vec3 color_resolution = vec3(5.0, 5.0, 5.0);
-                vec3 color_bands = floor(color.rgb * color_resolution) / (color_resolution - 1.0);
-            //    gl_FragColor = vec4(min(color_bands, 1.0), color.a);
 
 
-                    float v = (0.2126*color.r + 0.7152*color.g + 0.0722*color.b >= threshold) ? 1.0 : 0.0;
-                //    color = vec4(v);
-   gl_FragColor = brightnessMatrix( brightness ) * contrastMatrix( contrast ) *  saturationMatrix( saturation ) * color;
+ gl_FragColor = brightnessMatrix( brightness ) * contrastMatrix( contrast ) *  saturationMatrix( saturation ) * color;
 
 
-/*
+
+
+
+
     
     float col = gl_FragColor.r - threshold;
     
@@ -529,8 +526,8 @@ if ( distanceFromCenter >= 0.5 ) {
     // Dividing by the gradient was inspired by Inigo :) Thought it would be cool to try it
     float result = smoothstep(-spread, spread, col / length(grad));
     
-    gl_FragColor = vec4(result * vec3(1.0), 1.0);
-    */
+  //  gl_FragColor = vec4(result * vec3(1.0), 1.0);
+    
 
             }
 
@@ -548,7 +545,7 @@ if ( distanceFromCenter >= 0.5 ) {
         <canvas id="glcanvas"></canvas>
         <canvas id="telecran"></canvas>
         <canvas id="traitement"></canvas>
-        <video id="webcam"></video>
+        <video id="webcam" autoplay></video>
 
 
 

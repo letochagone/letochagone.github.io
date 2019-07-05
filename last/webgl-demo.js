@@ -2,11 +2,9 @@
 
 
 //factoriser le bindbuffer
+// remplacer image1 par pvTex1 (ou pvTexInit)
 
-//const video = document.createElement('video');
 const video = document.getElementById("webcam");
-video.autoplay = true;
-
 const qvgaConstraints = { video: { width: 1280, height: 720}  };
 const palConstraints =  { video: { width: 352,  height: 288}  };
 const fhdConstraints =  { video: { width: 1920, height: 1080} };
@@ -14,13 +12,11 @@ const vgaConstraints =  { video: { width: 640, height:  480} };
 const defautConstraints =  { video: true };
 
 var webcamConstraints;
-webcamConstraints = vgaConstraints ;
-webcamConstraints =qvgaConstraints ;
 
 
-
-var ctx ;
-var fbT1 , fbT3 , fbT2 , fbSobel ;
+// pas besoin pour l'instant 
+//var ctx ;
+var fbT1 , fbT3 , fbT2  ;
 
 var sobelOutput , textureWebcam, textureWebcamSobel;
 var swap ;
@@ -43,21 +39,16 @@ var NBRE;
 var mouseX=0 , mouseY=0 , click , mousedown ;
 var req ;
 var capturer=null , sCB ,dVB; 
-var realToCSSPixels =2 ;
-var ext1, ext2, ext5, ext3, ext4, ext6;
+var ext1, ext2,  ext4;
 var img ;
 
 
-
-
 var m7;
-
  // "alpha":{"valeur":{"defaut":0.187,"courante":0.187},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"lumi":{"valeur":{"defaut":0.823,"courante":0.823},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"flamme":{"valeur":{"defaut":0.308,"courante":0.308},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"delta2":{"valeur":{"defaut":0.041,"courante":0.041},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"force":{"valeur":{"defaut":73.666,"courante":-148.803},"max":{"defaut":1041,"courante":10441},"min":{"defaut":-8,"courante":-5911},"step":{"defaut":0.001,"courante":0.001}},"gravity":{"valeur":{"defaut":0,"courante":26.783},"max":{"defaut":80,"courante":44},"min":{"defaut":-800,"courante":-80},"step":{"defaut":0.001,"courante":0.001}},"forceMouse":{"valeur":{"defaut":-155.223,"courante":-676.989},"max":{"defaut":80,"courante":80},"min":{"defaut":-801,"courante":-801},"step":{"defaut":0.001,"courante":0.001}},"maxAngle":{"valeur":{"defaut":6.399,"courante":7},"max":{"defaut":7,"courante":7},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"angleBase":{"valeur":{"defaut":0,"courante":0},"max":{"defaut":7,"courante":7},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"slowdown":{"valeur":{"defaut":0.861,"courante":0.91},"max":{"defaut":2,"courante":2},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"choc":{"valeur":{"defaut":1.656,"courante":2.053},"max":{"defaut":3,"courante":3},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"seuil":{"valeur":{"defaut":2.209,"courante":18.665},"max":{"defaut":3,"courante":44},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"seuilMouse":{"valeur":{"defaut":2.99901,"courante":2.99901},"max":{"defaut":3,"courante":3},"min":{"defaut":0.00001,"courante":0.00001},"step":{"defaut":0.001,"courante":0.001}},"dt":{"valeur":{"defaut":0.00338,"courante":0.00559},"max":{"defaut":0.01,"courante":0.01},"min":{"defaut":0,"courante":0},"step":{"defaut":0.00001,"courante":0.00001}},"collisionMax":{"valeur":{"defaut":1,"courante":1},"max":{"defaut":1000,"courante":1000},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"vit0":{"valeur":{"defaut":1.1,"courante":1.1},"max":{"defaut":100,"courante":100},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"pointSize":{"valeur":{"defaut":2,"courante":1},"max":{"defaut":10,"courante":10},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"blend1":{"valeur":{"defaut":"ONE_MINUS_SRC_ALPHA","courante":"ONE_MINUS_SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"ONE","courante":"ONE"}},"scale":{"valeur":{"defaut":7,"courante":7},"max":{"defaut":500,"courante":500},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"gridStep":{"valeur":{"defaut":3,"courante":2},"max":{"defaut":20,"courante":20},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}}};
 m7 = {"alpha":{"valeur":{"defaut":0.187,"courante":0.985},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"lumi":{"valeur":{"defaut":0.823,"courante":0.963},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"flamme":{"valeur":{"defaut":0.308,"courante":0.243},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"delta2":{"valeur":{"defaut":0.041,"courante":0.049},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"force":{"valeur":{"defaut":-148.803,"courante":25.486},"max":{"defaut":10441,"courante":1044},"min":{"defaut":-5911,"courante":-591},"step":{"defaut":0.001,"courante":0.001}},"gravity":{"valeur":{"defaut":26.783,"courante":23.996},"max":{"defaut":44,"courante":44},"min":{"defaut":-80,"courante":-80},"step":{"defaut":0.001,"courante":0.001}},"forceMouse":{"valeur":{"defaut":-676.989,"courante":-399.14},"max":{"defaut":80,"courante":80},"min":{"defaut":-801,"courante":-801},"step":{"defaut":0.001,"courante":0.001}},"maxAngle":{"valeur":{"defaut":7,"courante":7},"max":{"defaut":7,"courante":7},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"angleBase":{"valeur":{"defaut":0,"courante":0},"max":{"defaut":7,"courante":7},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"slowdown":{"valeur":{"defaut":0.91,"courante":0.475},"max":{"defaut":2,"courante":2},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"choc":{"valeur":{"defaut":2.053,"courante":0.986},"max":{"defaut":3,"courante":3},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"seuil":{"valeur":{"defaut":18.665,"courante":1.273},"max":{"defaut":44,"courante":44},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"seuilMouse":{"valeur":{"defaut":2.99901,"courante":2.99901},"max":{"defaut":3,"courante":3},"min":{"defaut":0.00001,"courante":0.00001},"step":{"defaut":0.001,"courante":0.001}},"dt":{"valeur":{"defaut":0.00559,"courante":0.00812},"max":{"defaut":0.01,"courante":0.01},"min":{"defaut":0,"courante":0},"step":{"defaut":0.00001,"courante":0.00001}},"collisionMax":{"valeur":{"defaut":1,"courante":2},"max":{"defaut":1000,"courante":1000},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"vit0":{"valeur":{"defaut":1.1,"courante":1.1},"max":{"defaut":100,"courante":100},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"pointSize":{"valeur":{"defaut":1,"courante":2},"max":{"defaut":10,"courante":10},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"blend1":{"valeur":{"defaut":"ONE_MINUS_SRC_ALPHA","courante":"SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"ONE","courante":"DST_ALPHA"}},"scale":{"valeur":{"defaut":7,"courante":7},"max":{"defaut":500,"courante":500},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"gridStep":{"valeur":{"defaut":2,"courante":2},"max":{"defaut":20,"courante":20},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}}};
 m7 = {"alpha":{"valeur":{"defaut":0.985,"courante":0.762},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"lumi":{"valeur":{"defaut":0.963,"courante":0.963},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"flamme":{"valeur":{"defaut":0.243,"courante":0.243},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"delta2":{"valeur":{"defaut":0.049,"courante":0.049},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"force":{"valeur":{"defaut":25.486,"courante":-54.516},"max":{"defaut":1044,"courante":1044},"min":{"defaut":-591,"courante":-591},"step":{"defaut":0.001,"courante":0.001}},"gravity":{"valeur":{"defaut":23.996,"courante":137.94},"max":{"defaut":44,"courante":441},"min":{"defaut":-80,"courante":-80},"step":{"defaut":0.001,"courante":0.001}},"forceMouse":{"valeur":{"defaut":-399.14,"courante":-399.14},"max":{"defaut":80,"courante":80},"min":{"defaut":-801,"courante":-801},"step":{"defaut":0.001,"courante":0.001}},"maxAngle":{"valeur":{"defaut":7,"courante":7},"max":{"defaut":7,"courante":7},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"angleBase":{"valeur":{"defaut":0,"courante":0},"max":{"defaut":7,"courante":7},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"slowdown":{"valeur":{"defaut":0.475,"courante":0.822},"max":{"defaut":2,"courante":2},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"choc":{"valeur":{"defaut":0.986,"courante":1.827},"max":{"defaut":3,"courante":3},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"seuil":{"valeur":{"defaut":1.273,"courante":0.119},"max":{"defaut":44,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"seuilMouse":{"valeur":{"defaut":2.99901,"courante":2.99901},"max":{"defaut":3,"courante":3},"min":{"defaut":0.00001,"courante":0.00001},"step":{"defaut":0.001,"courante":0.001}},"dt":{"valeur":{"defaut":0.00812,"courante":0.00668},"max":{"defaut":0.01,"courante":0.01},"min":{"defaut":0,"courante":0},"step":{"defaut":0.00001,"courante":0.00001}},"collisionMax":{"valeur":{"defaut":2,"courante":1},"max":{"defaut":1000,"courante":1000},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"vit0":{"valeur":{"defaut":1.1,"courante":1.1},"max":{"defaut":100,"courante":100},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"pointSize":{"valeur":{"defaut":2,"courante":2},"max":{"defaut":10,"courante":10},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"blend1":{"valeur":{"defaut":"SRC_ALPHA","courante":"ONE_MINUS_SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"DST_ALPHA","courante":"ONE"}},"scale":{"valeur":{"defaut":7,"courante":7},"max":{"defaut":500,"courante":500},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"gridStep":{"valeur":{"defaut":2,"courante":2},"max":{"defaut":20,"courante":20},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}}};
 m7 = {"alpha":{"valeur":{"defaut":0.762,"courante":0.039},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"lumi":{"valeur":{"defaut":0.963,"courante":0.963},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"flamme":{"valeur":{"defaut":0.243,"courante":0.243},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"delta2":{"valeur":{"defaut":0.049,"courante":0.049},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"force":{"valeur":{"defaut":-54.516,"courante":-18.212},"max":{"defaut":1044,"courante":1044},"min":{"defaut":-591,"courante":-591},"step":{"defaut":0.001,"courante":0.001}},"gravity":{"valeur":{"defaut":137.94,"courante":137.94},"max":{"defaut":441,"courante":441},"min":{"defaut":-80,"courante":-80},"step":{"defaut":0.001,"courante":0.001}},"forceMouse":{"valeur":{"defaut":-399.14,"courante":-399.14},"max":{"defaut":80,"courante":80},"min":{"defaut":-801,"courante":-801},"step":{"defaut":0.001,"courante":0.001}},"maxAngle":{"valeur":{"defaut":7,"courante":7},"max":{"defaut":7,"courante":7},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"angleBase":{"valeur":{"defaut":0,"courante":0},"max":{"defaut":7,"courante":7},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"slowdown":{"valeur":{"defaut":0.822,"courante":0.822},"max":{"defaut":2,"courante":2},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"choc":{"valeur":{"defaut":1.827,"courante":1.827},"max":{"defaut":3,"courante":3},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"seuil":{"valeur":{"defaut":0.119,"courante":0.189},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"seuilMouse":{"valeur":{"defaut":2.99901,"courante":2.99901},"max":{"defaut":3,"courante":3},"min":{"defaut":0.00001,"courante":0.00001},"step":{"defaut":0.001,"courante":0.001}},"dt":{"valeur":{"defaut":0.00668,"courante":0.00437},"max":{"defaut":0.01,"courante":0.01},"min":{"defaut":0,"courante":0},"step":{"defaut":0.00001,"courante":0.00001}},"collisionMax":{"valeur":{"defaut":1,"courante":1},"max":{"defaut":1000,"courante":1000},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"vit0":{"valeur":{"defaut":1.1,"courante":1.1},"max":{"defaut":100,"courante":100},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"pointSize":{"valeur":{"defaut":2,"courante":1},"max":{"defaut":10,"courante":10},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"blend1":{"valeur":{"defaut":"ONE_MINUS_SRC_ALPHA","courante":"ONE_MINUS_SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"ONE","courante":"ONE"}},"scale":{"valeur":{"defaut":7,"courante":7},"max":{"defaut":500,"courante":500},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"gridStep":{"valeur":{"defaut":2,"courante":2},"max":{"defaut":20,"courante":20},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}}};
 m7 = {"alpha":{"valeur":{"defaut":0.039,"courante":0.026},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"lumi":{"valeur":{"defaut":0.963,"courante":0.963},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"flamme":{"valeur":{"defaut":0.243,"courante":0.243},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"delta2":{"valeur":{"defaut":0.049,"courante":0.049},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"force":{"valeur":{"defaut":-18.212,"courante":-171.493},"max":{"defaut":1044,"courante":1044},"min":{"defaut":-591,"courante":-591},"step":{"defaut":0.001,"courante":0.001}},"gravity":{"valeur":{"defaut":137.94,"courante":179.357},"max":{"defaut":441,"courante":441},"min":{"defaut":-80,"courante":-80},"step":{"defaut":0.001,"courante":0.001}},"forceMouse":{"valeur":{"defaut":-399.14,"courante":-575.92},"max":{"defaut":80,"courante":80},"min":{"defaut":-801,"courante":-801},"step":{"defaut":0.001,"courante":0.001}},"maxAngle":{"valeur":{"defaut":7,"courante":7},"max":{"defaut":7,"courante":7},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"angleBase":{"valeur":{"defaut":0,"courante":0},"max":{"defaut":7,"courante":7},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"slowdown":{"valeur":{"defaut":0.822,"courante":0.768},"max":{"defaut":2,"courante":2},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"choc":{"valeur":{"defaut":1.827,"courante":1.593},"max":{"defaut":3,"courante":3},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"seuil":{"valeur":{"defaut":0.189,"courante":0.904},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"seuilMouse":{"valeur":{"defaut":2.99901,"courante":0.85601},"max":{"defaut":3,"courante":3},"min":{"defaut":0.00001,"courante":0.00001},"step":{"defaut":0.001,"courante":0.001}},"dt":{"valeur":{"defaut":0.00437,"courante":0.0037},"max":{"defaut":0.01,"courante":0.01},"min":{"defaut":0,"courante":0},"step":{"defaut":0.00001,"courante":0.00001}},"collisionMax":{"valeur":{"defaut":1,"courante":1},"max":{"defaut":1000,"courante":1000},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"vit0":{"valeur":{"defaut":1.1,"courante":1.1},"max":{"defaut":100,"courante":100},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},"pointSize":{"valeur":{"defaut":1,"courante":2},"max":{"defaut":10,"courante":10},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"blend1":{"valeur":{"defaut":"ONE_MINUS_SRC_ALPHA","courante":"ONE_MINUS_SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"ONE","courante":"ONE_MINUS_SRC_COLOR"}},"scale":{"valeur":{"defaut":7,"courante":7},"max":{"defaut":500,"courante":500},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}},"gridStep":{"valeur":{"defaut":2,"courante":2},"max":{"defaut":20,"courante":20},"min":{"defaut":1,"courante":1},"step":{"defaut":1,"courante":1}}};
-
 m7 = {
   "uVelocityMax":{"valeur":{"defaut":0.026,"courante":0},"max":{"defaut":1,"courante":1},"min":{"defaut":0,"courante":0},"step":{"defaut":0.001,"courante":0.001}},
 
@@ -194,8 +185,9 @@ var model = {
   contrast:     { valeur: {defaut: 1       }  , max: {defaut: 1 }    , min: {defaut: -1 }         , step: {defaut: 0.01 }    },
   saturation:   { valeur: {defaut: 1       }  , max: {defaut: 1}     , min: {defaut: -1 }         , step: {defaut: 0.01 }    },
   resolution:   { valeur: {defaut: 0       }  , max: {defaut: 2 }    , min: {defaut: 0 }      , step: {defaut: 1 }           },
-  PVS:          { valeur: {defaut: 512     }  , max: {defaut: 5000 } , min: {defaut: 2 }      , step: {defaut: 1 }           }
-                 
+  PVS:          { valeur: {defaut: 512     }  , max: {defaut: 5000 } , min: {defaut: 2 }      , step: {defaut: 1 }           },
+  threshold:    { valeur: {defaut: 0       }  , max: {defaut: 1    } , min: {defaut: -1  }     , step: {defaut: 0.01 }       }
+           
 };
 
 
@@ -226,9 +218,22 @@ var m13 = {"uVelocityMax":{"valeur":{"defaut":44.34},"max":{"defaut":117},"min":
 
 
 var m14 = {"uVelocityMax":{"valeur":{"defaut":30.132},"max":{"defaut":117},"min":{"defaut":0},"step":{"defaut":0.001}},"alpha":{"valeur":{"defaut":0},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"lumi":{"valeur":{"defaut":0.932},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"flamme":{"valeur":{"defaut":0.261},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"delta2":{"valeur":{"defaut":0.054},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"force":{"valeur":{"defaut":-1931},"max":{"defaut":10411},"min":{"defaut":-5555},"step":{"defaut":1}},"gravity":{"valeur":{"defaut":4411},"max":{"defaut":4411},"min":{"defaut":-80},"step":{"defaut":0.001}},"forceMouse":{"valeur":{"defaut":-8011},"max":{"defaut":80},"min":{"defaut":-8011},"step":{"defaut":0.001}},"maxAngle":{"valeur":{"defaut":7},"max":{"defaut":7},"min":{"defaut":0},"step":{"defaut":0.001}},"angleBase":{"valeur":{"defaut":0},"max":{"defaut":39},"min":{"defaut":0},"step":{"defaut":0.001}},"slowdown":{"valeur":{"defaut":0.631},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":0.001}},"choc":{"valeur":{"defaut":1.121},"max":{"defaut":3},"min":{"defaut":0},"step":{"defaut":0.001}},"seuil":{"valeur":{"defaut":1.642},"max":{"defaut":10},"min":{"defaut":0},"step":{"defaut":0.001}},"seuilMouse":{"valeur":{"defaut":0.16001},"max":{"defaut":3},"min":{"defaut":0.00001},"step":{"defaut":0.001}},"dt":{"valeur":{"defaut":0.0003},"max":{"defaut":0.01},"min":{"defaut":0},"step":{"defaut":0.00001}},"collisionMax":{"valeur":{"defaut":1},"max":{"defaut":1000},"min":{"defaut":1},"step":{"defaut":1}},"vit0":{"valeur":{"defaut":1.1},"max":{"defaut":100},"min":{"defaut":0},"step":{"defaut":0.001}},"pointSize":{"valeur":{"defaut":2},"max":{"defaut":10},"min":{"defaut":1},"step":{"defaut":1}},"blend1":{"valeur":{"defaut":"ONE_MINUS_SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"ONE"}},"scale":{"valeur":{"defaut":7},"max":{"defaut":500},"min":{"defaut":1},"step":{"defaut":1}},"gridStep":{"valeur":{"defaut":3},"max":{"defaut":20},"min":{"defaut":1},"step":{"defaut":1}},"normalForce":{"valeur":{"defaut":1263.261},"max":{"defaut":15011},"min":{"defaut":0},"step":{"defaut":0.001}},"brightness":{"valeur":{"defaut":0.19},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"contrast":{"valeur":{"defaut":0.67},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"saturation":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"threshold":{"valeur":{"defaut":0},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"resolution":{"valeur":{"defaut":0},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":1}}};
-model = m13;
+
+
 m14.PVS= { valeur: {defaut: 512 }       , max: {defaut: 5000 } , min: {defaut: 2 }      , step: {defaut: 1 }     };
 m13.PVS= { valeur: {defaut: 512 }       , max: {defaut: 5000 } , min: {defaut: 2 }      , step: {defaut: 1 }     };
+
+
+var m15 ={"uVelocityMax":{"valeur":{"defaut":4.474},"max":{"defaut":117},"min":{"defaut":0},"step":{"defaut":0.001}},"alpha":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"lumi":{"valeur":{"defaut":0.747},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"flamme":{"valeur":{"defaut":0.597},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"delta2":{"valeur":{"defaut":0.168},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"force":{"valeur":{"defaut":2870.109},"max":{"defaut":10441},"min":{"defaut":-591},"step":{"defaut":0.001}},"gravity":{"valeur":{"defaut":505.381},"max":{"defaut":4411},"min":{"defaut":-80},"step":{"defaut":0.001}},"forceMouse":{"valeur":{"defaut":-7689.4},"max":{"defaut":80},"min":{"defaut":-8011},"step":{"defaut":0.001}},"maxAngle":{"valeur":{"defaut":7},"max":{"defaut":7},"min":{"defaut":0},"step":{"defaut":0.001}},"angleBase":{"valeur":{"defaut":0},"max":{"defaut":39},"min":{"defaut":0},"step":{"defaut":0.001}},"slowdown":{"valeur":{"defaut":0.539},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":0.001}},"choc":{"valeur":{"defaut":0.809},"max":{"defaut":4},"min":{"defaut":0},"step":{"defaut":0.001}},"seuil":{"valeur":{"defaut":2.769},"max":{"defaut":10},"min":{"defaut":0},"step":{"defaut":0.001}},"seuilMouse":{"valeur":{"defaut":2.99901},"max":{"defaut":3},"min":{"defaut":0.00001},"step":{"defaut":0.001}},"dt":{"valeur":{"defaut":0.00145},"max":{"defaut":0.01},"min":{"defaut":0},"step":{"defaut":0.00001}},"collisionMax":{"valeur":{"defaut":2},"max":{"defaut":1000},"min":{"defaut":1},"step":{"defaut":1}},"vit0":{"valeur":{"defaut":1.1},"max":{"defaut":100},"min":{"defaut":0},"step":{"defaut":0.001}},"pointSize":{"valeur":{"defaut":2},"max":{"defaut":10},"min":{"defaut":1},"step":{"defaut":1}},"blend1":{"valeur":{"defaut":"SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"ONE_MINUS_SRC_COLOR"}},"scale":{"valeur":{"defaut":7},"max":{"defaut":500},"min":{"defaut":1},"step":{"defaut":1}},"gridStep":{"valeur":{"defaut":2},"max":{"defaut":20},"min":{"defaut":1},"step":{"defaut":1}},"normalForce":{"valeur":{"defaut":836.535},"max":{"defaut":4501},"min":{"defaut":0},"step":{"defaut":0.001}},"brightness":{"valeur":{"defaut":0.39},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"contrast":{"valeur":{"defaut":0.6},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"saturation":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"threshold":{"valeur":{"defaut":0},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"resolution":{"valeur":{"defaut":0},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":1}},"PVS":{"valeur":{"defaut":512},"max":{"defaut":5000},"min":{"defaut":2},"step":{"defaut":1}}} ;
+var m16={"uVelocityMax":{"valeur":{"defaut":25.834},"max":{"defaut":117},"min":{"defaut":0},"step":{"defaut":0.001}},"alpha":{"valeur":{"defaut":0.941},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"lumi":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"flamme":{"valeur":{"defaut":0.807},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"delta2":{"valeur":{"defaut":0.088},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"force":{"valeur":{"defaut":10441},"max":{"defaut":10441},"min":{"defaut":-591},"step":{"defaut":0.001}},"gravity":{"valeur":{"defaut":4411},"max":{"defaut":4411},"min":{"defaut":-80},"step":{"defaut":0.001}},"forceMouse":{"valeur":{"defaut":-80111},"max":{"defaut":80},"min":{"defaut":-80111},"step":{"defaut":0.001}},"maxAngle":{"valeur":{"defaut":7},"max":{"defaut":7},"min":{"defaut":0},"step":{"defaut":0.001}},"angleBase":{"valeur":{"defaut":0},"max":{"defaut":39},"min":{"defaut":0},"step":{"defaut":0.001}},"slowdown":{"valeur":{"defaut":0.246},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":0.001}},"choc":{"valeur":{"defaut":1.112},"max":{"defaut":4},"min":{"defaut":0},"step":{"defaut":0.001}},"seuil":{"valeur":{"defaut":8.872},"max":{"defaut":10},"min":{"defaut":0},"step":{"defaut":0.001}},"seuilMouse":{"valeur":{"defaut":2.36601},"max":{"defaut":3},"min":{"defaut":0.00001},"step":{"defaut":0.001}},"dt":{"valeur":{"defaut":0.00026},"max":{"defaut":0.01},"min":{"defaut":0},"step":{"defaut":0.00001}},"collisionMax":{"valeur":{"defaut":41},"max":{"defaut":1000},"min":{"defaut":1},"step":{"defaut":1}},"vit0":{"valeur":{"defaut":1.1},"max":{"defaut":100},"min":{"defaut":0},"step":{"defaut":0.001}},"pointSize":{"valeur":{"defaut":1},"max":{"defaut":10},"min":{"defaut":1},"step":{"defaut":1}},"blend1":{"valeur":{"defaut":"SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"SRC_COLOR"}},"scale":{"valeur":{"defaut":7},"max":{"defaut":500},"min":{"defaut":1},"step":{"defaut":1}},"gridStep":{"valeur":{"defaut":3},"max":{"defaut":20},"min":{"defaut":1},"step":{"defaut":1}},"normalForce":{"valeur":{"defaut":491.063},"max":{"defaut":4501},"min":{"defaut":0},"step":{"defaut":0.001}},"brightness":{"valeur":{"defaut":0.72},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"contrast":{"valeur":{"defaut":0.98},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"saturation":{"valeur":{"defaut":-0.93},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"threshold":{"valeur":{"defaut":0.75},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"resolution":{"valeur":{"defaut":0},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":1}},"PVS":{"valeur":{"defaut":512},"max":{"defaut":5000},"min":{"defaut":2},"step":{"defaut":1}}};
+var m17={"uVelocityMax":{"valeur":{"defaut":34.221},"max":{"defaut":117},"min":{"defaut":0},"step":{"defaut":0.001}},"alpha":{"valeur":{"defaut":0.941},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"lumi":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"flamme":{"valeur":{"defaut":0.807},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"delta2":{"valeur":{"defaut":0.088},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"force":{"valeur":{"defaut":5557.042},"max":{"defaut":10441},"min":{"defaut":-591},"step":{"defaut":0.001}},"gravity":{"valeur":{"defaut":201.303},"max":{"defaut":4411},"min":{"defaut":-80},"step":{"defaut":0.001}},"forceMouse":{"valeur":{"defaut":80},"max":{"defaut":80},"min":{"defaut":-80111},"step":{"defaut":0.001}},"maxAngle":{"valeur":{"defaut":7},"max":{"defaut":7},"min":{"defaut":0},"step":{"defaut":0.001}},"angleBase":{"valeur":{"defaut":0},"max":{"defaut":39},"min":{"defaut":0},"step":{"defaut":0.001}},"slowdown":{"valeur":{"defaut":0.273},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":0.001}},"choc":{"valeur":{"defaut":1.596},"max":{"defaut":4},"min":{"defaut":0},"step":{"defaut":0.001}},"seuil":{"valeur":{"defaut":4.681},"max":{"defaut":10},"min":{"defaut":0},"step":{"defaut":0.001}},"seuilMouse":{"valeur":{"defaut":1.06301},"max":{"defaut":3},"min":{"defaut":0.00001},"step":{"defaut":0.001}},"dt":{"valeur":{"defaut":0.00045},"max":{"defaut":0.01},"min":{"defaut":0},"step":{"defaut":0.00001}},"collisionMax":{"valeur":{"defaut":11},"max":{"defaut":1000},"min":{"defaut":1},"step":{"defaut":1}},"vit0":{"valeur":{"defaut":1.1},"max":{"defaut":100},"min":{"defaut":0},"step":{"defaut":0.001}},"pointSize":{"valeur":{"defaut":1},"max":{"defaut":10},"min":{"defaut":1},"step":{"defaut":1}},"blend1":{"valeur":{"defaut":"SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"SRC_COLOR"}},"scale":{"valeur":{"defaut":7},"max":{"defaut":500},"min":{"defaut":1},"step":{"defaut":1}},"gridStep":{"valeur":{"defaut":4},"max":{"defaut":20},"min":{"defaut":1},"step":{"defaut":1}},"normalForce":{"valeur":{"defaut":303.521},"max":{"defaut":4501},"min":{"defaut":0},"step":{"defaut":0.001}},"brightness":{"valeur":{"defaut":0.78},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"contrast":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"saturation":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"threshold":{"valeur":{"defaut":0.75},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"resolution":{"valeur":{"defaut":0},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":1}},"PVS":{"valeur":{"defaut":500},"max":{"defaut":5000},"min":{"defaut":2},"step":{"defaut":1}}};
+var m18={"uVelocityMax":{"valeur":{"defaut":18.201},"max":{"defaut":117},"min":{"defaut":0},"step":{"defaut":0.001}},"alpha":{"valeur":{"defaut":0.663},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"lumi":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"flamme":{"valeur":{"defaut":0.808},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"delta2":{"valeur":{"defaut":0.088},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"force":{"valeur":{"defaut":3922.503},"max":{"defaut":10441},"min":{"defaut":-591},"step":{"defaut":0.001}},"gravity":{"valeur":{"defaut":8884.183},"max":{"defaut":44111},"min":{"defaut":-80},"step":{"defaut":0.001}},"forceMouse":{"valeur":{"defaut":-80111},"max":{"defaut":80},"min":{"defaut":-80111},"step":{"defaut":0.001}},"maxAngle":{"valeur":{"defaut":7},"max":{"defaut":7},"min":{"defaut":0},"step":{"defaut":0.001}},"angleBase":{"valeur":{"defaut":6.382},"max":{"defaut":39},"min":{"defaut":0},"step":{"defaut":0.001}},"slowdown":{"valeur":{"defaut":0.399},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":0.001}},"choc":{"valeur":{"defaut":0.847},"max":{"defaut":4},"min":{"defaut":0},"step":{"defaut":0.001}},"seuil":{"valeur":{"defaut":8.477},"max":{"defaut":10},"min":{"defaut":0},"step":{"defaut":0.001}},"seuilMouse":{"valeur":{"defaut":0.39001},"max":{"defaut":3},"min":{"defaut":0.00001},"step":{"defaut":0.001}},"dt":{"valeur":{"defaut":0.00037},"max":{"defaut":0.01},"min":{"defaut":0},"step":{"defaut":0.00001}},"collisionMax":{"valeur":{"defaut":1},"max":{"defaut":1000},"min":{"defaut":1},"step":{"defaut":1}},"vit0":{"valeur":{"defaut":40.255},"max":{"defaut":100},"min":{"defaut":0},"step":{"defaut":0.001}},"pointSize":{"valeur":{"defaut":3},"max":{"defaut":10},"min":{"defaut":1},"step":{"defaut":1}},"blend1":{"valeur":{"defaut":"SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"SRC_COLOR"}},"scale":{"valeur":{"defaut":7},"max":{"defaut":500},"min":{"defaut":1},"step":{"defaut":1}},"gridStep":{"valeur":{"defaut":4},"max":{"defaut":20},"min":{"defaut":1},"step":{"defaut":1}},"normalForce":{"valeur":{"defaut":1380.652},"max":{"defaut":4501},"min":{"defaut":0},"step":{"defaut":0.001}},"brightness":{"valeur":{"defaut":0},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"contrast":{"valeur":{"defaut":0.58},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"saturation":{"valeur":{"defaut":0.96},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"threshold":{"valeur":{"defaut":0.75},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"resolution":{"valeur":{"defaut":0},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":1}},"PVS":{"valeur":{"defaut":500},"max":{"defaut":5000},"min":{"defaut":2},"step":{"defaut":1}}};
+var m19={"uVelocityMax":{"valeur":{"defaut":24.054},"max":{"defaut":117},"min":{"defaut":0},"step":{"defaut":0.001}},"alpha":{"valeur":{"defaut":0.663},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"lumi":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"flamme":{"valeur":{"defaut":0.808},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"delta2":{"valeur":{"defaut":0.088},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"force":{"valeur":{"defaut":3922.503},"max":{"defaut":10441},"min":{"defaut":-591},"step":{"defaut":0.001}},"gravity":{"valeur":{"defaut":8884.183},"max":{"defaut":44111},"min":{"defaut":-80},"step":{"defaut":0.001}},"forceMouse":{"valeur":{"defaut":-80111},"max":{"defaut":80},"min":{"defaut":-80111},"step":{"defaut":0.001}},"maxAngle":{"valeur":{"defaut":7},"max":{"defaut":7},"min":{"defaut":0},"step":{"defaut":0.001}},"angleBase":{"valeur":{"defaut":6.382},"max":{"defaut":39},"min":{"defaut":0},"step":{"defaut":0.001}},"slowdown":{"valeur":{"defaut":0.399},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":0.001}},"choc":{"valeur":{"defaut":0.847},"max":{"defaut":4},"min":{"defaut":0},"step":{"defaut":0.001}},"seuil":{"valeur":{"defaut":2.255},"max":{"defaut":10},"min":{"defaut":0},"step":{"defaut":0.001}},"seuilMouse":{"valeur":{"defaut":0.39001},"max":{"defaut":3},"min":{"defaut":0.00001},"step":{"defaut":0.001}},"dt":{"valeur":{"defaut":0.00023},"max":{"defaut":0.01},"min":{"defaut":0},"step":{"defaut":0.00001}},"collisionMax":{"valeur":{"defaut":1},"max":{"defaut":1000},"min":{"defaut":1},"step":{"defaut":1}},"vit0":{"valeur":{"defaut":40.255},"max":{"defaut":100},"min":{"defaut":0},"step":{"defaut":0.001}},"pointSize":{"valeur":{"defaut":2},"max":{"defaut":10},"min":{"defaut":1},"step":{"defaut":1}},"blend1":{"valeur":{"defaut":"SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"SRC_COLOR"}},"scale":{"valeur":{"defaut":7},"max":{"defaut":500},"min":{"defaut":1},"step":{"defaut":1}},"gridStep":{"valeur":{"defaut":4},"max":{"defaut":20},"min":{"defaut":1},"step":{"defaut":1}},"normalForce":{"valeur":{"defaut":1824.83},"max":{"defaut":4501},"min":{"defaut":0},"step":{"defaut":0.001}},"brightness":{"valeur":{"defaut":0.58},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"contrast":{"valeur":{"defaut":0.98},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"saturation":{"valeur":{"defaut":0.96},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"threshold":{"valeur":{"defaut":0.75},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"resolution":{"valeur":{"defaut":0},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":1}},"PVS":{"valeur":{"defaut":1024},"max":{"defaut":5000},"min":{"defaut":2},"step":{"defaut":1}}};
+
+var m20={"uVelocityMax":{"valeur":{"defaut":43.554},"max":{"defaut":117},"min":{"defaut":0},"step":{"defaut":0.001}},"alpha":{"valeur":{"defaut":0.663},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"lumi":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"flamme":{"valeur":{"defaut":0.808},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"delta2":{"valeur":{"defaut":0.088},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"force":{"valeur":{"defaut":3922.503},"max":{"defaut":10441},"min":{"defaut":-591},"step":{"defaut":0.001}},"gravity":{"valeur":{"defaut":8884.183},"max":{"defaut":44111},"min":{"defaut":-80},"step":{"defaut":0.001}},"forceMouse":{"valeur":{"defaut":-80111},"max":{"defaut":80},"min":{"defaut":-80111},"step":{"defaut":0.001}},"maxAngle":{"valeur":{"defaut":7},"max":{"defaut":7},"min":{"defaut":0},"step":{"defaut":0.001}},"angleBase":{"valeur":{"defaut":6.382},"max":{"defaut":39},"min":{"defaut":0},"step":{"defaut":0.001}},"slowdown":{"valeur":{"defaut":0.399},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":0.001}},"choc":{"valeur":{"defaut":0.847},"max":{"defaut":4},"min":{"defaut":0},"step":{"defaut":0.001}},"seuil":{"valeur":{"defaut":2.255},"max":{"defaut":10},"min":{"defaut":0},"step":{"defaut":0.001}},"seuilMouse":{"valeur":{"defaut":0.39001},"max":{"defaut":3},"min":{"defaut":0.00001},"step":{"defaut":0.001}},"dt":{"valeur":{"defaut":0.00023},"max":{"defaut":0.01},"min":{"defaut":0},"step":{"defaut":0.00001}},"collisionMax":{"valeur":{"defaut":1},"max":{"defaut":1000},"min":{"defaut":1},"step":{"defaut":1}},"vit0":{"valeur":{"defaut":40.255},"max":{"defaut":100},"min":{"defaut":0},"step":{"defaut":0.001}},"pointSize":{"valeur":{"defaut":1},"max":{"defaut":10},"min":{"defaut":1},"step":{"defaut":1}},"blend1":{"valeur":{"defaut":"SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"SRC_COLOR"}},"scale":{"valeur":{"defaut":7},"max":{"defaut":500},"min":{"defaut":1},"step":{"defaut":1}},"gridStep":{"valeur":{"defaut":4},"max":{"defaut":20},"min":{"defaut":1},"step":{"defaut":1}},"normalForce":{"valeur":{"defaut":3668.167},"max":{"defaut":4501},"min":{"defaut":0},"step":{"defaut":0.001}},"brightness":{"valeur":{"defaut":0.52},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"contrast":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"saturation":{"valeur":{"defaut":-0.03},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"threshold":{"valeur":{"defaut":0.97},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"resolution":{"valeur":{"defaut":0},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":1}},"PVS":{"valeur":{"defaut":1024},"max":{"defaut":5000},"min":{"defaut":2},"step":{"defaut":1}}};
+var m21={"uVelocityMax":{"valeur":{"defaut":86.579},"max":{"defaut":117},"min":{"defaut":0},"step":{"defaut":0.001}},"alpha":{"valeur":{"defaut":0.663},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"lumi":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"flamme":{"valeur":{"defaut":0.808},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"delta2":{"valeur":{"defaut":0.088},"max":{"defaut":1},"min":{"defaut":0},"step":{"defaut":0.001}},"force":{"valeur":{"defaut":3922.503},"max":{"defaut":10441},"min":{"defaut":-591},"step":{"defaut":0.001}},"gravity":{"valeur":{"defaut":8884.183},"max":{"defaut":44111},"min":{"defaut":-80},"step":{"defaut":0.001}},"forceMouse":{"valeur":{"defaut":-80111},"max":{"defaut":80},"min":{"defaut":-80111},"step":{"defaut":0.001}},"maxAngle":{"valeur":{"defaut":7},"max":{"defaut":7},"min":{"defaut":0},"step":{"defaut":0.001}},"angleBase":{"valeur":{"defaut":6.382},"max":{"defaut":39},"min":{"defaut":0},"step":{"defaut":0.001}},"slowdown":{"valeur":{"defaut":0.488},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":0.001}},"choc":{"valeur":{"defaut":1.685},"max":{"defaut":4},"min":{"defaut":0},"step":{"defaut":0.001}},"seuil":{"valeur":{"defaut":0},"max":{"defaut":10},"min":{"defaut":0},"step":{"defaut":0.001}},"seuilMouse":{"valeur":{"defaut":0.39001},"max":{"defaut":3},"min":{"defaut":0.00001},"step":{"defaut":0.001}},"dt":{"valeur":{"defaut":0.00023},"max":{"defaut":0.01},"min":{"defaut":0},"step":{"defaut":0.00001}},"collisionMax":{"valeur":{"defaut":1},"max":{"defaut":1000},"min":{"defaut":1},"step":{"defaut":1}},"vit0":{"valeur":{"defaut":40.255},"max":{"defaut":100},"min":{"defaut":0},"step":{"defaut":0.001}},"pointSize":{"valeur":{"defaut":1},"max":{"defaut":10},"min":{"defaut":1},"step":{"defaut":1}},"blend1":{"valeur":{"defaut":"SRC_ALPHA"}},"blend2":{"valeur":{"defaut":"SRC_COLOR"}},"scale":{"valeur":{"defaut":7},"max":{"defaut":500},"min":{"defaut":1},"step":{"defaut":1}},"gridStep":{"valeur":{"defaut":4},"max":{"defaut":20},"min":{"defaut":1},"step":{"defaut":1}},"normalForce":{"valeur":{"defaut":2254.201},"max":{"defaut":4501},"min":{"defaut":0},"step":{"defaut":0.001}},"brightness":{"valeur":{"defaut":0.16},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"contrast":{"valeur":{"defaut":1},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"saturation":{"valeur":{"defaut":-0.11},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"threshold":{"valeur":{"defaut":0.97},"max":{"defaut":1},"min":{"defaut":-1},"step":{"defaut":0.01}},"resolution":{"valeur":{"defaut":0},"max":{"defaut":2},"min":{"defaut":0},"step":{"defaut":1}},"PVS":{"valeur":{"defaut":800},"max":{"defaut":5000},"min":{"defaut":2},"step":{"defaut":1}}};
+
+model = m21;
 
 fillGui();
 
@@ -243,7 +248,15 @@ img.src="1280_720.png";
 
 CSW=1280;
 CSH=720;
+
+var CSW_T,CSH_T;
+CSW_T=window.innerWidth;
+CSH_T=window.innerHeight;
+CSW=CSW_T;
+CSH=CSH_T;
 start();
+
+
 function ecouteurGUI() {
     sCB = document.getElementById( 'start-capturing-button' );
     dVB = document.getElementById( 'download-video-button' );
@@ -285,12 +298,13 @@ function ecouteurGUI() {
 
 
 function start() {
-
+webcamConstraints=fhdConstraints;
 getMedia(webcamConstraints);
+// pas besoin pour l'instant
  // CSW = img.width;
  // CSH = img.height;
 
-  gl = document.getElementById("glcanvas").getContext(
+gl = document.getElementById("glcanvas").getContext(
             "webgl",
             {
                 antialias: false,
@@ -303,16 +317,19 @@ getMedia(webcamConstraints);
   );
   ext1 = gl.getExtension("OES_texture_float");
   ext4 = gl.getExtension("EXT_color_buffer_float");
+  ext2 = gl.getExtension('OES_standard_derivatives');
+
 
   gl.canvas.width = CSW;
   gl.canvas.height = CSH;
 
    //debug
+   /*
     gl.canvas.style.width = CSW /2+ 'px';
    gl.canvas.style.height = CSH /2+ 'px';
     gl.canvas.style.width =  '100%';
     gl.canvas.style.height = '100%';
-
+*/
 
   gl.canvas.addEventListener('mouseup', function(ev) {  click = 0;}, false);
   gl.canvas.addEventListener('mousemove',
@@ -355,10 +372,11 @@ getMedia(webcamConstraints);
 
   gl_Traitement.getExtension('OES_standard_derivatives');
 
-  gl_Traitement.canvas.width = CSW;
-  gl_Traitement.canvas.height = CSH;
+  gl_Traitement.canvas.width = CSW_T;
+  gl_Traitement.canvas.height = CSH_T;
 
-
+   // gl_Traitement.canvas.style.width =  '100%';
+   // gl_Traitement.canvas.style.height = '100%';
 
   afficheurShader = compilink(gl,'afficheur');
   gridShader = compilink(gl,'grid');
@@ -369,7 +387,6 @@ getMedia(webcamConstraints);
 
   afficheurShader.position =  gl.getAttribLocation(afficheurShader, "position");
   afficheurShader.pvTex =         gl.getUniformLocation(    afficheurShader,    "pvTex"     );
-  afficheurShader.gridTex =       gl.getUniformLocation(    afficheurShader,    "gridTex"    );
   afficheurShader.mapColor =      gl.getUniformLocation(    afficheurShader,    "mapColor"  );
   afficheurShader.resolution =    gl.getUniformLocation(    afficheurShader,    "resolution");
   afficheurShader.PVS =           gl.getUniformLocation(    afficheurShader,    "PVS"       );
@@ -381,11 +398,7 @@ getMedia(webcamConstraints);
 
   gridShader.position =       gl.getAttribLocation(gridShader, "position");
   gridShader.pvTex =              gl.getUniformLocation(gridShader, "pvTex");
-  gridShader.resolution =         gl.getUniformLocation(gridShader, "resolution");
-  gridShader.alea =               gl.getUniformLocation(gridShader, "alea");
-  gridShader.gridSize =           gl.getUniformLocation(gridShader, "gridSize");
   gridShader.PVS =                gl.getUniformLocation(gridShader, "PVS");
-  gridShader.obstacle =           gl.getUniformLocation(gridShader, "obstacle");
 
   main2Shader.position =      gl.getAttribLocation(main2Shader, "position");
   main2Shader.pvTex =             gl.getUniformLocation(main2Shader, "pvTex");
@@ -422,9 +435,13 @@ getMedia(webcamConstraints);
   sobelShader.contrast =          gl_Traitement.getUniformLocation(sobelShader,"contrast");
   sobelShader.saturation =        gl_Traitement.getUniformLocation(sobelShader,"saturation");
   sobelShader.threshold =         gl_Traitement.getUniformLocation(sobelShader,"threshold");
+  sobelShader.m =                 gl_Traitement.getUniformLocation(sobelShader,"m");
+  sobelShader.px =                gl_Traitement.getUniformLocation(sobelShader,"px");
+  sobelShader.threshold =         gl_Traitement.getUniformLocation(sobelShader,"threshold");
 
 
-  NBRE= model.PVS.valeur.courante* model.PVS.valeur.courante;
+
+  NBRE= model.PVS.valeur.courante * model.PVS.valeur.courante;
 
   //PVS = Math.pow(2, Math.ceil(Math.log(Math.ceil(Math.sqrt(NBRE))) / Math.LN2));
   // ici je force PVS avec la valeur 2 , par ce que la formule marche pas pour NBRE = 1
@@ -450,8 +467,6 @@ getMedia(webcamConstraints);
 
   GRIDX= Math.floor(CSW / model.gridStep.valeur.courante);
   GRIDY= Math.floor(CSH / model.gridStep.valeur.courante);
-
-
 
 
   vertex_buffer = gl_Traitement.createBuffer();
@@ -559,8 +574,11 @@ getMedia(webcamConstraints);
   gl_Traitement.texParameteri(gl_Traitement.TEXTURE_2D, gl_Traitement.TEXTURE_WRAP_S, gl_Traitement.CLAMP_TO_EDGE);
   gl_Traitement.texParameteri(gl_Traitement.TEXTURE_2D, gl_Traitement.TEXTURE_WRAP_T, gl_Traitement.CLAMP_TO_EDGE);
   //gl_Traitement.texImage2D(gl_Traitement.TEXTURE_2D, 0, gl_Traitement.RGBA, gl_Traitement.RGBA, gl_Traitement.UNSIGNED_BYTE, img);
-  gl_Traitement.texImage2D(gl_Traitement.TEXTURE_2D, 0, gl_Traitement.RGBA, CSW, CSH, 0, gl_Traitement.RGBA, gl_Traitement.UNSIGNED_BYTE, null);
+  gl_Traitement.texImage2D(gl_Traitement.TEXTURE_2D, 0, gl_Traitement.RGBA, 1, 1, 0, gl_Traitement.RGBA, gl_Traitement.UNSIGNED_BYTE, new Uint8Array([255,255,255,255]));
+  gl_Traitement.pixelStorei(gl_Traitement.UNPACK_FLIP_Y_WEBGL, true);
 
+  //gl_Traitement.texImage2D(gl_Traitement.TEXTURE_2D, 0, gl_Traitement.RGBA, CSW, CSH, 0, gl_Traitement.RGBA, gl_Traitement.UNSIGNED_BYTE, null);
+  /*
   sobelOutput = gl_Traitement.createTexture();
   gl_Traitement.activeTexture(gl_Traitement.TEXTURE4);
   gl_Traitement.bindTexture(gl_Traitement.TEXTURE_2D, sobelOutput);
@@ -569,22 +587,22 @@ getMedia(webcamConstraints);
   gl_Traitement.texParameteri(gl_Traitement.TEXTURE_2D, gl_Traitement.TEXTURE_WRAP_S, gl_Traitement.CLAMP_TO_EDGE);
   gl_Traitement.texParameteri(gl_Traitement.TEXTURE_2D, gl_Traitement.TEXTURE_WRAP_T, gl_Traitement.CLAMP_TO_EDGE);
   gl_Traitement.texImage2D(gl_Traitement.TEXTURE_2D, 0, gl_Traitement.RGBA, CSW, CSH, 0, gl_Traitement.RGBA, gl_Traitement.UNSIGNED_BYTE, null);
-  gl_Traitement.pixelStorei(gl_Traitement.UNPACK_FLIP_Y_WEBGL, true);
 
   fbSobel = gl_Traitement.createFramebuffer();
   gl_Traitement.bindFramebuffer(gl_Traitement.FRAMEBUFFER, fbSobel);
   gl_Traitement.framebufferTexture2D(gl_Traitement.FRAMEBUFFER, gl_Traitement.COLOR_ATTACHMENT0, gl_Traitement.TEXTURE_2D, sobelOutput, 0);
-
+  */
   var update = new Worker("update.js");
 
   update.onmessage = onWorkEnded;
-   
+  
+  // pas besoin pour l'instant
+  /*
   ctx  = document.getElementById("telecran").getContext('2d');
   ctx.canvas.width  = CSW;
   ctx.canvas.height = CSH;
-  //ctx.drawImage(img, 0, 0, CSW, CSH);
-
-
+  ctx.drawImage(img, 0, 0, CSW, CSH);
+  */
 
 	updateModel();
 
@@ -630,9 +648,11 @@ function animate(timestamp) {
    // gl_Traitement.viewport(0, 0, 640, 480);
     gl_Traitement.useProgram(       sobelShader);
 
-    gl_Traitement.viewport(0, 0, CSW, CSH);
+    gl_Traitement.viewport(0, 0, CSW_T, CSH_T);
+    //    gl_Traitement.viewport(0, 0, window.innerWidth, window.innerHeight);
 
-    gl_Traitement.clear(            gl_Traitement.COLOR_BUFFER_BIT);
+
+    //gl_Traitement.clear(            gl_Traitement.COLOR_BUFFER_BIT);
     gl_Traitement.bindFramebuffer(  gl_Traitement.FRAMEBUFFER, null);
     gl_Traitement.bindBuffer(       gl_Traitement.ARRAY_BUFFER, vertex_buffer);
     gl_Traitement.enableVertexAttribArray(sobelShader.coordinates);
