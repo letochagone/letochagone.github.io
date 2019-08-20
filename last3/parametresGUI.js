@@ -301,7 +301,7 @@ resY.addEventListener('change',
     );
 resCssX.addEventListener('change', 
         event => {
-                    resCssX=Number(event.target.value);
+                    CSSX=Number(event.target.value);
                     cancelAnimationFrame(req);
                     req = undefined ;
                     start();
@@ -309,7 +309,7 @@ resCssX.addEventListener('change',
     );
 resCssY.addEventListener('change', 
         event => {
-                    resCssY=Number(event.target.value);
+                    CSSY=Number(event.target.value);
                     cancelAnimationFrame(req);
                     req = undefined ;
                     start();
