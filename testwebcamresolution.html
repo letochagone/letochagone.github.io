@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <meta name="author" content="">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+
+<body>
+
+
+
+  <video></video>
+<p>resolution of your webcam by defaut :</p>
+<div id="thediv"></div>
+
+
+
+
+
+<script type="text/javascript">
+
+const load=function() {
+    var constraints = { audio: false,
+                        video: true};
+    navigator.mediaDevices.getUserMedia(constraints).then(function(mediaStream){
+        var video = document.querySelector('video');
+        video.srcObject = mediaStream;
+        video.play();
+     // setTimeout(_=>{console.log("a ="+video.videoWidth);},1000);
+      
+      getVideoDimensionsOf(mediaStream)
+   .then(({width, height}) => {
+        document.getElementById("thediv").innerHTML = 
+          "width: " + width +" , height: " + height;
+
+
+    });
+      
+      
+    }).catch(function(err){
+        console.log("yikes, and err!" + err.message);
+    });
+
+}
+
+function getVideoDimensionsOf(url){
+  return new Promise(function(resolve){
+    let video = document.createElement('video');
+    video.addEventListener( "loadedmetadata", function () {
+      let height = this.videoHeight;
+      let width = this.videoWidth;
+      resolve({
+        height : height,
+        width : width
+      });
+    }, false );
+
+    video.srcObject = url;
+  });
+}
+
+
+load();
+
+</script>
+
+
+</body>
+
+</html>
