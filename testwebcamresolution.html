@@ -25,8 +25,24 @@
 <script type="text/javascript">
 
 window.onload=function() {
-    var constraints = { audio: false,
-                        video: true};
+    var constraints = {
+        audio: false,
+                      
+        video: {
+            width: {
+            min: 1280,
+            ideal: 3840,
+            max: 3840
+        },
+        height: {
+          min: 720,
+          ideal: 2160,
+          max: 2160
+        },
+        facingMode:  "user" 
+      }
+    };
+
     navigator.mediaDevices.getUserMedia(constraints).then(function(mediaStream){
         var video = document.querySelector('video');
         video.srcObject = mediaStream;
