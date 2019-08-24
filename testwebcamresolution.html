@@ -24,7 +24,7 @@
 
 <script type="text/javascript">
 
-const load=function() {
+window.onload=function() {
     var constraints = { audio: false,
                         video: true};
     navigator.mediaDevices.getUserMedia(constraints).then(function(mediaStream){
@@ -65,7 +65,6 @@ function getVideoDimensionsOf(url){
 }
 
 
-load();
 
 </script>
 
