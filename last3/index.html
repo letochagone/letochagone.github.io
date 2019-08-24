@@ -313,7 +313,38 @@
             float random(vec2 co) {
                 return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
             }
+vec3 rgb2hsl( in vec3 c ){
+  float h = 0.0;
+    float s = 0.0;
+    float l = 0.0;
+    float r = c.r;
+    float g = c.g;
+    float b = c.b;
+    float cMin = min( r, min( g, b ) );
+    float cMax = max( r, max( g, b ) );
 
+    l = ( cMax + cMin ) / 2.0;
+    if ( cMax > cMin ) {
+        float cDelta = cMax - cMin;
+        
+        //s = l < .05 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) ); Original
+        s = l < .0 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) );
+        
+        if ( r == cMax ) {
+            h = ( g - b ) / cDelta;
+        } else if ( g == cMax ) {
+            h = 2.0 + ( b - r ) / cDelta;
+        } else {
+            h = 4.0 + ( r - g ) / cDelta;
+        }
+
+        if ( h < 0.0) {
+            h += 6.0;
+        }
+        h = h / 6.0;
+    }
+    return vec3( h, s, l );
+}
 
 
             vec4 threshold(sampler2D image, vec2 uv, float threshold, float smoothness) {
@@ -325,7 +356,7 @@
                 return vec4(vec3(smoothstep(threshold, threshold + smoothness, lum)), 1.0);
             }
 
-            vec4 normalMap(sampler2D image, vec2 uv) {
+            vec2 normalMap(sampler2D image, vec2 uv) {
             
 
 
@@ -342,19 +373,32 @@
 */
 
 
-                    vec4 left   = texture2D(image, uv + offsets.zx / resolution); 
-                    vec4 right  = texture2D(image, uv + offsets.yx / resolution); 
-                    vec4 top    = texture2D(image, uv + offsets.xz / resolution); 
-                    vec4 bottom = texture2D(image, uv + offsets.xy / resolution); 
+                    vec4 left   = texture2D(image, uv +  vec2(-1,0) / resolution); 
+                    left.xyz = rgb2hsl(left.rgb);
+                 //   vec4 lefttop= texture2D(image, uv +  vec2(-1,-1) / resolution); 
+                  //  vec4 leftbottom= texture2D(image, uv +  vec2(-1,1) / resolution); 
+
+                    vec4 right  = texture2D(image, uv +  vec2(1,0)  / resolution); 
+                                        right.xyz = rgb2hsl(right.rgb);
+
+                   // vec4 righttop  = texture2D(image, uv +  vec2(1,-1)  / resolution); 
+                   // vec4 rightbottom  = texture2D(image, uv +  vec2(1,1)  / resolution); 
+
+                    vec4 top    = texture2D(image, uv +  vec2(0,-1) / resolution); 
+                                        top.xyz = rgb2hsl(top.rgb);
+
+                    vec4 bottom = texture2D(image, uv +  vec2(0,1)  / resolution); 
+                                        bottom.xyz = rgb2hsl(bottom.rgb);
+
                 
-                   vec4 color = vec4(
-                        0.0,
-                        ((left.r - right.b ) * 0.5) + 0.5 ,
-                        ((top.r  - bottom.b) * 0.5) + 0.5 ,
-                        1.0
+                   vec2 color = vec2(
+                    
+                        ((  left.b - right.b ) * 0.5) + 0.5 ,
+                        ((top.g  - bottom.g) * 0.5) + 0.5 
+                        
                     );
                   
-               
+               // color = vec2(dot(left,left),dot(bottom,bottom));
                 return color;
             }
             
@@ -378,7 +422,7 @@
                 vec2 vit = particle.zw;
 
                 vec4 pos1  =     texture2D( image1 ,  gl_FragCoord.xy / PVS ) ;
-                vec2 mm = normalMap(textureInput , (pos+1.)/2. ).gb  - 0.5;
+                vec2 mm = normalMap(textureInput , (pos+1.)/2. )  - 0.5;
 
 
 
@@ -424,7 +468,9 @@
                     vec2 pg = vit + vit2;
                     dr = length(pr);
                     angle = gridTexel.a * maxAngle+ angleBase;  
-        
+                  // angle = 0.0 * maxAngle+ angleBase;
+                   //      angle = random(pr) * maxAngle+angleBase;
+
                     angle1 = atan(pr.y, pr.x);
                     // pour les points y>=0 atan retourne un angle entre 0 et PI
                     // pour les points y<0 atan retourne un angle entre 0 et -PI
@@ -444,7 +490,7 @@
 
                 }
 
-                vit += mm * normalForce + force_totale * dt ;
+                vit += (mm * normalForce + force_totale) * dt ;
 
                 if (length(vit) > uVelocityMax)  vit *= slowdown;
              
