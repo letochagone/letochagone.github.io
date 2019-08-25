@@ -114,6 +114,7 @@
 
 
         <script id="gridVertex" type="x-shader/x-vertex">
+        precision highp sampler2D;
 
         uniform sampler2D   pvTex;
         uniform float         PVS;
@@ -138,7 +139,9 @@
 
         <script id="gridFragment" type="x-shader/x-fragment">
         
-        precision mediump float;
+        precision highp float;
+        precision highp int;
+        precision highp sampler2D;
 
         varying vec2 vitesse;
 
@@ -153,6 +156,8 @@
         </script>
 
         <script id="afficheurVertex" type="x-shader/x-vertex">
+            precision highp sampler2D;
+
             uniform sampler2D pvTex;
             uniform float PVS;
            //uniform sampler2D mapColor;
@@ -195,7 +200,9 @@
 
         <script id="afficheurFragment" type="x-shader/x-fragment">
 
-            precision mediump float;
+        precision highp float;
+        precision highp int;
+        precision highp sampler2D;
 
            // varying vec4 color;
             varying vec4 particlePV;
@@ -218,13 +225,16 @@
           //      }
                vec4 pandv = particlePV;
                float lon = length(pandv.ba);
-                              gl_FragColor=vec4( lumi,flamme,lon,lon) ;
+                          //    gl_FragColor=vec4( lumi,flamme,lon,lon) ;
 
               //   gl_FragColor = texture2D(pix, gl_PointCoord)*delta2 ; //* vec4(nvit,nvit,nvit,alpha); //delete
              //    vec2 fafa = vec2(0./3. , 1./3.);   // delete gl_FragCoord.xy / vec2(4)
                 // gl_FragColor = vec4(3,4,texture2D(pvTex,fafa).ba);
               // float lon=length(pandv.ba);
-               // float nvit=atan(1./(lon*lumi+flamme)*delta2)*0.63661977236;
+            float nvit=atan(lon)*0.636619772368;
+            nvit = atan(log(lon+1.0)/log(2.0))*0.636619772368; 
+            gl_FragColor=vec4( lumi,flamme,alpha,nvit) ;
+
            //  float  nvita =(sin((lon*lumi))+1.0)/2.0;
                // nvit=(cos(dot(pandv.ba,pandv.ba))+1.0)/2.0;
             //  float nvita=atan(length(pandv.ba))/3.14159265 + 0.5;
@@ -248,8 +258,8 @@
 
 
         <script id="main2Vertex" type="x-shader/x-vertex">
-            precision highp float;
-            precision highp int;
+    
+            precision highp sampler2D;
 
             attribute vec2 position;
 
@@ -282,8 +292,9 @@
             #extension GL_OES_standard_derivatives : enable
 
             #define PI 3.141519
-            precision highp float;
-            precision highp int;
+        precision highp float;
+        precision highp int;
+        precision highp sampler2D;
 
             uniform float choc;
             uniform vec2 gridSize;
@@ -305,8 +316,8 @@
             uniform int click;
             uniform float PVS;
             uniform float collisionMax;
-            uniform sampler2D image1;
-            uniform sampler2D textureInput;
+            uniform highp sampler2D image1;
+            uniform highp sampler2D textureInput;
 
             varying vec4 particle;
             varying vec4 gridTexel;
@@ -375,27 +386,27 @@ vec3 rgb2hsl( in vec3 c ){
 
 
                     vec4 left   = texture2D(image, uv +  vec2(-1,0) / resolution); 
-                    left.xyz = rgb2hsl(left.rgb);
+                  //  left.xyz = rgb2hsl(left.rgb);
                  //   vec4 lefttop= texture2D(image, uv +  vec2(-1,-1) / resolution); 
                   //  vec4 leftbottom= texture2D(image, uv +  vec2(-1,1) / resolution); 
 
                     vec4 right  = texture2D(image, uv +  vec2(1,0)  / resolution); 
-                                        right.xyz = rgb2hsl(right.rgb);
+                                    //    right.xyz = rgb2hsl(right.rgb);
 
                    // vec4 righttop  = texture2D(image, uv +  vec2(1,-1)  / resolution); 
                    // vec4 rightbottom  = texture2D(image, uv +  vec2(1,1)  / resolution); 
 
                     vec4 top    = texture2D(image, uv +  vec2(0,-1) / resolution); 
-                                        top.xyz = rgb2hsl(top.rgb);
+                                     //   top.xyz = rgb2hsl(top.rgb);
 
                     vec4 bottom = texture2D(image, uv +  vec2(0,1)  / resolution); 
-                                        bottom.xyz = rgb2hsl(bottom.rgb);
+                                   //     bottom.xyz = rgb2hsl(bottom.rgb);
 
                 
                    vec2 color = vec2(
                     
-                        ((  left.b - right.b ) * 0.5) + 0.5 ,
-                        ((top.g  - bottom.g) * 0.5) + 0.5 
+                        ((  left.b - right.r ) * 0.5) + 0.5 ,
+                        ((top.b  - bottom.r) * 0.5) + 0.5 
                         
                     );
                   
@@ -514,6 +525,8 @@ vec3 rgb2hsl( in vec3 c ){
 
 
         <script id="sobelVertex" type="x-shader/x-vertex">
+            precision highp sampler2D;
+
             attribute vec2 coordinates;
 
             void main() {
@@ -529,8 +542,11 @@ vec3 rgb2hsl( in vec3 c ){
         <script id="sobelFragment" type="x-shader/x-fragment">
             #extension GL_OES_standard_derivatives : enable
 
-            precision mediump float;
-            uniform sampler2D texture;
+        precision highp float;
+        precision highp int;
+        precision highp sampler2D;
+
+        uniform sampler2D texture;
             uniform vec2 resolution;
             uniform float brightness ;
             uniform float contrast ;

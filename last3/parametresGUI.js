@@ -286,6 +286,7 @@ let resCssY = document.querySelector("#resCssY");
 resX.addEventListener('change', 
         event => {
                     CSW=Number(event.target.value);
+                    CSW_T=CSW;
                      cancelAnimationFrame(req);
                     req = undefined ;
                     start();
@@ -294,6 +295,7 @@ resX.addEventListener('change',
 resY.addEventListener('change', 
         event => {
                     CSH=Number(event.target.value);
+                    CSH_T=CSH;
                     cancelAnimationFrame(req);
                     req = undefined ;
                     start();
