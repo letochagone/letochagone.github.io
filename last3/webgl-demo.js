@@ -156,7 +156,16 @@ function SexportVid(blob) {
 const video = document.querySelector('video#webcam');
 
 
+var lowConstraints = {
+        audio: false,
+                      
+        video: {
+          width:160,
+          height:120,
+                  facingMode:  "user" 
 
+        }
+      };
 const qvgaConstraints = { video: { width: 1280, height: 720}  };
 const palConstraints =  { video: { width: 352,  height: 288}  };
 const fhdConstraints =  { video: { width: 1920, height: 1080} };
@@ -167,13 +176,13 @@ const qxgaConstraints =
         video: {
             width: {
                 min: 1280,
-                //ideal: 3840,
-                ideal: 4000
+                ideal: 3840,
+                //ideal: 4000
             },
             height: {
                 min: 720,
-                //ideal: 2160,
-                ideal:4000
+                ideal: 2160,
+                //ideal:4000
             },
             facingMode:  "user" 
         }
@@ -525,7 +534,7 @@ function start() {
 
 
 	webcamConstraints=fhdConstraints;
-    webcamConstraints=qxgaConstraints
+    webcamConstraints=lowConstraints;
 	getMedia(webcamConstraints);
 
 pix = new Image();
