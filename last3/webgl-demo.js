@@ -161,6 +161,23 @@ const qvgaConstraints = { video: { width: 1280, height: 720}  };
 const palConstraints =  { video: { width: 352,  height: 288}  };
 const fhdConstraints =  { video: { width: 1920, height: 1080} };
 const vgaConstraints =  { video: { width: 640, height:  480} };
+const qxgaConstraints = 
+    {
+        audio: false,
+        video: {
+            width: {
+                min: 1280,
+                //ideal: 3840,
+                ideal: 4000
+            },
+            height: {
+                min: 720,
+                //ideal: 2160,
+                ideal:4000
+            },
+            facingMode:  "user" 
+    };
+
 const defautConstraints =  { video: true };
 
 var webcamConstraints;
@@ -502,6 +519,7 @@ function start() {
 
 
 	webcamConstraints=fhdConstraints;
+    webcamConstraints=qxgaConstraints
 	getMedia(webcamConstraints);
 
 pix = new Image();
