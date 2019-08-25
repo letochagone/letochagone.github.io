@@ -42,21 +42,13 @@ window.onload=function() {
         audio: false,
                       
         video: {
-            width: {
-              max:120,
-           // min: 1280,
-            //ideal: 3840,
-            ideal: 120
-        },
-        height: {
-         // min: 720,
-         max:160,
-          //ideal: 2160,
-          ideal:160
-        },
-        facingMode:  "user" 
-      }
-    };
+          width:160,
+          height:120,
+                  facingMode:  "user" 
+
+        }
+      };
+    
 
     navigator.mediaDevices.getUserMedia(constraints).then(function(mediaStream){
         var video = document.querySelector('video');
