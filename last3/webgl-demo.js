@@ -462,6 +462,8 @@ m46.pointSize.valeur.defaut=1;
 //1536x2048
 CSW=1536; ///1280;
 CSH=2048; //720;
+CSW=1280;
+CSH=720;
 var CSW_T,CSH_T;
 
 CSW_T=window.innerWidth;

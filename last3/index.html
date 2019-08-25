@@ -114,7 +114,9 @@
 
 
         <script id="gridVertex" type="x-shader/x-vertex">
-        precision highp sampler2D;
+precision lowp float;
+precision lowp int;
+precision lowp sampler2D;
 
         uniform sampler2D   pvTex;
         uniform float         PVS;
@@ -139,9 +141,9 @@
 
         <script id="gridFragment" type="x-shader/x-fragment">
         
-        precision highp float;
-        precision highp int;
-        precision highp sampler2D;
+        precision lowp float;
+        precision lowp int;
+        precision lowp sampler2D;
 
         varying vec2 vitesse;
 
@@ -156,7 +158,9 @@
         </script>
 
         <script id="afficheurVertex" type="x-shader/x-vertex">
-            precision highp sampler2D;
+precision lowp float;
+precision lowp int;
+precision lowp sampler2D;
 
             uniform sampler2D pvTex;
             uniform float PVS;
@@ -200,9 +204,9 @@
 
         <script id="afficheurFragment" type="x-shader/x-fragment">
 
-        precision highp float;
-        precision highp int;
-        precision highp sampler2D;
+        precision lowp float;
+        precision lowp int;
+        precision lowp sampler2D;
 
            // varying vec4 color;
             varying vec4 particlePV;
@@ -259,7 +263,9 @@
 
         <script id="main2Vertex" type="x-shader/x-vertex">
     
-            precision highp sampler2D;
+precision lowp float;
+precision lowp int;
+precision lowp sampler2D;
 
             attribute vec2 position;
 
@@ -292,9 +298,9 @@
             #extension GL_OES_standard_derivatives : enable
 
             #define PI 3.141519
-        precision highp float;
-        precision highp int;
-        precision highp sampler2D;
+        precision lowp float;
+        precision lowp int;
+        precision lowp sampler2D;
 
             uniform float choc;
             uniform vec2 gridSize;
@@ -316,8 +322,8 @@
             uniform int click;
             uniform float PVS;
             uniform float collisionMax;
-            uniform highp sampler2D image1;
-            uniform highp sampler2D textureInput;
+            uniform lowp sampler2D image1;
+            uniform lowp sampler2D textureInput;
 
             varying vec4 particle;
             varying vec4 gridTexel;
@@ -525,7 +531,10 @@ vec3 rgb2hsl( in vec3 c ){
 
 
         <script id="sobelVertex" type="x-shader/x-vertex">
-            precision highp sampler2D;
+
+precision lowp float;
+precision lowp int;
+precision lowp sampler2D;
 
             attribute vec2 coordinates;
 
@@ -542,9 +551,9 @@ vec3 rgb2hsl( in vec3 c ){
         <script id="sobelFragment" type="x-shader/x-fragment">
             #extension GL_OES_standard_derivatives : enable
 
-        precision highp float;
-        precision highp int;
-        precision highp sampler2D;
+        precision lowp float;
+        precision lowp int;
+        precision lowp sampler2D;
 
         uniform sampler2D texture;
             uniform vec2 resolution;
