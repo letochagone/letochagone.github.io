@@ -176,6 +176,7 @@ const qxgaConstraints =
                 ideal:4000
             },
             facingMode:  "user" 
+        }
     };
 
 const defautConstraints =  { video: true };
@@ -455,18 +456,18 @@ model = m46;
 //img.src="352_288.png";
 //img.src="1920_1080.png";
 //img.src="640_480.png";
-
-CSW=1920; ///1280;
-CSH=1080; //720;
+//1536x2048
+CSW=1536; ///1280;
+CSH=2048; //720;
 var CSW_T,CSH_T;
 
 CSW_T=window.innerWidth;
 CSH_T=window.innerHeight;
 
-CSW_T=1280;
-CSH_T=720;
-var CSSX= CSW/2;
-var CSSY= CSH/2;
+CSW_T=1536;
+CSH_T=2048;
+var CSSX= CSW;
+var CSSY= CSH;
 fillGui();
 
 ecouteurGUI();
