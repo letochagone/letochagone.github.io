@@ -14,10 +14,9 @@
             margin: 0;
         }
 
-        video {
-            xmin-height: 100%; 
-            xwidth:100vw;
-        }
+video {
+  display: block;
+}
     </style>
 
 
@@ -27,45 +26,87 @@
 
 
 
-  <video></video>
 <p>resolution of your webcam by defaut :</p>
 <div id="thediv"></div>
 
 
-
+    <input type="number" id="wx"  >
+                <input type="number" id="wy" >
 
 
 <script type="text/javascript">
 
-window.onload=function() {
-    var constraints = {
+const constraints = {
         audio: false,
                       
         video: {
-          width:640,
-          height:480,
-         // height:{max:200},
-                  facingMode:  "user" 
+                  facingMode:  "user" ,
+                  width:55555,
+                  height:55555
+                
+
 
         }
       };
     
+let wx = document.querySelector("#wx");
+let wy = document.querySelector("#wy");
+
+wx.addEventListener('change', 
+        event => {
+          constraints.video.width={};
+                  //  constraints.video.width.min=Number(event.target.value);
+                                  //      constraints.video.width.max=Number(event.target.value);
+                                                           constraints.video.width.ideal=Number(event.target.value);
+
+
+               
+                   
+                }
+    );
+wy.addEventListener('change', 
+        event => {
+                    constraints.video.height={};
+
+                                //  constraints.video.height.min=Number(event.target.value);
+                                  //      constraints.video.height.max=Number(event.target.value);
+                                                         constraints.video.height.ideal=Number(event.target.value);
+            console.log(constraints.video);
+            //video=null;
+            //video = document.querySelector('video');
+                    start();
+                }
+    );
+
+
+const start =function() {
+
+
+
+
+
+
+
+   
+ 
 
     navigator.mediaDevices.getUserMedia(constraints).then(function(mediaStream){
-        var video = document.querySelector('video');
-        video.srcObject = mediaStream;
-        video.play();
-     // setTimeout(_=>{console.log("a ="+video.videoWidth);},1000);
-      
-      getVideoDimensionsOf(mediaStream,video)
-   .then(({width, height}) => {
+
+      const elem = document.querySelector('#vid');
+      if (elem) {
+        elem.parentNode.removeChild(elem); 
+      }
+
+      let video = document.createElement('video');
+      video.setAttribute("id", "vid");
+      video.srcObject = mediaStream;
+      video.play();
+      document.body.appendChild(video);
+
+      getVideoDimensionsOf(mediaStream,video).then(({width, height}) => {
         document.getElementById("thediv").innerHTML = 
           " B width: " + width +" , height: " + height;
-
-
-    });
-      
-      
+        });
     }).catch(function(err){
         console.log("yikes, and err!" + err.message);
     });
@@ -84,9 +125,12 @@ function getVideoDimensionsOf(url,vid){
       });
     }, false );
 
-   // video.srcObject = url;
+    //vid.srcObject = url;
   });
 }
+
+
+  window.onload = start;
 
 
 
