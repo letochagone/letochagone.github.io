@@ -222,7 +222,7 @@ var NBRE;
 var mouseX=0 , mouseY=0 , click , mousedown ;
 var req ;
 var capturer=null , sCB ,dVB; 
-var ext1, ext2,  ext4;
+var ext,ext1, ext2,  ext4;
 var img , pix;
 
 
@@ -577,8 +577,7 @@ pix = new Image();
   ext1 = gl.getExtension("OES_texture_float");
   ext4 = gl.getExtension("EXT_color_buffer_float");
   ext2 = gl.getExtension('OES_standard_derivatives');
-
-
+  ext = gl.getExtension('WEBGL_color_buffer_float');
   gl.canvas.width = CSW;
   gl.canvas.height = CSH;
 
@@ -930,6 +929,7 @@ console.log(NBRE);
 //+
 //ecouteurRecord(canvas);
 
+console.log(ext);
 
   
   if (!req) {req =window.requestAnimationFrame(animate);}
