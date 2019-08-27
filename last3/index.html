@@ -43,12 +43,7 @@
             }
 
             #traitement {
-                image-rendering: pixelated;
-                display:true;
-                position: absolute;
-                left: 0;
-                top: 0;
-                z-index: -15;
+     
 
             }
             #telecran {
@@ -83,19 +78,7 @@
                 bottom:0;
             }
             video#webcam {
-                
-                position: absolute;
-                left:0;
-                top:0;
-             xright: 0;
-             xbottom: 0;
-    width: 1%; 
-    height: 1%; 
-    z-index: -100;
-    xbackground-size: cover;
-    xoverflow: hidden;
-                sz-index: -10;
-                sobject-fit: contain;
+
             }
             
 
@@ -116,7 +99,7 @@
         <script id="gridVertex" type="x-shader/x-vertex">
 precision highp float;
 precision highp int;
-precision highp sampler2D;
+precision lowp sampler2D;
 
         uniform sampler2D   pvTex;
         uniform float         PVS;
@@ -141,9 +124,9 @@ precision highp sampler2D;
 
         <script id="gridFragment" type="x-shader/x-fragment">
         
-        precision highp float;
-        precision highp int;
-        precision highp sampler2D;
+        precision mediump float;
+        precision mediump int;
+        precision lowp sampler2D;
 
         varying vec2 vitesse;
 
@@ -160,7 +143,7 @@ precision highp sampler2D;
         <script id="afficheurVertex" type="x-shader/x-vertex">
 precision highp float;
 precision highp int;
-precision highp sampler2D;
+precision lowp sampler2D;
 
             uniform sampler2D pvTex;
             uniform float PVS;
@@ -189,7 +172,7 @@ precision highp sampler2D;
 
                // pos= -1.0 + (2.0 * floor((pos+1.0) / 2.0 * resolution) + 1.0) / resolution; 
 
-                gl_Position = vec4(pos.x, pos.y,0, 1); 
+                gl_Position = vec4(pos,0, 1); 
                 gl_PointSize = pointSize;
 
                 //color = texelFetch(mapColor, ivec2(position), 0);
@@ -204,9 +187,9 @@ precision highp sampler2D;
 
         <script id="afficheurFragment" type="x-shader/x-fragment">
 
-        precision highp float;
-        precision highp int;
-        precision highp sampler2D;
+        precision mediump float;
+        precision mediump int;
+        precision lowp sampler2D;
 
            // varying vec4 color;
             varying vec4 particlePV;
@@ -223,34 +206,25 @@ precision highp sampler2D;
 
 
             void main() {
-           //  float distanceFromCenter = distance( gl_PointCoord, vec2(0.5,0.5) );
-          //      if ( distanceFromCenter >= 0.5 ) {
-              //      discard;  // don't draw this pixel!
-          //      }
-               vec4 pandv = particlePV;
-               float lon = length(pandv.ba);
-                          //    gl_FragColor=vec4( lumi,flamme,lon,lon) ;
+          //   float distanceFromCenter = distance( gl_PointCoord, vec2(0.5,0.5) );
+            //    if ( distanceFromCenter >= 0.5 ) {
+              //    discard;  // don't draw this pixel!
+                //}
+            //   vec4 pandv = particlePV;
+             //  float lon = length(pandv.ba);
+//vec4 gpre= texture2D(pix,gl_PointCoord);
 
-              //   gl_FragColor = texture2D(pix, gl_PointCoord)*delta2 ; //* vec4(nvit,nvit,nvit,alpha); //delete
-             //    vec2 fafa = vec2(0./3. , 1./3.);   // delete gl_FragCoord.xy / vec2(4)
-                // gl_FragColor = vec4(3,4,texture2D(pvTex,fafa).ba);
+             //    gl_FragColor = vec4(gpre.rgb,gpre.a * delta2);
               // float lon=length(pandv.ba);
-            float nvit=atan(lon)*0.636619772368;
-            nvit = atan(log(lon+1.0)/log(2.0))*0.636619772368; 
-            gl_FragColor=vec4( lumi,flamme,alpha,nvit) ;
+          //  float nvit=atan(exp(lon*alpha))*0.636619772368;
+          //  nvit = atan()*0.636619772368; 
+           gl_FragColor=vec4( flamme,lumi,delta2,alpha) ;
 
            //  float  nvita =(sin((lon*lumi))+1.0)/2.0;
                // nvit=(cos(dot(pandv.ba,pandv.ba))+1.0)/2.0;
             //  float nvita=atan(length(pandv.ba))/3.14159265 + 0.5;
 
-                              //    gl_FragColor = vec4(nvit,nvit,nvit,distanceFromCenter);
-                             // lon = lon / 100. ;
-                        //     float blur = exp(-distanceFromCenter*distanceFromCenter*delta2);
 
-                          //    gl_FragColor = vec4(lumi,flamme,alpha,1.0);
-                // gl_FragColor.ba = vec2(5.,6.);
-               //  gl_FragColor = vec4(1111.,2222.,texture2D(pvTex,vec2(0)));
-              // gl_FragColor=vec4(atan(12110.0)/3.1415926+0.5); //delete
  //gl_FragColor = texture2D(pix, gl_PointCoord) ;
             }
 
@@ -265,7 +239,7 @@ precision highp sampler2D;
     
 precision highp float;
 precision highp int;
-precision highp sampler2D;
+precision lowp sampler2D;
 
             attribute vec2 position;
 
@@ -279,15 +253,16 @@ precision highp sampler2D;
 
             void main() {
 
-                vec2 pos = position / PVS;
+                vec2 pos = position / PVS; // pos = 0...1
 
                 particle = texture2D( pvTex , pos);
 
-                vec2 posgrid = (particle.xy + 1.) / 2. ;     //  =  floor( gridSize * (particle.xy + 1.0)/ 2.0)  / gridSize ;
+               vec2 posgrid = (particle.xy + 1.) / 2. ;     //  =  floor( gridSize * (particle.xy + 1.0)/ 2.0)  / gridSize ;
 
                 gridTexel = texture2D( gridTex, posgrid);
             
                 gl_Position = vec4(   2. * pos + 1./PVS  - 1. , 0 , 1 );
+
 
                 gl_PointSize = 1.0;
             }
@@ -298,12 +273,12 @@ precision highp sampler2D;
             #extension GL_OES_standard_derivatives : enable
 
             #define PI 3.141519
-        precision highp float;
-        precision highp int;
-        precision highp sampler2D;
+        precision mediump float;
+        precision mediump int;
+        precision lowp sampler2D;
 
             uniform float choc;
-            uniform vec2 gridSize;
+            uniform highp vec2 gridSize;
             uniform vec2 resolution;
             uniform float maxAngle;
             uniform float angleBase;
@@ -320,10 +295,10 @@ precision highp sampler2D;
 
             uniform vec2 mouseCoords;
             uniform int click;
-            uniform float PVS;
+            uniform highp float PVS;
             uniform float collisionMax;
-            uniform highp sampler2D image1;
-            uniform highp sampler2D textureInput;
+            uniform  sampler2D image1;
+            uniform  sampler2D textureInput;
 
             varying vec4 particle;
             varying vec4 gridTexel;
@@ -411,8 +386,8 @@ vec3 rgb2hsl( in vec3 c ){
                 
                    vec2 color = vec2(
                     
-                        ((  left.b - right.r ) * 0.5) + 0.5 ,
-                        ((top.b  - bottom.r) * 0.5) + 0.5 
+                        (  left.r - right.r ) * 0.5 + 0.5 ,
+                        (top.r  - bottom.r) * 0.5 + 0.5 
                         
                     );
                   
@@ -439,7 +414,9 @@ vec3 rgb2hsl( in vec3 c ){
                 vec2 pos = particle.xy;
                 vec2 vit = particle.zw;
 
-                vec4 pos1  =     texture2D( image1 ,  gl_FragCoord.xy / PVS ) ;
+               // vec4 pos1  =     texture2D( image1 ,  gl_FragCoord.xy / PVS ) ;
+
+
                 vec2 mm = normalMap(textureInput , (pos+1.)/2. )  - 0.5;
 
 
@@ -508,11 +485,13 @@ vec3 rgb2hsl( in vec3 c ){
 
                 }
 
-                vit += (mm * normalForce + force_totale) * dt ;
+                vit += mm * normalForce + force_totale * dt;
+                
+             //  vit += force_totale * dt;
 
                 if (length(vit) > uVelocityMax)  vit *= slowdown;
              
-                pos += vit * dt ;
+                pos += vit  * dt; // +  mm * normalForce;
 
 
                 if (pos.x >= 1.0 || pos.x <= -1.0 || pos.y >=1.0 || pos.y <= -1.0) {
@@ -534,7 +513,7 @@ vec3 rgb2hsl( in vec3 c ){
 
 precision highp float;
 precision highp int;
-precision highp sampler2D;
+precision lowp sampler2D;
 
             attribute vec2 coordinates;
 
@@ -551,9 +530,9 @@ precision highp sampler2D;
         <script id="sobelFragment" type="x-shader/x-fragment">
             #extension GL_OES_standard_derivatives : enable
 
-        precision highp float;
-        precision highp int;
-        precision highp sampler2D;
+        precision mediump float;
+        precision mediump int;
+        precision lowp sampler2D;
 
         uniform sampler2D texture;
             uniform vec2 resolution;
