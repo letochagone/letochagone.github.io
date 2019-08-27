@@ -634,7 +634,11 @@ console.log("he");
   );
 
   gl_Traitement.getExtension('OES_standard_derivatives');
-
+  gl_Traitement.getExtension("OES_texture_float");
+  gl_Traitement.getExtension("EXT_color_buffer_float");
+  gl_Traitement.getExtension('WEBGL_color_buffer_float');
+  gl_Traitement.getExtension('EXT_float_blend');
+  
   gl_Traitement.canvas.width = CSW_T;
   gl_Traitement.canvas.height = CSH_T;
   console.log("gl_Traitement "+CSW_T+" , "+CSH_T);
@@ -957,6 +961,8 @@ function animate(timestamp) {
     /// SOBEL // ************************************************************
     /// SOBEL // ************************************************************
     /// SOBEL // ************************************************************
+        gl_Traitement.disable(gl.BLEND);
+
     gl_Traitement.useProgram(       sobelShader);
     gl_Traitement.viewport(0, 0, CSW_T, CSH_T);
     gl_Traitement.bindFramebuffer(  gl_Traitement.FRAMEBUFFER, null);
