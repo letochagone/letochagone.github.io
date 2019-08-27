@@ -42,8 +42,8 @@ window.onload=function() {
         audio: false,
                       
         video: {
-          width:160,
-          height:120,
+          width:{max:400},
+         // height:{max:200},
                   facingMode:  "user" 
 
         }
@@ -56,7 +56,7 @@ window.onload=function() {
         video.play();
      // setTimeout(_=>{console.log("a ="+video.videoWidth);},1000);
       
-      getVideoDimensionsOf(mediaStream)
+      getVideoDimensionsOf(mediaStream,video)
    .then(({width, height}) => {
         document.getElementById("thediv").innerHTML = 
           " B width: " + width +" , height: " + height;
@@ -71,10 +71,10 @@ window.onload=function() {
 
 }
 
-function getVideoDimensionsOf(url){
+function getVideoDimensionsOf(url,vid){
   return new Promise(function(resolve){
-    let video = document.createElement('video');
-    video.addEventListener( "loadedmetadata", function () {
+    //let video = document.createElement('video');
+    vid.addEventListener( "loadedmetadata", function () {
       let height = this.videoHeight;
       let width = this.videoWidth;
       resolve({
@@ -83,7 +83,7 @@ function getVideoDimensionsOf(url){
       });
     }, false );
 
-    video.srcObject = url;
+   // video.srcObject = url;
   });
 }
 
