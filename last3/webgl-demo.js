@@ -578,6 +578,8 @@ pix = new Image();
   ext4 = gl.getExtension("EXT_color_buffer_float");
   ext2 = gl.getExtension('OES_standard_derivatives');
   ext = gl.getExtension('WEBGL_color_buffer_float');
+  gl.getExtension('EXT_float_blend');
+console.log("he");
   gl.canvas.width = CSW;
   gl.canvas.height = CSH;
 
