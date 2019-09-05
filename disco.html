@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    	<meta charset="utf-8"/>
+    	<title>DISCO</title>
+    	<style>
+        html, 
+body {
+    height: 100vh;
+}
+        * {
+          margin:0;
+        }
+
+        canvas {
+          width:100%;
+          height: 100%;
+        }
+    	</style>
+  	</head>
+
+  	<body>
+  		<canvas id="renderCanvas"></canvas>
+
+
+  		<script type="text/javascript">
+
+
+var vertexShaderSource =
+    `#version 300 es
+
+    in vec2 a_Position;
+
+    void main()
+    {
+        gl_Position = vec4(a_Position, 0.0, 1.0);
+        gl_PointSize=1.0;
+    }`;
+
+var fragmentShaderSource =
+    `#version 300 es
+
+    precision mediump float;
+
+    uniform float dimx;
+    uniform float dimy;
+    uniform float scale;
+    uniform float offx;
+    uniform float offy;
+    uniform float p[32];
+    uniform int indices[32];
+    out vec4 outColor;
+
+
+    vec3 hsv2rgb(vec3 c){
+      vec4 K=vec4(1.,2./3.,1./3.,3.);
+      return c.z*mix(K.xxx,
+        clamp(
+          abs(
+            fract(c.x+K.xyz)*6.-K.w
+          )-K.x,0.,1.
+        ),c.y);
+    }
+
+
+    void main()
+    {
+      float o[32];
+      //for(int i=0;i<4;++i) { o[i] = 1.0 - p[i] * 0.0078125;}
+      vec2 coordsEcran = gl_FragCoord.xy / vec2(dimx,dimy);
+      vec2 coordsMath = 2.0 * coordsEcran - 1.0;
+
+      float x = coordsMath.x *scale+offx;
+      float y = coordsMath.y *scale+offy;
+
+   //  float f=abs(p[0]*x*sin(x*p[1]*y+p[2]*y+p[12]+p[13]*x)-y*p[3]+p[14])*abs(x*p[4]*sin(y*y*p[5]+x*x*p[6])+y*abs(sin(x*p[7]+y*p[8]+x+y))*p[9]);
+   //  float f= (x*p[5]*cos(x*p[0]+y*p[1])+y*sin(x*p[2]+y*p[3])*p[4])/(y*p[6]*cos(y*p[7]+x*p[8])+x*sin(x*p[9]+y*p[10])*p[11]);
+   float f=p[13]/abs(
+   x*x*x*p[0]+
+   y*y*y*p[1]+
+   y*x*x*p[2]+
+   y*y*x*p[3]+
+   x*x*p[4]+
+   x*y*p[5]+
+   y*y*p[6]+
+   x*p[7]+
+   y*p[8]+
+   p[9]
+   );
+  // f=(p[11]*x*y+p[0])/(cos(x*x*p[1]-y*y*p[2]))*1.0/(sin(x*x*p[5]+y*y*p[6]+p[8]));
+  //f=p[0]/(cos(x*x*p[1]+p[2]*y*y-x*y*p[3]+p[4]))+    p[5]/(sin(p[6]*x*x-y*y*p[7]-x*y*p[8]+p[9]))+. p[10]/(sin(p[11]*x-y*p[12]+p[13]))+ p[14]/(sin(p[15]*x*x+y*y*p[13]))+y*atan(x)*p[14]+cos(x*y+p[12])*p[5];
+   //+cos(x+y)*x*y); 
+    //  f=f*p[8];
+//0.02463994238
+
+
+ 
+  float p0 = 1.0 - 0.0078125 * p[indices[0]];
+  float p1 = 1.0 - 0.0078125 * p[indices[1]] ;
+  float p2 = 1.0 - 0.0078125 * p[indices[2]] ;
+  float p3 = 1.0 - 0.0078125 * p[indices[3]] ;
+  float p4 = 1.0 - 0.0078125 * p[indices[4]];
+  float p5 = 1.0 - 0.0078125 * p[indices[5]] ;
+  float p6 = 1.0 - 0.0078125 * p[indices[6]] ;
+  float p7 = 1.0 - 0.0078125 * p[indices[7]] ;
+  float p8 = 1.0 - 0.0078125 * p[indices[8]] ;
+  float p9 = 1.0 - 0.0078125 * p[indices[9]] ;
+  float p10 = 1.0 - 0.0078125 * p[indices[10]] ;
+  float p11 = 1.0 - 0.0078125 * p[indices[11]] ;
+  float p12 = 1.0 - 0.0078125 * p[indices[12]] ;
+  float p13 = 1.0 - 0.0078125 * p[indices[13]] ;
+  float p14 = 1.0 - 0.0078125 * p[indices[14]] ;
+  float p15 = 1.0 - 0.0078125 * p[indices[15]] ;
+  float p16 = 1.0 - 0.0078125 * p[indices[16]] ;
+  float p17 = 1.0 - 0.0078125 * p[indices[17]] ;
+  float p18 = 1.0 - 0.0078125 * p[indices[18]] ;
+  float p19 = 1.0 - 0.0078125 * p[indices[19]] ;
+  float p20 = 1.0 - 0.0078125 * p[indices[20]] ;
+  float p21 = 1.0 - 0.0078125 * p[indices[21]] ;
+  float p22 = 1.0 - 0.0078125 * p[indices[22]] ;
+
+  float cx,cy;
+
+  cx = p0 *1.0;
+  cy = p1 *1.0;
+
+  f= p2/ ( p3*(x-cx)*(x-cx)+p4*(y-cy)*(sin(y)-cy)-6.0*p5);
+  
+  cx= p6*2.0;
+  cy= p7*2.0;
+  
+  f=f +  p8/  (   p9*(x-cx)*(x-cx)+p10*(y-cy)*(y-cy)+p11*6.0 ) ;
+
+  cx= p12*4.0;
+  cy= p13*4.0;
+  
+  f=f+ p14/( (x-cx)*(sin(x)-cx)+p15*(sin(y)-cy)*(y-cy)-p16*12.0 );
+       
+
+  f=f*p17 + sin(f*p19+p22)*p20;
+
+  f=p[13]/(
+   x*x*x*p0+
+   y*y*y*p1+
+   y*x*x*p2+
+   y*y*x*p3+
+   x*x*p4+
+   x*y*p5+
+   y*y*p6+
+   x*p7+
+   y*p8+
+   p9
+   );
+   f=f*0.1;
+  // f=tan(f*p10+p12);
+
+  float f1 = f*p21; 
+  float f2 = f*p22 ; 
+
+        
+  float col =  0.636619772368 * abs( atan(f));
+  float col2 = 0.636619772368 * abs( atan(f1));
+  float col3 = 0.636619772368 * abs( atan(f2));
+
+  outColor = vec4(col,col2,col3, 1.0);
+    }`;
+
+
+
+var fftSize=64;
+var decalage=0;
+var canvasX=1680;
+var canvasY=1050;
+var canvasX=640;
+var canvasY=480;
+var canvasX=1360;
+var canvasY=768;
+canvasX=1680;
+canvasY=1050;
+canvasX=window.innerWidth;
+canvasY=window.innerHeight;
+document.onfullscreenchange = function ( event ) { 
+ // canvasX=window.innerWidth;
+//canvasY=window.innerHeight;
+//gl.viewport(0,0,renderCanvas.width,renderCanvas.height);
+
+}; 
+
+
+function toggleFullScreen() {
+  var videoElement = document.getElementById("renderCanvas");
+
+    if (!document.mozFullScreen && !document.webkitFullScreen) {
+      if (videoElement.mozRequestFullScreen) {
+        videoElement.mozRequestFullScreen();
+      } else {
+        videoElement.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+      }
+    } else {
+      if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else {
+        document.webkitCancelFullScreen();
+      }
+    }
+  }
+  
+  document.addEventListener("keydown", function(e) {
+    if (e.keyCode == 13) {
+      toggleFullScreen();
+    }
+  }, false);
+
+
+var renderCanvas= document.getElementById("renderCanvas");
+
+
+renderCanvas.width= canvasX;
+renderCanvas.height=canvasY ;
+//renderCanvas.width= 640;
+//renderCanvas.height=480;
+//renderCanvas.style.width= canvasX+'px' ;
+//renderCanvas.style.height=canvasY+'px' ;
+var gl = renderCanvas.getContext("webgl2");
+
+
+gl.viewport(0,0,renderCanvas.width,renderCanvas.height);
+//gl.viewport(0,0,canvasX,canvasY);
+
+var vShader = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vShader, vertexShaderSource);
+gl.compileShader(vShader);
+
+var fShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(fShader, fragmentShaderSource);
+gl.compileShader(fShader);
+
+var program = gl.createProgram();
+gl.attachShader(program, vShader);
+gl.attachShader(program, fShader);
+gl.linkProgram(program);
+
+var uDimx = gl.getUniformLocation(    program,    "dimx"       );
+var uDimy = gl.getUniformLocation(    program,    "dimy"       );
+var scale = gl.getUniformLocation(    program,    "scale"       );
+var offx = gl.getUniformLocation(    program,    "offx"       );
+var offy = gl.getUniformLocation(    program,    "offy"       );
+var Uindices = gl.getUniformLocation( program, "indices");
+
+
+var  p= gl.getUniformLocation( program, "p" );
+
+
+
+
+if ( !gl.getProgramParameter( program, gl.LINK_STATUS) ) {
+  var info = gl.getProgramInfoLog(program);
+  throw 'Impossible de compiler le programme WebGL. \n\n' + info;
+}
+
+gl.useProgram(program);
+gl.uniform1f( uDimx,  renderCanvas.width    );
+gl.uniform1f( uDimy,  renderCanvas.height    );
+
+var vertices = [-1, -1, 1, -1, -1, 1, 1, 1];
+
+var floatArray = new Float32Array(vertices);
+
+var vbo = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+gl.bufferData(gl.ARRAY_BUFFER, floatArray, gl.STATIC_DRAW);
+
+var a_Position = gl.getAttribLocation(program, "a_Position");
+gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(a_Position);
+
+
+var analyser;
+var bufferLength;
+var dataArray;
+
+var indices=Array(fftSize/2).fill().map((v,i)=>i)
+
+navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+  .then(gotStream);
+
+var sampleRate=44100;
+  var options={
+  sampleRate:sampleRate,
+  latencyHint:0
+
+};
+function gotStream(stream) {
+
+
+  const audioContext = new AudioContext(options);//{sampleRate:3000});
+ // console.log(audioCtx);
+  const audioSourceNode = audioContext.createMediaStreamSource(stream);
+  analyser= audioContext.createAnalyser();
+  analyser.fftSize = fftSize;
+ //  analyser.smoothingTimeConstant=0.9;
+ analyser.smoothingTimeConstant=0.9;
+ // analyser.minDecibels = -50;
+//analyser.maxDecibels = -10;
+
+  bufferLength = analyser.frequencyBinCount;
+
+  console.log("taille de la plage de frequence = "+bufferLength);
+  dataArray = new Uint8Array(bufferLength);
+  audioSourceNode.connect(analyser);
+  
+  setInterval(function() {
+      indices=shuffle(indices);
+
+     // console.log(indices);
+ }, 2000);
+  draw();
+}
+
+
+var scaleTime,offxTime,offyTime;
+var t=0;
+function draw() {
+  var frequencyData = new Uint8Array(bufferLength);
+  requestAnimationFrame(draw);
+  analyser.getByteFrequencyData(frequencyData);
+//console.log(frequencyData);
+
+  //gl.clearColor(0.9, 1.0, 0.9, 1.0);
+  //gl.clear(gl.COLOR_BUFFER_BIT);
+
+  //let uniforms=[];
+  //uniforms.length=16;
+  //for (let i=0; i<16; i++) {let f= 1-2*frequencyData[indices[i]] / 255 ;uniforms[i]=f*0.1 ;}
+  //let uniforms =new Float32array(frequencyData.map(x=>1-2*x / 255);
+  // let uniforms= new Float32Array(frequencyData).map(x=>1-x * 0.0078125);
+    //  gl.uniform1fv( p,  uniforms );
+      gl.uniform1fv( p,  frequencyData );
+
+  //console.log(frequencyData)
+scaleTime = 5+3*Math.sin(t);
+scaleTime=15;
+offxTime = (Math.sin(t))*4;
+offyTime = (Math.cos(t))*4;
+offyTime=0;
+offxTime=0;
+
+t+=0.01;
+gl.uniform1f( scale,scaleTime);
+gl.uniform1f( offx,offxTime);
+gl.uniform1f( offy,offyTime);
+gl.uniform1iv( Uindices,  indices );
+
+gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+
+}
+
+
+
+function shuffle(array) {
+    let counter = array.length;
+
+    // While there are elements in the array
+    while (counter > 0) {
+        // Pick a random index
+        let index = Math.floor(Math.random() * counter);
+
+        // Decrease counter by 1
+        counter--;
+
+        // And swap the last element with it
+        let temp = array[counter];
+        array[counter] = array[index];
+        array[index] = temp;
+    }
+
+    return array;
+}
+
+
+
+
+  		</script>
+  	</body>
+</html>
+
