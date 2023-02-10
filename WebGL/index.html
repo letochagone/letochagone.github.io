@@ -1,0 +1,370 @@
+<!doctype html>
+<html>
+
+<head>
+	<style>
+		
+	</style>
+</head>
+
+<body>
+	<canvas></canvas>
+	<button>Click</button>
+	<script>
+		
+'use strict';
+
+const button = document.querySelector('button');
+
+button.addEventListener('click', (event) => {
+
+    /*
+    au moment où l'on clique, on est dans cet état :
+   gl = {
+       arrayBuffer: colorBuffer
+       let vertexArray = {
+                attributes: [
+colorLoc----->      { enabled: TRUE, type: <<gl.UNSIGNED_BYTE>>, size: <<4>>, normalized: <<true>>, 
+                        stride: <<0>>, offset: <<0>>, buffer: <<colorBuffer>> },
+                    { enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+                        stride: 0, offset: 0, buffer: null },
+positionLoc---->    { enabled: true, type: gl.FLOAT, size: 2, normalized: false, 
+                        stride: 0, offset: 0, buffer: positionBuffer },
+                    { enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+                        stride: 0, offset: 0, buffer: null },
+      
+                    ...
+     ],
+   }
+}
+*/
+       // gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+//gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer); // arrayBuffer pointe sur colorBuffer
+
+    gl.bufferData(gl.ARRAY_BUFFER, vertexColors2, gl.STATIC_DRAW); // arrayBuffer := vertexColors2
+   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer); // arrayBuffer pointe sur positionBuffer
+    gl.bufferData(gl.ARRAY_BUFFER, vertexPositions2, gl.STATIC_DRAW); // arrayBuffer := vertexPositions2
+     console.log(4);
+
+/*
+2e clique :
+arrayBuffer pointe sur positionBuffer
+gl.bufferData(gl.ARRAY_BUFFER, vertexColors2, gl.STATIC_DRAW); 
+arrayBuffer := vertexColors2
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+arrayBuffer pointe sur positionBuffer
+gl.bufferData(gl.ARRAY_BUFFER, vertexPositions2, gl.STATIC_DRAW);
+arrayBuffer := vertexPositions2
+
+*/
+    /*
+
+	
+	//  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+	//gl.disableVertexAttribArray(positionLoc);
+	/*
+	const attribute  = vertexArray.attributes[positionLoc]
+	*/
+	  //gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+	//return;
+
+  button.textContent = `Click count: ${event.detail}`;
+  //gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  /*
+gl = {
+	arrayBuffer : positionBuffer;
+
+}
+*/
+ // gl.bufferData(gl.ARRAY_BUFFER, vertexPositions2, gl.STATIC_DRAW);
+
+
+/*
+bufferData(bindPoint,data(==vertexPositions2),usage) :
+   var buffer;
+   if (bindPoint==gl.ARRAY_BUFFER)
+     buffer = arrayBuffer(==positionBuffer);
+     break;
+   if (bindPoint==...)
+   
+   //copy data into buffer;
+   buffer.copyData(data); 
+   buffer.setUsage(usage)
+
+
+gl = {
+	arrayBuffer: positionBuffer
+	                    \_______vertexPositions2
+	let vertexArray = {
+     attributes: [
+             		{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+                		stride: 0, offset: 0, buffer: null },
+       				{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+         				stride: 0, offset: 0, buffer: null },
+ positionLoc---->	{ enabled: TRUE, type: gl.FLOAT, size: 2, normalized: false, 
+         				stride: 0, offset: 0, buffer: positionBuffer },
+       				{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+        				stride: 0, offset: 0, buffer: null },
+      
+       				...
+     ],
+   }
+}
+
+*/
+
+
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+});
+
+
+
+const canvas = document.querySelector('canvas');
+
+const gl = canvas.getContext('webgl');
+
+
+const vsGLSL = `
+attribute vec4 position;
+attribute vec4 color;
+
+varying vec4 v_color;
+
+void main() {
+    gl_Position = position;
+    v_color = color;
+}
+`;
+
+
+const fsGLSL = `
+precision highp float;
+
+varying vec4 v_color;
+
+void main() {
+    gl_FragColor = v_color;
+}
+`;
+
+
+const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vertexShader, vsGLSL);
+gl.compileShader(vertexShader);
+if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+  throw new Error(gl.getShaderInfoLog(vertexShader))
+};
+const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(fragmentShader, fsGLSL);
+gl.compileShader(fragmentShader);
+if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+  throw new Error(gl.getShaderInfoLog(fragmentShader))
+};
+const prg = gl.createProgram();
+gl.attachShader(prg, vertexShader);
+gl.attachShader(prg, fragmentShader);
+gl.linkProgram(prg);
+
+if (!gl.getProgramParameter(prg, gl.LINK_STATUS)) {
+  throw new Error(gl.getProgramInfoLog(prg))
+};
+
+
+
+const positionLoc = gl.getAttribLocation(prg, 'position');
+const colorLoc = gl.getAttribLocation(prg, 'color');
+
+// in clip space
+const vertexPositions = new Float32Array([
+    0,   0.7,
+  0.5,  -0.7,
+ -0.5,  -0.7,
+]);
+const vertexPositions2 = new Float32Array([
+    0,   0.7,
+  0.3,  -0.5,
+ -0.8,  -0.7,
+]);
+
+
+const positionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+/*
+gl = {
+	arrayBuffer : positionBuffer;
+
+}
+*/
+gl.bufferData(gl.ARRAY_BUFFER, vertexPositions, gl.STATIC_DRAW);
+/*
+positionBuffer = vertexPositions
+gl = {
+	arrayBuffer : positionBuffer
+}
+*/
+
+const vertexColors = new Uint8Array([
+    255, 0, 0, 255,
+    0, 255, 0, 255,
+    0, 0, 255, 255,
+]);
+const vertexColors2 = new Uint8Array([
+    255, 0, 255, 255,
+    255, 255, 0, 255,
+    0, 255, 255, 255,
+]);
+
+
+
+const colorBuffer = gl.createBuffer();
+
+gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+/*
+positionBuffer = vertexPositions
+
+gl = {
+    colorBuffer: null;
+	arrayBuffer : colorBuffer;
+}
+*/
+
+gl.bufferData(gl.ARRAY_BUFFER, vertexColors, gl.STATIC_DRAW);
+/*
+positionBuffer = vertexPositions
+colorBuffer = vertexColors;
+gl {
+
+	arrayBuffer : colorBuffer;
+}
+*/
+
+
+gl.enableVertexAttribArray(positionLoc);
+/*
+attribute := vertexArray.attributes[positionLoc]
+attribute.enabled=true
+gl = {
+	let vertexArray = {
+     attributes: [
+             		{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+                		stride: 0, offset: 0, buffer: null },
+       				{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+         				stride: 0, offset: 0, buffer: null },
+ positionLoc---->	{ enabled: TRUE, type: gl.FLOAT, size: 3, normalized: false, 
+         				stride: 0, offset: 0, buffer: null },
+       				{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+        				stride: 0, offset: 0, buffer: null },
+      
+       				...
+     ],
+   }
+}
+*/
+
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+/*
+gl = {
+	arrayBuffer: positionBuffer
+}
+*/
+
+gl.vertexAttribPointer(
+    positionLoc,  
+    2,            // 2 values per vertex shader iteration
+    gl.FLOAT,     // data is 32bit floats
+    false,        // don't normalize
+    0,            // stride (0 = auto)
+    0,            // offset into buffer
+);
+/*
+gl = {
+	arrayBuffer: positionBuffer
+	let vertexArray = {
+     attributes: [
+             		{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+                		stride: 0, offset: 0, buffer: null },
+       				{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+         				stride: 0, offset: 0, buffer: null },
+ positionLoc---->	{ enabled: TRUE, type: gl.FLOAT, size: 2, normalized: false, 
+         				stride: 0, offset: 0, buffer: positionBuffer },
+       				{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+        				stride: 0, offset: 0, buffer: null },
+      
+       				...
+     ],
+   }
+}
+
+*/
+
+
+gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+/*
+gl = {
+	arrayBuffer: colorBuffer
+}
+*/
+
+gl.enableVertexAttribArray(colorLoc);
+/*
+gl = {
+	arrayBuffer: colorBuffer
+	let vertexArray = {
+     attributes: [
+colorLoc----->      { enabled: TRUE, type: gl.FLOAT, size: 3, normalized: false, 
+                		stride: 0, offset: 0, buffer: null },
+       				{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+         				stride: 0, offset: 0, buffer: null },
+positionLoc---->	{ enabled: true, type: gl.FLOAT, size: 2, normalized: false, 
+         				stride: 0, offset: 0, buffer: positionBuffer },
+       				{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+        				stride: 0, offset: 0, buffer: null },
+      
+       				...
+     ],
+   }
+}
+
+*/
+
+gl.vertexAttribPointer(
+    colorLoc,  
+    4,                // 4 values per vertex shader iteration
+    gl.UNSIGNED_BYTE, // data is 8bit unsigned bytes
+    true,             // do normalize
+    0,                // stride (0 = auto)
+    0,                // offset into buffer
+);
+/*
+gl = {
+	arrayBuffer: colorBuffer
+	let vertexArray = {
+     attributes: [
+colorLoc----->      { enabled: TRUE, type: <<gl.UNSIGNED_BYTE>>, size: <<4>>, normalized: <<true>>, 
+                		stride: <<0>>, offset: <<0>>, buffer: <<colorBuffer>> },
+       				{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+         				stride: 0, offset: 0, buffer: null },
+positionLoc---->	{ enabled: true, type: gl.FLOAT, size: 2, normalized: false, 
+         				stride: 0, offset: 0, buffer: positionBuffer },
+       				{ enabled: false, type: gl.FLOAT, size: 3, normalized: false, 
+        				stride: 0, offset: 0, buffer: null },
+      
+       				...
+     ],
+   }
+}
+
+*/
+
+gl.useProgram(prg);
+
+
+// compute 3 vertices for 1 triangle
+gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+	</script>
+</body>
+</html>
