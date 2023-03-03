@@ -1,66 +1,195 @@
 <!doctype html>
 <html>
-	<head>
-		<link href="prism.css" rel="stylesheet" />
-<link rel="stylesheet" href="texImage2D.css">
+  <head>
 
-	</head>
-	
-	
-<body>
-	<pre><code class="language-css">p { color: red }</code></pre>
-		<pre><code class="language-javascript">
-const canvas = document.querySelector("canvas");
-const gl = canvas.getContext("webgl");
+    <link rel="stylesheet" href="highlight/styles/agate.min.css">
+    <script src="highlight/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+  </head>
+
+  <body>
+    <pre><code>&lt;!doctype html&gt;
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;canvas id="canvas"&gt;&lt;/canvas&gt;
+      &lt;script&gt;</code></pre>
+
+    <pre><code>        'use strict';
+        const canvas = document.querySelector("canvas");
+        const gl = canvas.getContext("webgl");
+
+        canvas.style.width="60px";
+        canvas.style.height="40px";
+        gl.canvas.style.imageRendering="pixelated";
+
+        gl.canvas.width= 3;
+        gl.canvas.height = 2;
+
+        const vsGLSL=`</code></pre>
+
+    <pre><code>          attribute vec4 a_position;
+          attribute vec2 a_texCoord;
+          uniform vec2 u_resolution;
+          varying vec2 v_texCoord;
+
+          void main() {
+            gl_Position = a_position;
+            v_texCoord = a_texCoord;
+          }
+    </code></pre>
+
+    <pre><code>        `;
+
+        const fsGLSL=`</code></pre>
+
+    <pre><code>          precision mediump float;
+          uniform sampler2D u_image;
+          varying vec2 v_texCoord;
+
+          void main() {
+            gl_FragColor = texture2D(u_image, v_texCoord);
+            gl_FragColor.rgb *= gl_FragColor.a;
+          }</code></pre>
+
+
+    <pre><code>        `;
+
+        const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertexShader,vsGLSL);
+        gl.compileShader(vertexShader);
+
+        const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fragmentShader,fsGLSL);
+        gl.compileShader(fragmentShader);
+
+        const prg = gl.createProgram();
+        gl.attachShader(prg,vertexShader);
+        gl.attachShader(prg,fragmentShader);
+        gl.linkProgram(prg);
+
+        let positionLocation = gl.getAttribLocation(prg, "a_position");
+        let texcoordLocation = gl.getAttribLocation(prg, "a_texCoord");
+
+
+        let buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        const farr = new Float32Array([
+          -1,  1, 0, 1, 
+          -1, -1, 0, 0,
+           1,  1, 1, 1,
+           1, -1, 1, 0
+        ]);
+
+        gl.bufferData(gl.ARRAY_BUFFER, farr,gl.STATIC_DRAW);
+
+        // Create a texture.
+        let texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+
+        // Set the parameters so we can render any size image.
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+
+        const ctx = document.createElement('canvas').getContext('2d');
+        ctx.canvas.width = 3
+        ctx.canvas.height = 2
+        ctx.fillStyle = 'rgba(66,44,144,0.5)';
+        ctx.fillRect(2, 1, 1, 1);
+        ctx.fillStyle = 'rgba(166,144,14,0.7)';
+        ctx.fillRect(0, 0, 1, 1);
+
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,                // mip level
+          gl.RGBA,          // internal format
+          gl.RGBA,          // format
+          gl.UNSIGNED_BYTE, // type
+          ctx.canvas
+        );
+
+        let resolutionLocation = gl.getUniformLocation(prg, "u_resolution");
+
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        gl.useProgram(prg);
+
+        gl.enableVertexAttribArray(positionLocation);
+
+        const fsize = farr.BYTES_PER_ELEMENT;
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 4*fsize, 0);
+
+        gl.enableVertexAttribArray(texcoordLocation);
+        gl.vertexAttribPointer(texcoordLocation, 2, gl.FLOAT, false, 4*fsize, 2*fsize);
+
+        gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+
+/*
+résultat écran :
+XXA
+BXX
+
+X = carré noir
+B = 117 100 10
+
+le point B correspond à rgba(166,144,14,0.7)
+co = Cs as + Cb ab * ( 1- as)
+ici Cs = 166/255 144/255 14/255
+    as = 0.7
+    Cb = 0 0 0
+    ab = 1
+co = ( 166/255 * 0.7 , 144/255 * 0.7 , 14/255 * 0.7
+   = 116 101 10
+*/
 </code></pre>
 
-
-	
-	
-	<pre>
-    <code class="language-markup">
-        <script type="prism-html-markup">
-<h1 class="foo">h1. Heading 1</h1>
-<h2>h2. Heading 2</h2>
-<h3>h3. Heading 3</h3>
-<h4>h4. Heading 4</h4>
-<h5>h5. Heading 5</h5>
-<h6>h6. Heading 6</h6>
-</script>
-    </code>
-</pre>
+<pre><code>    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
 
 	 
 <canvas id="canvas"></canvas>
 	<script>
-
-	'use strict';
+'use strict';
 
 const canvas = document.querySelector("canvas");
 const gl = canvas.getContext("webgl");
 
 canvas.style.width="60px";
 canvas.style.height="40px";
-gl.canvas.width= 3;
-gl.canvas.height = 2;
 gl.canvas.style.imageRendering="pixelated";
 
+gl.canvas.width= 3;
+gl.canvas.height = 2;
 
 
 const vsGLSL=`
-attribute vec4 a_position;
-attribute vec2 a_texCoord;
+  attribute vec4 a_position;
+  attribute vec2 a_texCoord;
 
-uniform vec2 u_resolution;
+  uniform vec2 u_resolution;
 
-varying vec2 v_texCoord;
+  varying vec2 v_texCoord;
 
-void main() {
+  void main() {
 
-  gl_Position = a_position;
-  v_texCoord = a_texCoord;
-}
+    gl_Position = a_position;
+    v_texCoord = a_texCoord;
+  }
 `;
+
 
 const fsGLSL=`
 precision mediump float;
@@ -68,65 +197,41 @@ uniform sampler2D u_image;
 varying vec2 v_texCoord;
 void main() {
   gl_FragColor = texture2D(u_image, v_texCoord);
-  
-  //gl_FragColor = vec4(255./255.,181./255.,160./255.,100./255.); 
   gl_FragColor.rgb *= gl_FragColor.a;
 
 
 }
 `;
-/*
-co = 255/255*100/255+(1-100/255)
-181/255*100/255+1-100/255
-*/
+
+
 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
 gl.shaderSource(vertexShader,vsGLSL);
 gl.compileShader(vertexShader);
-if (!gl.getShaderParameter(vertexShader,gl.COMPILE_STATUS)) {
-  throw new Error(gl.getShaderInfoLog(vertexShader))
-};
 
 const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
 gl.shaderSource(fragmentShader,fsGLSL);
 gl.compileShader(fragmentShader);
-if (!gl.getShaderParameter(fragmentShader,gl.COMPILE_STATUS)) {
-  throw new Error(gl.getShaderInfoLog(fragmentShader))
-};
 
 const prg = gl.createProgram();
 gl.attachShader(prg,vertexShader);
 gl.attachShader(prg,fragmentShader);
 gl.linkProgram(prg);
-if (!gl.getProgramParameter(prg,gl.LINK_STATUS)) {
-  throw new Error(gl.getProgramInfoLog(prg))
-};
 
-gl.detachShader(prg, vertexShader);
-gl.deleteShader(vertexShader);
-gl.detachShader(prg, fragmentShader);
-gl.deleteShader(fragmentShader);
-
-
-
-
-// 67 50 255 122  16 62 180 57   246 50 68 190
-// 255 181 160 255   180 124 62 153    180 255 180 111 
 let positionLocation = gl.getAttribLocation(prg, "a_position");
 let texcoordLocation = gl.getAttribLocation(prg, "a_texCoord");
 
+
 let buffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
 const farr = new Float32Array([
   -1, 1, 0, 1, 
   -1, -1, 0, 0,
   1, 1, 1, 1,
   1, -1, 1, 0
 ]);
+
 gl.bufferData(gl.ARRAY_BUFFER, farr,gl.STATIC_DRAW);
-
-
-
-
 
 // Create a texture.
 let texture = gl.createTexture();
@@ -138,45 +243,74 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-// Upload the image into the texture.
-gl.texImage2D(gl.TEXTURE_2D , 0, gl.RGBA, 3, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-	new Uint8Array([  67,  50, 255, 122,   16, 62, 180,  57,   246,  50,  68, 190,
-		             255, 181, 160, 255,    0,  0, 255, 153,   180, 255, 180, 111
-		           ])
-);
+
+const ctx = document.createElement('canvas').getContext('2d');
+ctx.canvas.width = 3
+ctx.canvas.height = 2
+ctx.fillStyle = 'rgba(166,44,244,0.5)';
+ctx.fillRect(2, 1, 1, 1);
+ctx.fillStyle = 'rgba(166,144,14,0.8)';
+ctx.fillRect(0, 0, 1, 1);
+
+gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,                // mip level
+    gl.RGBA,          // internal format
+    gl.RGBA,          // format
+    gl.UNSIGNED_BYTE, // type
+    ctx.canvas);
 
 let resolutionLocation = gl.getUniformLocation(prg, "u_resolution");
 
-
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
 gl.clearColor(0, 0, 0, 1);
 gl.clear(gl.COLOR_BUFFER_BIT);
 
 gl.useProgram(prg);
 
+
 gl.enableVertexAttribArray(positionLocation);
 const fsize = farr.BYTES_PER_ELEMENT;
 gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 4*fsize, 0);
 
+
 gl.enableVertexAttribArray(texcoordLocation);
-
-
 gl.vertexAttribPointer(texcoordLocation, 2, gl.FLOAT, false, 4*fsize, 2*fsize);
 
+
 gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+
 gl.enable(gl.BLEND);
 gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+
 let primitiveType = gl.TRIANGLES;
+
 //couleur ecran
 // co = Cs * as + Cb* ab * (1-as)
 // co  = 67/255 * 122/255 + (1-122/255)
 gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
 
+/*
+résultat écran :
+XXA
+BXX
 
+X = carré noir
+B = 117 100 10
+
+le point B correspond à rgba(166,144,14,0.7)
+co = Cs as + Cb ab * ( 1- as)
+ici Cs = 166/255 144/255 14/255
+    as = 0.7
+    Cb = 0 0 0
+    ab = 1
+co = ( 166/255 * 0.7 , 144/255 * 0.7 , 14/255 * 0.7
+   = 116 101 10
+*/
 
 </script>
 	
-	    <script src="prism.js"></script>
 </body>
 </html>
