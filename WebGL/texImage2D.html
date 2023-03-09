@@ -5,6 +5,8 @@
     <link rel="stylesheet" href="highlight/styles/agate.min.css">
     <script src="highlight/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
+
+
   </head>
 
   <body>
@@ -85,6 +87,44 @@
         // Create a texture.
         let texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
+    </code></pre>
+
+    <pre><code class="nohighlight">
+      const gl = {
+        activeTextureUnit: 0,
+        textureUnits: [    
+          { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+          { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+          { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+          { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+          ……
+        ];
+      }
+      gl.createTexture = function() {
+        return new WebGLTexture();
+      };
+      gl.bindTexture = function(target, texture) {
+        const textureUnit =gl.textureUnits[gl.activeTextureUnit];
+        textureUnit[target] = texture;
+      }
+
+      texture = new WebGLTexture();
+      gl = {
+        activeTextureUnit: 0,
+        textureUnits: [    
+          { TEXTURE_2D: texture, TEXTURE_CUBE_MAP: null, },
+          { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+          { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+          { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+          ……
+        ];
+      }
+
+
+      
+    </code></pre>
+    <pre><code>
+
 
         // Set the parameters so we can render any size image.
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
