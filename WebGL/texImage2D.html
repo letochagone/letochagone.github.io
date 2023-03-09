@@ -109,6 +109,7 @@
       }
 
       texture = new WebGLTexture();
+      texture = { mips: ..., texture_state: ...};
       gl = {
         activeTextureUnit: 0,
         textureUnits: [    
@@ -124,31 +125,88 @@
       
     </code></pre>
     <pre><code>
+      // Set the parameters so we can render any size image.
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    </code></pre>
+    <pre><code class="nohighlight">
+      gl.texParameteri = function(target, pname, value) {
+        const textureUnit = gl.textureUnits[gl.activeTextureUnit];
+        const texture = textureUnit[target];
+        texture.setSetting(pname, value);
+      }
+
+      texture = { mips: ... ,
+                  texture_state: { TEXTURE_WRAP_S: gl.CLAMP_TO_EDGE,
+                                   TEXTURE_WRAP_T: gl.CLAMP_TO_EDGE,
+                                   gl.TEXTURE_MIN_FILTER: gl.NEAREST,
+                                   gl.TEXTURE_MAG_FILTER: gl.NEAREST
+                                 }
+                }
 
 
-        // Set the parameters so we can render any size image.
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      
+    </code></pre>
+    <pre><code>
+      const ctx = document.createElement('canvas').getContext('2d');
+      ctx.canvas.width = 3
+      ctx.canvas.height = 2
+      ctx.fillStyle = 'rgba(66,44,144,0.5)';
+      ctx.fillRect(2, 1, 1, 1);
+      ctx.fillStyle = 'rgba(166,144,14,0.7)';
+      ctx.fillRect(0, 0, 1, 1);
 
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,                // mip level
+        gl.RGBA,          // internal format
+        gl.RGBA,          // format
+        gl.UNSIGNED_BYTE, // type
+        ctx.canvas
+      );
+    </code></pre>
+    <pre><code class="nohighlight">
+      gl.texImage2D(
+        target,
+        level,
+        internalformat,
+        format,
+        type,
+        source) {
 
-        const ctx = document.createElement('canvas').getContext('2d');
-        ctx.canvas.width = 3
-        ctx.canvas.height = 2
-        ctx.fillStyle = 'rgba(66,44,144,0.5)';
-        ctx.fillRect(2, 1, 1, 1);
-        ctx.fillStyle = 'rgba(166,144,14,0.7)';
-        ctx.fillRect(0, 0, 1, 1);
-
-        gl.texImage2D(
-          gl.TEXTURE_2D,
-          0,                // mip level
-          gl.RGBA,          // internal format
-          gl.RGBA,          // format
-          gl.UNSIGNED_BYTE, // type
-          ctx.canvas
+        const textureUnit =gl.textureUnits[gl.activeTextureUnit];
+        const texture = textureUnit[target];
+        texture.setMipLevel(
+          target,
+          level,
+          convertDataToInternalFormat(
+            internalFormat,
+            source.width,
+            source.height,
+            format,
+            type,
+            source.data
+          )
         );
+      }
+
+      texture.setMipLevel(
+        gl.TEXTURE_2D,
+        0,
+        convertDataToInternalFormat(
+          gl.RGBA,
+          3,
+          2,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          ctx.canvas
+        )
+      );
+    </code></pre>
+    <pre><code>
+
 
         let resolutionLocation = gl.getUniformLocation(prg, "u_resolution");
 
