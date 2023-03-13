@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+
+  <head>
+
+  	<style>
+
+canvas {
+
+  display: inline-block;
+image-rendering: pixelated;}
+  	</style>
+  </head>
+
+  <body>
+  	<canvas id="canvas" width="30" height="20"></canvas>
+
+<!-- vertex shader -->
+<script>
+	"use strict";
+
+
+	let vertex=`
+  attribute vec2 vertexPosition;
+  void main() {
+    gl_Position = vec4(vertexPosition, 1, 1);
+  }`;
+
+  let fragment=`
+  precision mediump float;
+
+  uniform sampler2D u_image;
+
+
+
+  void main() {
+    gl_FragColor = texture2D(
+        u_image ,
+        gl_FragCoord.xy / vec2(3,2)
+    );
+    gl_FragColor = vec4(gl_FragCoord.x,gl_FragCoord.y,0,1);
+  }`;
+
+
+
+
+  var canvas = document.querySelector("#canvas");
+  var gl = canvas.getContext("webgl");
+  gl.getExtension("OES_texture_float");
+ gl.getExtension("WEBGL_color_buffer_float");
+
+
+ 
+  //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+
+  let program = gl.createProgram();
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(vertexShader, vertex);
+  gl.shaderSource(fragmentShader, fragment);
+  gl.compileShader(vertexShader);
+  gl.compileShader(fragmentShader);
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+
+   // Tell it to use our program (pair of shaders)
+  gl.useProgram(program);
+
+
+let A = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+let H = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, H);
+gl.bufferData(gl.ARRAY_BUFFER, A, gl.STATIC_DRAW);
+
+  
+let a_vertexPosition = gl.getAttribLocation(program, "vertexPosition");
+gl.enableVertexAttribArray(a_vertexPosition);
+gl.vertexAttribPointer(a_vertexPosition, 2, gl.FLOAT, gl.FALSE, 0, 0);
+
+
+
+
+
+
+let texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+//gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+
+  
+
+
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D,texture);
+/*
+ gl = {
+              activeTextureUnit: 0
+
+              textureUnits: [
+                { TEXTURE_2D: texture         , TEXTURE_CUBE_MAP: defaultCubeMapTexture, },
+                { TEXTURE_2D: default2DTexture, TEXTURE_CUBE_MAP: defaultCubeMapTexture, },
+                { TEXTURE_2D: default2DTexture, TEXTURE_CUBE_MAP: defaultCubeMapTexture, },
+                ...
+              ]
+            }
+*/
+let u_image = gl.getUniformLocation(program, "u_image");
+gl.uniform1i(u_image, 0);
+
+
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 3, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, 
+  new Uint8Array([44,66,222,5,
+    55,12,7,44,
+    55,12,7,44,
+    55,12,7,44,
+    55,12,7,44,
+    55,12,7,44,]));
+
+const fb = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+
+
+let texture2 = gl.createTexture();
+gl.activeTexture(gl.TEXTURE1);
+
+gl.bindTexture(gl.TEXTURE_2D, texture2);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 3, 2, 0, 
+              gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 3, 2, 0, 
+              gl.RGBA, gl.FLOAT, null);
+
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D,texture);
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture2, 0);
+
+
+  // Tell WebGL how to convert from clip space to pixels
+  gl.viewport(0, 0, 3, 2);
+  // Clear the canvas
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+ 
+
+ 
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+
+         //   var pixels = new Float32Array(3 * 2*4 );
+         var pixels= new Uint8Array(3*2*4);
+
+          pixels= new Float32Array(3*2*4);
+
+//gl.readPixels(0, 0, 3, 2, gl.RGBA, gl.FLOAT, pixels);
+//gl.readPixels(0,0,3,2,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+
+gl.readPixels(0,0,3,2,gl.RGBA,gl.FLOAT,pixels);
+
+console.log(pixels);
+</script>
+  </body>
+</html>
