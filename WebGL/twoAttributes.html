@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      canvas {
+        image-rendering: pixelated;
+      }
+  	</style>
+  </head>
+
+  <body>
+    <p id="container"></p>
+    <canvas id="canvas" width="30" height="20"></canvas>
+
+    <script>
+      "use strict";
+
+      let vertex=`
+      attribute vec2 aVertexPosition;
+      attribute vec4 aVertexColor;
+
+      varying vec4 vColor;
+      void main() {
+        vColor = aVertexColor;
+        gl_Position = vec4(aVertexPosition, 1, 1);
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      uniform sampler2D u_image;
+
+      varying vec4 vColor;
+
+
+      void main() {
+        gl_FragColor = vColor;
+      }`;
+
+      var canvas = document.querySelector("#canvas");
+      var gl = canvas.getContext("webgl");
+    
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+      let positions = new Float32Array([
+        -1, -1,
+         1, -1,
+         0,  1
+      ]);
+      let positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      /* pseudoCode
+      gl = {
+        arrayBuffer: H;
+      }
+      buffer = {
+        H: null;
+      }
+      */
+
+      gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+      //https://stackoverflow.com/questions/27148273/what-is-the-logic-of-binding-buffers-in-webgl
+
+      /*
+      on remplit le buffer pointé par arrayBuffer avec des données A.
+      */
+      /* pseudoCode :
+      gl = {
+        arrayBuffer: H;
+      }
+      buffer = {
+        H: A   ( A , c'est : [-1, -1, 1, -1, 0, 1]  )
+      }
+      */
+
+      let a_vertexPosition = gl.getAttribLocation(program, "aVertexPosition");
+      /*
+      Separate from those bindpoints there's number of attributes.
+      The attributes are also global state by default.
+      They define how to pull data out of the buffers to supply to your vertex shader.
+      Calling gl.getAttribLocation(someProgram, "nameOfAttribute") tells you which attribute the vertex shader will look at to get data out of a buffer.
+
+      So, there's 4 functions that you use to configure how an attribute will get data from a buffer. gl.enableVertexAttribArray, gl.disableVertexAttribArray, gl.vertexAttribPointer, and gl.vertexAttrib??.
+      */
+      gl.enableVertexAttribArray(a_vertexPosition);
+      /*pseudocode
+      gl = {
+        arrayBuffer: H;
+        vertexArray: {
+           attributes:[
+             {enabled: TRUE, type:...,normalized,...,}
+             {enabled: FALSE,....}
+             ......
+           ]
+        }
+      }
+      buffer = {
+        H: A;
+      }
+      */
+      gl.vertexAttribPointer(a_vertexPosition, 2, gl.FLOAT, gl.FALSE, 0, 0);
+      /*
+      le tableau vertexArray est affecté avec les paramètres passés par vertexAttribPointer,
+      à l'indice 'a_vertexPosition'.
+      gl = {
+        arrayBuffer: H
+        vertexArray: {
+          attributes:[
+       a_vertexPosition --> {enabled: TRUE, type: gl.FLOAT, normalized: gl.FALSE, stride: 0, offset: 0, buffer: H},
+                            {enabled: FALSE,....},
+                            {....},
+                            ......
+          ]
+        }
+      }
+
+      buffer = {
+        H: A;
+      }
+      */
+
+
+      let colorBuffer = gl.createBuffer();
+      /*
+      gl = {
+        arrayBuffer: H;
+      }
+      buffer = {
+        H: A;
+        colorBuffer: null; 
+      }
+      */
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+      /*
+      
+      gl = {
+        arrayBuffer: colorBuffer;
+        vertexArray: {
+          attributes:[
+             a_vertexPosition --> {enabled: TRUE, type: gl.FLOAT, normalized: gl.FALSE, stride: 0, offset: 0, buffer: H},
+                                  {enabled: FALSE,....},
+                                  {....},
+                                  ......
+          ] 
+        }
+      }
+
+      buffer = {
+        H: A;
+        colorBuffer: null;
+      }
+      */
+
+
+      let colors= new Float32Array([
+        1,0,0,1,
+        0,1,0,1,
+        0,0,1,1
+      ]);
+      gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+      /*
+      on remplit le buffer pointé par arrayBuffer avec des données colors.
+      */
+      /* pseudoCode :
+      gl = {
+        arrayBuffer: colorBuffer;
+      }
+      buffer = {
+        H: A   ( A , c'est : [-1, -1, 1, -1, 0, 1]  )
+        colorBuffer: [ rouge : 1 0 0 1  , vert 0 1 0 1 , bleu 0 0 1 1 ]
+      }
+      */
+      let a_vertexColor = gl.getAttribLocation(program, "aVertexColor");
+      gl.enableVertexAttribArray(a_vertexColor);
+      gl.vertexAttribPointer(a_vertexColor, 4, gl.FLOAT, gl.FALSE, 0, 0);
+
+
+      gl.viewport(0, 0, 30, 20);
+      gl.clearColor(0, 1, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+   
+
+
+    </script>
+  </body>
+</html>
