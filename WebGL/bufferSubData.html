@@ -6,36 +6,55 @@
   			border: 1px solid black;
   			image-rendering: pixelated;
   		}
+
+  		.pseudoCode {
+  			white-space: pre;
+  			background-color: gray;
+  		}
   	</style>
 
   	<link
   	  rel="stylesheet"
-      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/a11y-dark.min.css"
     >
 </head>
 
 <body>
-	<pre><code>
+	<!--
+		le lien suivant donne de bonnes explications pour
+		l'utilisation de highlight.js
+		https://www.youtube.com/watch?v=ZX1NCf7U3ec
+	-->
+	<pre><code class="language-javascript">
 const canvas = document.querySelector('canvas');
-const gl = canvas.getContext('webgl');
+const gl = canvas.getContext('webgl');</code></pre>
 
-</code></pre>
+
 <p>On donne la taille d'affichage du canvas</p>
-<pre><code>
+<pre><code class="language-javascript">
 canvas.style.width="500px";
 canvas.style.height="200px";
-
 </code></pre>
+
+
 <p>On donne la taille du drawingBuffer. Combien de pixels le canvas va contenir.</p>
-<pre><code>
+<pre><code class="language-javascript">
 // taille du drawingBuffer
 //https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
 
 canvas.width=5;
 canvas.height=2;
+</code></pre>
 
+
+<p>When you first create the WebGL context WebGL will set the viewport to match the size of the canvas
+Donc la ligne suivante n'est pas nécessaire ici.</p>
+<pre><code>
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+</code></pre>
 
+
+<pre><code class="language-javascript">
 const vertex = `
 attribute vec2 a_position;
 void main() {
@@ -48,7 +67,10 @@ precision mediump float;
 void main() {
 gl_FragColor = vec4(1, 0, 0, 1);
 }`;
+</code></pre>
 
+
+<pre><code class="language-javascript"> 
 let prg = gl.createProgram();
 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
 const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -68,47 +90,58 @@ const positions = new Float32Array(2);
 
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+</code></pre>
 
-/* pseudoCode
+
+
+<p class="pseudoCode">
+pseudoCode :
 gl = {
-arrayBuffer: positionBuffer;
+  arrayBuffer: positionBuffer;
 }
 buffer = {
-positionBuffer: null;
+  positionBuffer: null;
 }
-*/
 
-// On donne au buffer courant, c'est à dire le buffer désigné par bindBuffer, 
-// la taille de dims * num * 4 octets.
+</p>
+
+
+<p class="pseudoCode">
 // il y a deux implémentations de bufferData, voir les liens ci-dessous
 //https://registry.khronos.org/webgl/specs/latest/1.0/#refsGLES20
 //void bufferData(GLenum target, GLsizeiptr size, GLenum usage)
 //void bufferData(GLenum target, [AllowShared] BufferSource? data, GLenum usage) (OpenGL ES 2.0 §2.9, man page) 
-console.log(positions.byteLength);
+</p>
+<pre><code class="language-javascript">
 gl.bufferData(gl.ARRAY_BUFFER, positions.byteLength, gl.DYNAMIC_DRAW);
-// positions.byteLength = 8 octets 
-// il faut 4 octets pour stocker un Float32Array , 32bits = 4 octets , 1 octets = 8 bits
-// Nous avons déclaré positions = Float32Array(2), donc positions.byteLength = 2 * 4 octets 
+</code></pre>
+<p class="pseudoCode">
+On a donné au buffer courant, c'est à dire le buffer désigné par bindBuffer (positionBuffer)
+la taille : positions.byteLengths = 8 octets
+il faut 4 octets pour stocker un Float32Array , 32bits = 4 octets , 1 octets = 8 bits
+Nous avons déclaré positions = Float32Array(2), donc positions.byteLength = 2 * 4 octets 
 
 
-/*
 gl = {
-arrayBuffer : positionBuffer;
+  arrayBuffer : positionBuffer;
 }
 buffer = {
-positionBuffer: [ ] // tableau de 8 octets
+  positionBuffer: [ ] // tableau de 8 octets;
 }
-*/
 
 
+</p>
 
-
+<pre><code class="language-javascript">
 
 positions[0]=-1+7/5;
 positions[1]=-1+1/2;
 
+positions[2]=-1+1/5;
+positions[3]=-1+3/2;
+
+
 //https://stackoverflow.com/questions/59547020/webgl-stride-not-working-doesnt-stride-past-values-in-buffer
-//gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
 
       //	gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions.slice(20,50));
@@ -132,26 +165,22 @@ gl.vertexAttribPointer(
 	0, // offset
 );
 
-gl.drawArrays(gl.POINTS, 0, 1);
+gl.drawArrays(gl.POINTS, 0, 2);
 
 
 
   	</code></pre>
+
+
   	<canvas></canvas>
   	<script>
   		const canvas = document.querySelector('canvas');
   		canvas.style.width="500px";
   		canvas.style.height="200px";
-
-
-  		const gl = canvas.getContext('webgl');
-  		// taille du drawingBuffer
-  		//https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-
   		canvas.width=5;
   		canvas.height=2;
 
-  		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  		const gl = canvas.getContext('webgl');
 
   		const vertex = `
   		attribute vec2 a_position;
@@ -160,104 +189,130 @@ gl.drawArrays(gl.POINTS, 0, 1);
   		  gl_PointSize = 1.0;
   	    }`;
 
-      const fragment = `
+  	    const fragment = `
         precision mediump float;
         void main() {
           gl_FragColor = vec4(1, 0, 0, 1);
-       }`;
+        }`;
 
-      let prg = gl.createProgram();
-      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-      gl.shaderSource(vertexShader, vertex);
-      gl.shaderSource(fragmentShader, fragment);
-      gl.compileShader(vertexShader);
-      gl.compileShader(fragmentShader);
-      gl.attachShader(prg, vertexShader);
-      gl.attachShader(prg, fragmentShader);
-      gl.linkProgram(prg);
+        let prg = gl.createProgram();
+        const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+        const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(vertexShader, vertex);
+        gl.shaderSource(fragmentShader, fragment);
+        gl.compileShader(vertexShader);
+        gl.compileShader(fragmentShader);
+        gl.attachShader(prg, vertexShader);
+        gl.attachShader(prg, fragmentShader);
+        gl.linkProgram(prg);
 
-      gl.useProgram(prg);
+        gl.useProgram(prg);
 
-      const positionAttributeLocation = gl.getAttribLocation(prg, 'a_position');
+        const positionAttributeLocation = gl.getAttribLocation(prg, 'a_position');
 
-      const positions = new Float32Array(2);
-
-      const positionBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-      /* pseudoCode
-      gl = {
-        arrayBuffer: positionBuffer;
-      }
-      buffer = {
-        positionBuffer: null;
-      }
-      */
-
-      // On donne au buffer courant, c'est à dire le buffer désigné par bindBuffer, 
-      // la taille de dims * num * 4 octets.
-      // il y a deux implémentations de bufferData, voir les liens ci-dessous
-      //https://registry.khronos.org/webgl/specs/latest/1.0/#refsGLES20
-      //void bufferData(GLenum target, GLsizeiptr size, GLenum usage)
-      //void bufferData(GLenum target, [AllowShared] BufferSource? data, GLenum usage) (OpenGL ES 2.0 §2.9, man page) 
-      console.log(positions.byteLength);
-      gl.bufferData(gl.ARRAY_BUFFER, positions.byteLength, gl.DYNAMIC_DRAW);
-      // positions.byteLength = 8 octets 
-      // il faut 4 octets pour stocker un Float32Array , 32bits = 4 octets , 1 octets = 8 bits
-      // Nous avons déclaré positions = Float32Array(2), donc positions.byteLength = 2 * 4 octets 
+        const positions = new Float32Array(6);
 
 
-      /*
-      gl = {
-        arrayBuffer : positionBuffer;
-      }
-      buffer = {
-        positionBuffer: [ ] // tableau de 8 octets
-      }
-      */
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+        gl.bufferData(gl.ARRAY_BUFFER, positions.byteLength, gl.DYNAMIC_DRAW);
+
+        positions[0]=-1+7/5;
+		positions[1]=-1+1/2;
+		/*
+		-----
+		---X-
+		*/
+
+		positions[2]=-1+1/5;
+		positions[3]=-1+3/2;
+		/*
+		X----
+		-----
+		*/
+
+		positions[4]=-1+9/5;
+		positions[5]=-1+3/2;
+		/*
+		X---X
+		---X-
+		*/
+
+	gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
 
 
 
- 
-
-positions[0]=-1+7/5;
-positions[1]=-1+1/2;
-
-        //https://stackoverflow.com/questions/59547020/webgl-stride-not-working-doesnt-stride-past-values-in-buffer
-      	//gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      	gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
-
-      	      //	gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions.slice(20,50));
+/*
+float32Array(6)
+bufferData(...positions.byteLength)
+ x      y       x    y    x    y    
+bbbb   bbbb    bbbb bbbb bbbb bbbb 
+32bits 32bits   ...  ...  ...  ...
 
 
-      	//gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+gl.bufferSubData(gl.ARRAY_BUFFER, 8, positions.slice(0,4));
+
+               |-----------------|
+0123   4567    8
+ x      y       x    y    x    y    
+bbbb   bbbb    bbbb bbbb bbbb bbbb 
+32bits 32bits   ...  ...  ...  ...
+
+
+bufferData : 
+
+positions[0]    -----
+positions[0]    ---1-
+
+positions[0]    2----
+positions[0]    ---1-
+
+positions[0]    2---3
+positions[0]    ---1-
+
+
+*/
+        const subPositions = new Float32Array(2);
+        subPositions[0]= -1 + 3/5;
+        subPositions[1]= -1 + 1/2;
+        // subPositions est un Float32array de 2 éléments
+        // chaque élément occupe 4 octets 
+        // donc subPositions occupe 8 octets
+
+		gl.bufferSubData(gl.ARRAY_BUFFER, 8, subPositions);
+
+/*
+bufferSubData : contient un seul point, on le note A
+
+effet sur le bufferData courant :
+
+positions[0]    -----   bbbb   4 octets 4*8=32bits
+positions[0]    ---1-   bbbb   4 octest 
+
+positions[0]    -----   bufferSubData(gl.ARRAY_BUFFER, 8 , subPositions)
+positions[0]    -A-1-
+
+positions[0]    ----3
+positions[0]    -A-1-
+
+bufferSubData modifie une partie du buffer courant
+*/
+
+
 
       	gl.enableVertexAttribArray(positionAttributeLocation);
-
-      	
  
       	gl.vertexAttribPointer(
       		positionAttributeLocation,
-      		2, // size
-      		// number of components per vertex attribute
-      	    // ici c'est 2, parce que dans notre vertex on a : attribute vec2 a_position
-
-      		gl.FLOAT, //type,
-      		false, // normalize,
-      		0, //stride,
-      		0, // offset
+      		2,
+      		gl.FLOAT,
+      		false,
+      		0,
+      		0,
       	);
 
-      	gl.drawArrays(gl.POINTS, 0, 1);
-      
-
-
-
-
-
-
-
+      	gl.drawArrays(gl.POINTS, 0, 3);
 
   </script>
 
