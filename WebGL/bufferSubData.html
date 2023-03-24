@@ -15,9 +15,13 @@
 
   	<link
   	  rel="stylesheet"
-      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/a11y-dark.min.css"
-    >
+      href="highlight/styles/a11y-dark.min.css">
+
 </head>
+
+
+
+
 
 <body>
 	<!--
@@ -27,7 +31,7 @@
 	-->
 	<pre><code class="language-javascript">
 const canvas = document.querySelector('canvas');
-const gl = canvas.getContext('webgl');</code></pre>
+</code></pre>
 
 
 <p>On donne la taille d'affichage du canvas</p>
@@ -44,6 +48,9 @@ canvas.style.height="200px";
 
 canvas.width=5;
 canvas.height=2;
+
+const gl = canvas.getContext('webgl');
+
 </code></pre>
 
 
@@ -54,7 +61,7 @@ gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 </code></pre>
 
 
-<pre><code class="language-javascript">
+<pre><code class="language-glsl">
 const vertex = `
 attribute vec2 a_position;
 void main() {
@@ -86,8 +93,6 @@ gl.useProgram(prg);
 
 const positionAttributeLocation = gl.getAttribLocation(prg, 'a_position');
 
-const positions = new Float32Array(2);
-
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 </code></pre>
@@ -106,33 +111,11 @@ buffer = {
 </p>
 
 
-<p class="pseudoCode">
-// il y a deux implémentations de bufferData, voir les liens ci-dessous
-//https://registry.khronos.org/webgl/specs/latest/1.0/#refsGLES20
-//void bufferData(GLenum target, GLsizeiptr size, GLenum usage)
-//void bufferData(GLenum target, [AllowShared] BufferSource? data, GLenum usage) (OpenGL ES 2.0 §2.9, man page) 
-</p>
-<pre><code class="language-javascript">
-gl.bufferData(gl.ARRAY_BUFFER, positions.byteLength, gl.DYNAMIC_DRAW);
-</code></pre>
-<p class="pseudoCode">
-On a donné au buffer courant, c'est à dire le buffer désigné par bindBuffer (positionBuffer)
-la taille : positions.byteLengths = 8 octets
-il faut 4 octets pour stocker un Float32Array , 32bits = 4 octets , 1 octets = 8 bits
-Nous avons déclaré positions = Float32Array(2), donc positions.byteLength = 2 * 4 octets 
 
-
-gl = {
-  arrayBuffer : positionBuffer;
-}
-buffer = {
-  positionBuffer: [ ] // tableau de 8 octets;
-}
-
-
-</p>
 
 <pre><code class="language-javascript">
+
+const positions = new Float32Array(6);
 
 positions[0]=-1+7/5;
 positions[1]=-1+1/2;
@@ -140,14 +123,86 @@ positions[1]=-1+1/2;
 positions[2]=-1+1/5;
 positions[3]=-1+3/2;
 
-
-//https://stackoverflow.com/questions/59547020/webgl-stride-not-working-doesnt-stride-past-values-in-buffer
-gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
-
-      //	gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions.slice(20,50));
+positions[4]=-1+9/5;
+positions[5]=-1+3/2;
 
 
-//gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
+
+</code></pre>
+
+<p class="pseudoCode">
+pseudoCode :
+gl = {
+  arrayBuffer: positionBuffer;
+}
+buffer = {
+  positionBuffer: [
+    positions[0] positions[1]
+    positions[2] positions[3]
+    positions[4] positions[5]
+  ];
+}
+
+</p>
+<pre><code>
+
+const subPositions = new Float32Array(2);
+subPositions[0]= -1 + 3/5;
+subPositions[1]= -1 + 1/2;
+        // subPositions est un Float32array de 2 éléments
+        // chaque élément occupe 4 octets 
+        // donc subPositions occupe 8 octets
+
+gl.bufferSubData(gl.ARRAY_BUFFER, 8, subPositions);
+
+</code></pre>
+<p class="pseudoCode">
+
+bufferSubData modifie une partie du buffer courant :
+
+pseudoCode :
+gl = {
+  arrayBuffer: positionBuffer;
+}
+buffer = {
+  positionBuffer: [
+       positions[0]    positions[1]
+    subPositions[0] subPositions[1]
+       positions[4]    positions[5]
+  ];
+}
+bufferData courant :
+
+positions[0]    4 octets (1 élement Float32Array)
+positions[1]    4 octets (1 élement Float32Array)
+
+positions[2]    4 octets (1 élement Float32Array)
+positions[3]    4 octets (1 élement Float32Array)
+
+positions[4]    4 octets (1 élement Float32Array)
+positions[5]    4 octets (1 élement Float32Array)
+
+bufferData modifié :
+
+octet 0 : positions[0]    
+octet 4 : positions[1]   
+
+octet 8:  SubPositions[0]   
+octet 12: SubPositions[1]   
+
+octet 16: positions[4]    
+octet 20: positions[5]   
+
+For the WebGLBuffer object bound to the passed target write the passed data starting at the passed offset
+
+>>https://registry.khronos.org/webgl/specs/latest/1.0/
+>>5.14.5 Buffer objects
+>>
+>>For the WebGLBuffer object bound to the passed target write the passed data starting 
+>> at the passed offset
+</p>
+<pre><code>
 
 gl.enableVertexAttribArray(positionAttributeLocation);
 
@@ -165,7 +220,7 @@ gl.vertexAttribPointer(
 	0, // offset
 );
 
-gl.drawArrays(gl.POINTS, 0, 2);
+gl.drawArrays(gl.POINTS, 0, 3);
 
 
 
@@ -210,13 +265,10 @@ gl.drawArrays(gl.POINTS, 0, 2);
 
         const positionAttributeLocation = gl.getAttribLocation(prg, 'a_position');
 
-        const positions = new Float32Array(6);
-
-
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-        gl.bufferData(gl.ARRAY_BUFFER, positions.byteLength, gl.DYNAMIC_DRAW);
+        const positions = new Float32Array(6);
 
         positions[0]=-1+7/5;
 		positions[1]=-1+1/2;
@@ -235,8 +287,8 @@ gl.drawArrays(gl.POINTS, 0, 2);
 		positions[4]=-1+9/5;
 		positions[5]=-1+3/2;
 		/*
-		X---X
-		---X-
+		----X
+		-----
 		*/
 
 	gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
@@ -263,13 +315,13 @@ bbbb   bbbb    bbbb bbbb bbbb bbbb
 bufferData : 
 
 positions[0]    -----
-positions[0]    ---1-
+positions[1]    ---1-
 
-positions[0]    2----
-positions[0]    ---1-
+positions[2]    2----
+positions[3]    ---1-
 
-positions[0]    2---3
-positions[0]    ---1-
+positions[4]    2---3
+positions[5]    ---1-
 
 
 */
@@ -280,7 +332,7 @@ positions[0]    ---1-
         // chaque élément occupe 4 octets 
         // donc subPositions occupe 8 octets
 
-		gl.bufferSubData(gl.ARRAY_BUFFER, 8, subPositions);
+	gl.bufferSubData(gl.ARRAY_BUFFER, 8, subPositions);
 
 /*
 bufferSubData : contient un seul point, on le note A
@@ -315,8 +367,7 @@ bufferSubData modifie une partie du buffer courant
       	gl.drawArrays(gl.POINTS, 0, 3);
 
   </script>
-
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script src="highlight/highlight.min.js"></script>
   <script>
   	hljs.highlightAll();
   </script>
