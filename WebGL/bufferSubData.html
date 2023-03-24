@@ -91,7 +91,8 @@ gl.linkProgram(prg);
 
 gl.useProgram(prg);
 
-const positionAttributeLocation = gl.getAttribLocation(prg, 'a_position');
+</code></pre>
+<pre><code class="language-javascript">
 
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -173,6 +174,14 @@ buffer = {
   ];
 }
 bufferData courant :
+1F 00 00 00 // positions[0], 4 octets pour stocker un élément de type Float32Array
+00 00 00 00 // positions[1], 4 octets pour stocker un élément de type Float32Array
+00 00 00 00 // positions[2], 4 octets pour stocker un élément de type Float32Array
+00 00 00 00 // positions[3], 4 octets pour stocker un élément de type Float32Array
+00 00 00 00 // positions[4], 4 octets pour stocker un élément de type Float32Array
+00 00 00 00 // positions[5], 4 octets pour stocker un élément de type Float32Array
+
+
 
 positions[0]    4 octets (1 élement Float32Array)
 positions[1]    4 octets (1 élement Float32Array)
@@ -204,6 +213,7 @@ For the WebGLBuffer object bound to the passed target write the passed data star
 </p>
 <pre><code>
 
+const positionAttributeLocation = gl.getAttribLocation(prg, 'a_position');
 gl.enableVertexAttribArray(positionAttributeLocation);
 
 
@@ -263,7 +273,6 @@ gl.drawArrays(gl.POINTS, 0, 3);
 
         gl.useProgram(prg);
 
-        const positionAttributeLocation = gl.getAttribLocation(prg, 'a_position');
 
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -352,6 +361,7 @@ bufferSubData modifie une partie du buffer courant
 */
 
 
+        const positionAttributeLocation = gl.getAttribLocation(prg, 'a_position');
 
       	gl.enableVertexAttribArray(positionAttributeLocation);
  
