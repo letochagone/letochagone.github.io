@@ -3,5 +3,28 @@
   <body>
     https://stackoverflow.com/questions/33317784/how-to-change-four-hexadecimal-number-to-float-in-js
     https://www.h-schmidt.net/FloatConverter/IEEE754.html
+    
+    
+    <script>
+      function floatToHex(x) {
+        return Array.from(
+        new Uint8ClampedArray(       // Represents the four bytes…
+          new Float32Array([x])  // …of this number
+          .buffer
+        )
+      ).map(function(a){
+        return a.toString(16);
+      }
+           );
+      }
+      
+      new Float32Array(
+  new Uint8ClampedArray(
+    ["e1", "7a", "cc", "41"].map(function(a){
+      return parseInt(a, 16);
+    })
+  ).buffer
+);
+    </script>
   </body>
 </html>
