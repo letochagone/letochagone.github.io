@@ -1,0 +1,207 @@
+<!doctype html>
+<html>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+      
+      const canvas = document.querySelector('canvas');
+
+const gl = canvas.getContext('webgl');
+
+      canvas.style.imageRendering="pixelated";
+      canvas.style.backgroundColor="rgb(0,255,0)"
+
+
+      //Set display size (CSS pixels)
+      let size = 3;
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+
+
+      //set actual size in memory (scaled to account for extra pixel density)
+      const scale = window.devicePixelRatio;
+
+
+      canvas.width = size * scale ;
+      canvas.height = size * scale ;
+
+      
+      gl.getExtension("OES_texture_float");
+      gl.getExtension("OES_texture_float_linear");
+      
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+      let vs=`
+      attribute vec2 aPosition;
+
+
+      void main() {
+
+
+
+        gl_Position = vec4(
+          (aPosition.x + 0.5)/ ${canvas.width}.0 * 2.0 -1.0,
+          (aPosition.y + 0.5)/ ${canvas.height}.0 * 2.0 -1.0,
+          0,1);
+
+
+
+        gl_PointSize = 1.0;
+      }
+      `;
+      let fs=`
+      precision mediump float;
+
+      uniform sampler2D physicsData;
+      uniform vec2 u_textureSize;
+
+      void main() {
+        // compute 1 pixel in texture coordinates.
+        //vec2 onePixel = vec2(1.0, 1.0) / u_textureSize;
+        //onePixel = vec2(1.0, 1.0) / vec2(3.0,2.0);
+
+        //texcoordX = pixelCoordX / (width  - 1)
+        //texcoordY = pixelCoordY / (height - 1)
+
+        gl_FragColor = vec4(gl_FragCoord.xy,0,1);
+        gl_FragColor = vec4(0,1,0,1);
+        gl_FragColor = texture2D(physicsData, vec2(2.0/(3.0-1.0),1.0/(2.0-1.0)));
+
+        /*
+        gl_FragColor = texture2D(physicsData, vec2(0.0/(3.0-1.0),0.0/(2.0-1.0)));
+        new Uint8Array([
+        [[255,0  ,0  ,255,]]    0  , 255,0,255,     0,0,255,255, 
+        255,0  ,255,255,        255, 255,0,255,     0,255,255,255   
+
+        gl_FragColor = texture2D(physicsData, vec2(1.0/(3.0-1.0),0.0/(2.0-1.0)));
+        new Uint8Array([
+        255,0  ,0  ,255,        [[0  , 255,0,255,]]     0,0,255,255, 
+        255,0  ,255,255,        255, 255,0,255,     0,255,255,255     
+
+        gl_FragColor = texture2D(physicsData, vec2(2.0/(3.0-1.0),0.0/(2.0-1.0)));
+        new Uint8Array([
+        255,0  ,0  ,255,        0  , 255,0,255,     [[0,0,255,255,]] 
+        255,0  ,255,255,        255, 255,0,255,     0,255,255,255   
+
+        gl_FragColor = texture2D(physicsData, vec2(2.0/(3.0-1.0),1.0/(2.0-1.0)));
+        new Uint8Array([
+        255,0  ,0  ,255,        0  , 255,0,255,     0,0,255,255,
+        255,0  ,255,255,        255, 255,0,255,     [[0,255,255,255  ]]
+        */
+
+
+
+        
+      }
+      `;
+
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader,vs);
+      gl.compileShader(vertexShader);
+
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader,fs);
+      gl.compileShader(fragmentShader);
+
+      const program = gl.createProgram();
+      gl.attachShader(program,vertexShader);
+      gl.attachShader(program,fragmentShader);
+      gl.linkProgram(program);
+      gl.useProgram(program);
+
+
+      let positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,positionBuffer);
+
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+          new Uint8Array([
+          0,0,
+          0,1,
+          0,2,
+          0,5,]),
+        gl.STATIC_DRAW
+      );
+
+      let positionAttributeLocation = gl.getAttribLocation(program, "aPosition");
+      gl.enableVertexAttribArray(positionAttributeLocation);
+
+   
+        let stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+        let offset = 0;        // start at the beginning of the buffer
+
+        gl.vertexAttribPointer(
+          positionAttributeLocation, 2, gl.UNSIGNED_BYTE, false, 0, 0);
+      
+
+      const physicsDataLoc = gl.getUniformLocation(program, 'physicsData');
+      gl.uniform1i(physicsDataLoc, 2);
+      gl.activeTexture(gl.TEXTURE0 + 2);
+
+      let physicsDataTexture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, physicsDataTexture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 3, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+      // create a texture using a canvas so we don't have to download one ( à faire)
+      //https://stackoverflow.com/questions/35309300/how-to-render-images-in-webgl-from-arraybuffer)
+      new Uint8Array([
+        255,0  ,0  ,255,  0  , 255,0,255, 0,0,255,255, 
+        255,0  ,255,255,  255, 255,0,255, 0,255,255,255   
+      ]));
+  
+
+
+
+
+      let textureEcran = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0);
+
+      gl.bindTexture(gl.TEXTURE_2D, textureEcran);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,             
+        gl.RGBA,
+        canvas.width,
+        canvas.height,
+        0,
+        gl.RGBA,
+        gl.FLOAT,
+        null);
+      //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+
+
+      
+      let fbEcran = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fbEcran);
+      gl.framebufferTexture2D(
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0,
+        gl.TEXTURE_2D,
+        textureEcran,
+        0
+      );
+     
+           gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+           let grgr = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, grgr);
+                 gl.bindFramebuffer(gl.FRAMEBUFFER,fbEcran);
+
+
+
+
+      gl.drawArrays(gl.POINTS, 0, 4);
+
+
+
+    </script>
+  </body>
+</html>
+  
