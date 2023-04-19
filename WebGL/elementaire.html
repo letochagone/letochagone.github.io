@@ -14,10 +14,15 @@
       
       
 //https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio
+      // la taille du carré affiché sera de 3x3 pixels
       let size = 3;
       canvas.style.width = `${size}px`;
       canvas.style.height = `${size}px`;
-      const scale = window.devicePixelRatio;
+      
+      //on tient compte de la densité de pixels supplémentaire. 
+      // mon écran est un 2880x1800 pixels
+      let scale = window.devicePixelRatio;
+      // scale vaut 2 sur mon ordinateur
       canvas.width = size * scale ;
       canvas.height = size * scale ;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -133,6 +138,8 @@
         0
       );
       
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       let pixels = new Float32Array(canvas.width*canvas.height*4);
       gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.FLOAT,pixels);
