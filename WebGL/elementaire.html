@@ -24,8 +24,8 @@
       // mon écran est un 2880x1800 pixels
       let scale = window.devicePixelRatio;
       // scale vaut 2 sur mon ordinateur
-      canvas.width = size * scale ;
-      canvas.height = size * scale ;
+      canvas.width = Math.floor(size * scale) ;
+      canvas.height = Math.floor(size * scale) ;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
       let vs=`
