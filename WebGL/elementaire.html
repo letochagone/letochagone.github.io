@@ -1,21 +1,98 @@
 <!doctype html>
 <html>
-  <h1>Les Buffers et WebGL</h1>
-  <p>
-    Cette page montre les valeurs d'un buffer WebGL.<br>
-    Entrons dans le détail :
-    Le code javascript & WebGL suivant se termine par l'affichage d'un carré dont les couleurs sont les valeurs d'un buffer.
-    Le carré a une taille affichée de 3x3 pixels.<br>
-    le voici : <canvas id="canvas"></canvas>
-    <br>
-    Une capture écran (fouche FN + Impécr) puis une aggrandissement sous Gimp (avec affichage d'une grille) donne l'image suivante
-      <img src="image1.png">
-    <br>
-</p>
-<p>
-</p>
+  <head>
+    <!--
+    <link href="rainbow/rainbow.css" rel="stylesheet" type="text/css">
+    -->
+
+    <style>
+      /**** Parsed Code  ****/
+      pre code .string {
+        color:#A1E46D;
+      }
+      pre code .special {
+        color:#D6665D;
+      }
+      pre code .special-js {
+        color:#6DE4D1;
+      }
+      pre code .special-js-glob {
+        color:#A1E46D;
+        font-weight:bold;
+      }
+      pre code .special-comment {
+        color:#aaa;
+      }
+      pre code .special-js-meth {
+        color:#E46D8A;
+      }
+      pre code .special-html {
+        color:#E4D95F;
+      }
+      pre code .special-sql {
+        color:#1D968C;
+      }
+      pre code .special-php {
+        color:#597EA7;
+      }
+    </style>
+  </head>
 
   <body>
+    <h1>
+      Les Buffers et WebGL
+    </h1>
+    <p>
+      Cette page montre les valeurs d'un buffer WebGL.<br>
+      Entrons dans le détail :
+      Le code javascript & WebGL suivant se termine par l'affichage d'un carré dont les couleurs sont les valeurs d'un buffer.
+      Le carré a une taille affichée de 3x3 pixels.<br>
+      le voici : <canvas id="canvas"></canvas>
+      <br>
+      Une capture écran (fouche FN + Impécr) puis une aggrandissement sous Gimp (avec affichage d'une grille) donne l'image suivante :
+      <br>
+      <img src="image1.png">
+      <br>
+    </p>
+
+    <p>
+      Bon, en fait le but est de connaître toutes les valeurs d'un buffer. On va afficher ces valeurs dans une texture.
+    </p>
+
+    <p>
+      Voici le contenu de ce buffer : 
+    </p>
+
+    <div id="output"></div>
+
+    <h2>
+      explication du code javascript donnant ce résultat
+    </h2>
+ 
+    <pre>
+      <code  class="colorJavascript">
+        const canvas = document.querySelector('canvas');
+        const gl = canvas.getContext('webgl');
+      </code>
+    </pre>
+
+    <pre>
+       <code  class="colorJavascript">
+         gl.getExtension("OES_texture_float");
+         gl.getExtension("OES_texture_float_linear");
+      
+         canvas.style.imageRendering="pixelated";
+         canvas.style.backgroundColor="rgb(0,255,0)"
+
+        let x=4;
+        for (x=2; x<4; x++) {
+
+        }
+      </code>
+    </pre> 
+
+
+ 
     <script>
       const canvas = document.querySelector('canvas');
       const gl = canvas.getContext('webgl');
@@ -155,13 +232,41 @@
       gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 
       gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fbEcran);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+
       let pixels = new Float32Array(canvas.width*canvas.height*4);
       gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.FLOAT,pixels);
+      var array = Array.from(pixels);
+
+
+
+//affichage dans la div #ouput du buffer
       let i=0;
-      console.log(pixels.slice(i,i+4));
-      i=i+4;
+      for (let i=0; i<144;i=i+4) {
+        let rgba = array.slice(i,i+4);
+        let r = rgba[0].toPrecision(2);
+        let g = rgba[1].toPrecision(2);
+        let b = rgba[2].toPrecision(2);
+        let a = rgba[3].toPrecision(2);
+       // console.log(r+ " , " + g + " , "+ b + ", " + a);
+        let gr= document.getElementById("output").textContent ;
+        gr = gr + g + "   "+ b  + " ; ";
+
+        document.getElementById("output").textContent = gr;
+
+      }
 
 
+//document.getElementById("output").textContent = "New text";
+
+    </script>
+
+
+    <script src="w3schools/codeColor.js">
+      
     </script>
   </body>
 </html>
