@@ -1,0 +1,245 @@
+<!doctype html>
+<html>
+  <head>
+ 
+
+    <style>
+      canvas {
+        image-rendering: pixelated;
+      }img {
+        width: 5px;
+        height: 5px;
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <canvas id="canvasVHD"></canvas>
+    <br>
+
+  	<canvas id="canvas"></canvas>
+
+    <script>
+
+const canvasVHD = document.getElementById("canvasVHD");
+  //canvasVHD.style.imageRendering='pixelated';
+const context = canvasVHD.getContext("2d");
+
+
+
+
+// Set display size (css pixels).
+const size = 6;
+
+
+// les deux lignes suivantes change la taille d'affichage du canvas
+canvasVHD.style.width = `${size}px`;
+canvasVHD.style.height = `${size}px`;
+// la taille d'affichage est alors donnée par canvasVHD.clientWidth et canvasVHD.clientHeight
+//Les propriétés clientWidth  et clientHeight sont uniquement accessible en lecture-seule.
+
+
+
+// Set actual size in memory (scaled to account for extra pixel density).
+let scale = window.devicePixelRatio; // Change to 1 on retina screens to see blurry canvas.
+
+scale=2;
+canvasVHD.width = Math.floor(size * scale);
+canvasVHD.height = Math.floor(size * scale);
+
+// Normalize coordinate system to use CSS pixels.
+//
+//
+//CLOMPRENDRE LE ROLE DE CONTEXT POINT SCALE
+//
+//context.scale(scale, scale);
+//
+//
+//
+//
+//
+
+
+
+//context.fillStyle="rgb(0,0,255)";
+//context.fillRect(0,0,6,6);
+
+canvasVHD.style.backgroundColor='gray';
+
+context.fillStyle ="rgb(125,125,215";
+context.fillRect(0,0,6,6);
+context.fillStyle = "rgb(200,0,0)"; // définit la couleur de remplissage du rectangle
+context.fillRect(0, 0, 4, 4); 
+context.fillStyle = "rgba(0,200,0,0.5)"; // définit la couleur de remplissage du rectangle
+context.fillRect(2, 2, 3, 3); 
+/*
+xxxx--
+xxxx--
+xx###-
+xx###-
+--###-
+------
+*/
+
+
+
+
+const canvasGl = document.getElementById("canvas");
+//Set display size (css pixels).
+canvasGl.style.width = `${size}px`;
+canvasGl.style.height = `${size}px`;
+
+/*
+Every canvas has 2 sizes. The size of its drawingbuffer. This is how many pixels are in the canvas. The second size is the size the canvas is displayed. CSS determines the size the canvas is displayed.
+You can set the size of the canvas's drawingbuffer in 2 ways. One using Javascript :
+*/
+// Set actual size in memory (scaled to account for extra pixel density).
+canvasGl.width = Math.floor(size * scale);
+canvasGl.height = Math.floor(size * scale);
+
+var gl = canvasGl.getContext("webgl");
+
+canvasGl.style.imageRendering='pixelated';
+
+
+
+
+
+/*
+gl.viewport only does 2 things. It sets the conversion from clip space to screen space 
+(or in this case canvas space) and it sets the clipping region for vertices. 
+'clipping vertices' means it does not clip pixels so drawing a gl_PointSize = 10.0 point at the edge of the viewport setting will draw outside the viewport setting
+*/
+//gl.viewport(0,0,canvasGl.width,canvasGl.width);
+//gl.viewport(0,0,canvasGl.clientWidth,canvasGl.clientHeight);
+//gl.viewport(0,0,12,12);
+
+  var ext = gl.getExtension("OES_texture_float");
+  var linear = gl.getExtension("OES_texture_float_linear");
+
+      
+
+      let vs=`
+        attribute vec2 position;
+        attribute vec2 texPosition;
+        varying vec2 vtexPosition;
+        void main() {
+          vtexPosition = texPosition;
+          gl_PointSize = 1.0;
+          gl_Position = vec4(position, 0, 1);
+          //gl_Position=vec4(-1.0+11.0/12.0,-1.0+11.0/12.0,0,1);
+        }
+      `;
+      let fs=`
+        precision mediump float;
+        uniform sampler2D u_tex;
+        varying vec2 vtexPosition;
+        void main () {
+          gl_FragColor = vec4(vtexPosition,0,1);
+          gl_FragColor = texture2D(u_tex, gl_FragCoord.xy/vec2(16,16));
+          gl_FragColor = texture2D(u_tex, vtexPosition);
+          //gl_FragColor=vec4(1,0,1,1);
+
+        }
+      `;
+
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader,vs);
+      gl.compileShader(vertexShader);
+
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader,fs);
+      gl.compileShader(fragmentShader);
+
+      const program = gl.createProgram();
+      gl.attachShader(program,vertexShader);
+      gl.attachShader(program,fragmentShader);
+      gl.linkProgram(program);
+      gl.useProgram(program);
+ 
+
+const texPositionAttributeLocation = gl.getAttribLocation(
+  program,"texPosition");
+
+let texPosBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,texPosBuffer);
+let x=0.0;
+let y=0.0;
+let h=1.0;
+let l=1.0;
+gl.bufferData(gl.ARRAY_BUFFER,
+  /*
+  B:x y+h  D:x+l y+h
+
+  A:x y   C:x+l y
+  */
+  new Float32Array([
+    x,y,    //A
+    x,y+h,  //B
+    x+l,y,  //C
+    x+l,y,  //C
+    x,y+h,  //B
+    x+l,y+h //D
+  ]),
+  gl.STATIC_DRAW
+  );
+  gl.enableVertexAttribArray(texPositionAttributeLocation);
+  gl.vertexAttribPointer(texPositionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+
+const positionAttributeLocation = gl.getAttribLocation(program, 'position');
+let positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,positionBuffer);
+      let xa=-1;
+      let ya=-1;
+      let xb=1;
+      let yc=1;
+      /*
+      B(-1 1)    D(1 1)
+
+      A(-1 -1)   C(1 -1)
+      */
+
+
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1,  //A 
+        -1, 1,   //B
+       1,-1,    //C
+       1,-1,    //C
+       -1,1,  //B
+       1,1,     //D
+ 
+     ]), gl.STATIC_DRAW);
+      /*
+      C xa yc       D xb yc  
+
+      A xa ya         B xb ya 
+      */
+
+    gl.enableVertexAttribArray(positionAttributeLocation);
+    gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+
+
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.FLOAT, canvasVHD);
+
+  gl.clearColor(0,1,0,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+ 
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+  //  gl.drawArrays(gl.POINTS, 0, 1);
+
+
+    </script>
+  </body>
+</html>
+
