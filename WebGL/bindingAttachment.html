@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+</head>
+<body>
+<canvas id="c" width="400" height="400"></canvas>
+
+<p>
+  
+
+You don't draw framebuffers. You draw textures. So, first you attach a texture to a framebuffer. Now, with that framebuffer bound, draw something, the result is drawn into the the attachments of the framebuffer. Next unbind the framebuffer and draw something using the textures you attached to the framebuffer to see their contents.
+  </p>
+	<script>
+const gl = document.querySelector('#c').getContext('webgl');
+
+const vs = `
+    attribute vec4 a_position;
+    varying vec2 v_texcoord;
+
+    void main() {
+      gl_Position = a_position;
+      v_texcoord = a_position.xy * 0.5 + 0.5;
+    }    
+`;
+const fs = `
+precision mediump float;
+varying vec2 v_texcoord;
+uniform sampler2D u_sampler;
+void main() {
+    gl_FragColor = texture2D(u_sampler, v_texcoord);
+}
+`;
+
+ const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertexShader,vs);
+      gl.compileShader(vertexShader);
+
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader,fs);
+      gl.compileShader(fragmentShader);
+
+      const program = gl.createProgram();
+      gl.attachShader(program,vertexShader);
+      gl.attachShader(program,fragmentShader);
+      gl.linkProgram(program);
+      gl.useProgram(program);
+
+
+const positionLocation = gl.getAttribLocation(program, "a_position");
+
+// a single triangle from top right to bottom left to bottom right
+const verts = [
+      1,  1,
+     -1,  1,
+     -1, -1,
+];   
+const vertBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vertBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+{
+  const numElements = 2;
+  const type = gl.FLOAT;
+  const normalize = false;
+  const stride = 0;
+  const offset = 0;
+  gl.vertexAttribPointer(
+      positionLocation, numElements, type, normalize, stride, offset);
+  gl.enableVertexAttribArray(positionLocation);
+}
+
+// create an empty texture
+const tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+{
+  const level = 0;
+  const internalFormat = gl.RGBA;
+  const width = 1;
+  const height = 1;
+  const border = 0;
+  const format = gl.RGBA;
+  const type = gl.UNSIGNED_BYTE;
+  const data = null;
+  gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border,
+                format, type, data);
+}
+
+// Create a framebuffer and attach the texture.
+const fb = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+{
+  const level = 0
+  gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, level);
+}
+
+// Render to the texture (using clear because it's simple)
+gl.clearColor(0, 1, 0, 1); // green;
+gl.clear(gl.COLOR_BUFFER_BIT);
+
+// Now draw with the texture to the canvas
+// NOTE: We clear the canvas to red so we'll know
+// so anywhere that shows up green is coming from the canvas texture
+// from above.
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+gl.clearColor(1, 0, 0, 1); // red
+gl.clear(gl.COLOR_BUFFER_BIT);
+{
+  const offset = 0;
+  const count = 3;
+  gl.drawArrays(gl.TRIANGLES, offset, count);
+}
+</script>
+</body>
+</html>
