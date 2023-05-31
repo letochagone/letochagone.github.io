@@ -23,6 +23,16 @@
       ctx.fillStyle = "black";
       ctx.fillRect( 3, 3, 1,1 );
       
+      let dp = window.devicePixelRatio || 1;
+      
+      log(dp);
+      
+      function log(...args) {
+        const elem = document.createElement("pre");
+        elem.textContent = [...args].join(' ');
+        document.body.appendChild(elem);
+      }
+      
     </script>
   </body>
 </html>
