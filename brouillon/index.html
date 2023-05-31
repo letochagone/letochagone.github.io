@@ -8,15 +8,19 @@
     <script>
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
-      const size = 5;
+
       
-      canvas.style.width = `${size}px`;
-      canvas.style.height = `${size}px`;
+      const devicePixelRatio = window.devicePixelRatio;
       
-      const scale = window.devicePixelRatio;
+      const desiredPixelWidth = 5;
+      const desiredPixelHeight = 5;
+
+      canvas.width  = desiredPixelWidth;
+      canvas.height = desiredPixelHeight;
+
       
-      canvas.width = Math.floor(size * scale);
-      canvas.height = Math.floor(size * scale);
+      canvas.style.width  = (desiredPixelWidth / devicePixelRatio)  + "px";
+      canvas.style.height = (desiredPixelHeight / devicePixelRatio) + "px";
       
       canvas.style.backgroundColor="red"; 
       
