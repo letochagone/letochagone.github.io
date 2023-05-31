@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const size = 5;
+      
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+      
+      const scale = window.devicePixelRatio;
+      
+      canvas.width = Math.floor(size * scale);
+      canvas.height = Math.floor(size * scale);
+      
+      canvas.style.backgroundColor="red"; 
+      
+      ctx.fillStyle = "black";
+      ctx.fillRect( 3, 3, 1,1 );
+      
+    </script>
+  </body>
+</html>
