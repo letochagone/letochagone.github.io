@@ -1,0 +1,479 @@
+<!doctype html>
+<html>
+  <head>
+
+
+    <style>
+      canvas {
+        image-rendering: pixelated;
+      }
+
+      /* pre code does NOT select the children.
+It selects the descendants.
+So pre > code will select the elements immediately inside the parent elements "pre"  attached to them.
+
+
+*/
+      _pre {display: block}
+      pre code  {
+        background: black;
+        color: white;
+        display: inherit;
+        /*
+        The inherit CSS keyword causes the element to take the computed value of the property from its parent element.
+        donc ici , l'element code va comment valeur display, celle de l'element pre
+        */
+      }
+      /**** Parsed Code  ****/
+      pre code .string {
+        color:#A1E46D;
+      }
+      pre code .special {
+        color:#D6665D;
+      }
+      pre code .special-js {
+        color:#6DE4D1;
+      }
+      pre code .special-js-glob {
+        color:#A1E46D;
+        font-weight:bold;
+      }
+      pre code .special-comment {
+        color:#aaa;
+      }
+      pre code .special-js-meth {
+        color:#E46D8A;
+      }
+      pre code .special-html {
+        color:#E4D95F;
+      }
+      pre code .special-sql {
+        color:#1D968C;
+      }
+      pre code .special-php {
+        color:#597EA7;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>
+      readPixels d'un Canvas
+    </h1>
+    
+ 
+    <pre><code  class="colorJavascript">
+      let canvas= document.getElementById('canvas');
+canvas.style.width='50px';
+canvas.style.height='40px'
+let gl = canvas.getContext("webgl");
+
+let lx=5;
+let ly=4;
+gl.canvas.width=lx;
+gl.canvas.height=ly;
+gl.viewport(0,0,lx,ly);
+let vertexShaderSource=`
+  attribute vec2 positions;
+  attribute vec2 xy;
+
+  varying vec2 texCoords;
+
+  void main() {
+        texCoords = xy;
+        gl_Position = vec4(positions,0,1);
+  }
+`;
+    </code></pre>
+
+
+<figure>
+       <canvas id="canvas2D"></canvas>
+
+    <figcaption>canvas2D formé avec getContext('2D')</figcaption>
+</figure>
+
+    <p>Le canvas ci dessous est le résultat d'un texImage2D avec comme paramètre ce canvas2D</p>
+
+   <canvas id="canvas"></canvas>
+
+   <p>on voit qu'il est inversé verticalement</p>
+
+   <p>Regardons le résultat d'un readpixels de ce canvas</p>
+ 
+ <pre id="log1"></pre>
+
+ <p>on constate que les pixels sont lus de la gauche vers la droite, à partir du bas de l'image.
+ </p>
+    <script>
+    
+
+
+var canvas2D = document.getElementById('canvas2D'); 
+canvas2D.width=5;
+canvas2D.height=4;
+canvas2D.style.width="50px";
+canvas2D.style.height="40px";
+canvas2D.style.backgroundColor="gray";
+var ctx = canvas2D.getContext('2d');
+
+ctx.fillStyle = "rgb(200,0,0)"; // définit la couleur de remplissage du rectangle
+ctx.fillRect(0, 0, 1, 1);
+ctx.fillStyle = "rgb(0,200,0)"; // définit la couleur de remplissage du rectangle
+ctx.fillRect(4, 1, 1, 1);
+ctx.fillStyle = "rgb(0,0,200)"; // définit la couleur de remplissage du rectangle
+ctx.fillRect(0, 3, 1, 1);
+ctx.fillStyle="rgb(200,200,0)";
+ctx.fillRect(4,3,1,1);
+/*
+R----
+----V
+-----
+B----
+*/
+
+let canvas= document.getElementById('canvas');
+canvas.style.width='50px';
+canvas.style.height='40px'
+let gl = canvas.getContext("webgl");
+
+let lx=5;
+let ly=4;
+gl.canvas.width=lx;
+gl.canvas.height=ly;
+gl.viewport(0,0,lx,ly);
+let vertexShaderSource=`
+  attribute vec2 positions;
+  attribute vec2 xy;
+
+  varying vec2 texCoords;
+
+  void main() {
+        texCoords = xy;
+        gl_Position = vec4(positions,0,1);
+  }
+`;
+let fragmentShaderSource=`
+  precision mediump float;
+
+  varying vec2 texCoords;
+
+
+  uniform sampler2D texture;
+  void main() {
+
+   gl_FragColor= texture2D(texture, 
+      gl_FragCoord.xy/vec2( ${lx} , ${ly} )
+   );
+
+
+   gl_FragColor = vec4( 
+     (gl_FragCoord.xy-vec2(0.5,0.5))/vec2( ${lx} , ${ly} ),
+     0,1
+    );
+    /*
+    capture ecran :
+     0 2/3  1/3 2/3  2/3 2/3
+     0 1/3  1/3 1/3  2/3 1/3
+     0 0    1/3 0    2/3 0
+
+     (gl_FragCoord - 0.5)/ 3 = 0  donc gl_FragCoord = 0.5
+     (gl_FragCoord - 0.5)/ 3 = 2/3  donc gl_FragCoord = 2.5
+
+     donc gl_FragCoord = 
+     0.5 2.5   1.5 2.5    2.5 2.5
+     0.5 1.5   1.5 1.5    2.5 1.5
+     0.5 0.5   1.5 0.5    2.5 0.5
+
+      gl_FragCoord assumes a lower-left origin for window coordinates and assumes pixel centers are located at half-pixel centers. For example, the (x, y) location (0.5, 0.5) is returned for the lower-left-most pixel in a window
+
+
+    */
+
+
+    /*
+    https://stackoverflow.com/a/60620232/6143315
+    */
+    gl_FragColor= texture2D(
+      texture,
+      (  gl_FragCoord.xy- vec2(0.5,0.5) ) / vec2(3,3)
+    );
+
+
+
+  gl_FragColor = texture2D( texture , texCoords);
+
+  gl_FragColor = texture2D( texture, 
+    vec2( 
+      (4.0 + 0.5)/ ${lx}.0,
+      (1.0 + 0.5)/ ${ly}.0
+    )
+  ); 
+  /*
+  0
+  */
+
+  gl_FragColor = texture2D( texture , texCoords);
+
+  //renvoie la couleur du point de la texture, ici l'image d'un canvas, situé aux coordonnées (0,3)
+  //gl_FragColor = texture2D( texture , vec2(0,3));
+  //
+  //l'image du canvas est affiché à l'écran ainsi
+  // R X X X X
+  // X  X X X V 
+  // X  X X X X
+  // B X X X J
+
+
+  // gl_FragColor=vec4(texCoords.x,texCoords.y,0,1);
+   /*
+    1/6 5/6   3/6 5/6  5/6 5/6
+    1/6 3/6   3/6 3/6  5/6 3/6
+    1/6 1/6   3/6 1/6  5/6 1/6
+
+    (2*i+1)/(2*bufferSize)
+   */
+   //gl_FragColor=vec4(gl_FragCoord.xy/vec2(3,3),0,1);
+
+
+  }
+`;
+let vertex = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertex, vertexShaderSource);
+  gl.compileShader(vertex);
+  let successCompileVertex = gl.getShaderParameter(vertex, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du vertex :" + successCompileVertex);
+  if (!successCompileVertex) console.log("erreur compilation du vertex : "+gl.getShaderInfoLog(vertex));
+
+  let fragment = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragment, fragmentShaderSource);
+  gl.compileShader(fragment);
+  let successCompileFragment = gl.getShaderParameter(fragment, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du fragment :" + successCompileFragment);
+  if (!successCompileFragment) console.log("erreur compilation du fragment : "+gl.getShaderInfoLog(fragment));
+
+
+const program = gl.createProgram();
+gl.attachShader(program,vertex);
+gl.attachShader(program,fragment);
+gl.linkProgram(program);
+let successLink = gl.getProgramParameter(program, gl.LINK_STATUS);
+console.log("LINK_STATUS du Program : "+successLink);
+if (!successLink)  console.log(gl.getProgramInfoLog(program));
+
+gl.useProgram(program);
+
+/*
+glContext = {
+  ARRAY_BUFFER_BINDING: null,
+  VERTEX_ARRAY_BINDING: null (default  VAO)
+
+ VAO(default): {
+    attributes: [
+      {enabled: -, size:-,....,buffer: -},
+      ...
+    ]
+  }
+}
+*/
+let bufferXy = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,bufferXy);
+gl.bufferData(gl.ARRAY_BUFFER,
+  new Float32Array([
+        0, 0,
+        0, 1,
+        1, 0,
+        1, 0,
+        0, 1,
+        1, 1,
+    ]),
+  gl.STATIC_DRAW);
+/*
+0 1   1 1 
+
+
+0 0   1 0
+*/
+
+
+let bufferPositions = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,bufferPositions);
+gl.bufferData(gl.ARRAY_BUFFER,
+    new Float32Array([
+      -1,-1,
+      -1,1,
+      1,-1,
+      1,-1,
+      -1,1,
+      1,1
+
+    ]),
+    gl.STATIC_DRAW
+);
+
+let xyBufferAttributeLocation = gl.getAttribLocation(program,"xy");
+gl.enableVertexAttribArray(xyBufferAttributeLocation);
+gl.bindBuffer(gl.ARRAY_BUFFER,bufferXy);
+
+/*
+glContext = {
+  ARRAY_BUFFER_BINDING: bufferPositions,
+  VERTEX_ARRAY_BINDING: null (default  VAO)
+
+ VAO(default): {
+    attributes: [
+      {enabled: TRUE, size:-,....,buffer: -},
+      ...
+    ]
+  }
+}
+
+*/
+
+
+gl.vertexAttribPointer(xyBufferAttributeLocation,2,gl.FLOAT,false,0,0);
+
+
+
+/*
+glContext = {
+  ARRAY_BUFFER_BINDING: bufferPositions,
+  VERTEX_ARRAY_BINDING: null (default  VAO)
+
+ VAO(default): {
+    attributes: [
+      {enabled: -, size:-,....,buffer: -},
+      ...
+    ]
+  }
+}
+
+gman:
+There can be more than one ARRAY_BUFFER and every attribute can reference a different buffer. Which buffer that attribute is getting its data from is determined by which buffer was bound to the ARRAY_BUFFER bind point at the time vertexAttribPointer as called for a particular attribute
+*/
+let positionsBufferAttributeLocation = gl.getAttribLocation(program,"positions");
+
+gl.enableVertexAttribArray(positionsBufferAttributeLocation);
+gl.bindBuffer(gl.ARRAY_BUFFER,bufferPositions);
+
+/*
+glContext = {
+  ARRAY_BUFFER_BINDING: bufferPositions,
+  VERTEX_ARRAY_BINDING: null (default  VAO)
+
+ VAO(default): {
+    attributes: [
+      {enabled: TRUE, size:-,....,buffer: -},
+      ...
+    ]
+  }
+}
+
+*/
+
+gl.vertexAttribPointer(positionsBufferAttributeLocation,2,gl.FLOAT,false,0,0);
+/*
+glContext = {
+  ARRAY_BUFFER_BINDING: bufferPositions,
+  VERTEX_ARRAY_BINDING: null (default  VAO)
+
+ VAO(default): {
+    attributes: [
+      {enabled: TRUE, size:2,....,buffer:bufferPositions },
+      ...
+    ]
+  }
+}
+
+*/
+
+
+let texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D,texture);
+
+     // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+       /*
+       If set, then during any subsequent calls to texImage2D or texSubImage2D,
+        the source data is flipped along the vertical axis, so that conceptually 
+        the last row is the first one transferred. 
+        The initial value is false. Any non-zero value is interpreted as true.
+
+        If the TexImageSource is an ImageBitmap, then this  parameter will be ignored.  
+       */
+
+
+gl.texImage2D(
+      gl.TEXTURE_2D,
+      0, //level,
+      gl.RGBA, //internalFormat,
+      gl.RGBA,//srcFormat,
+      gl.UNSIGNED_BYTE,//srcType,
+      canvas2D
+    );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+/*
+ecran: J=clearColor R=gl_FragColor
+J J J 
+J J J
+J R J
+*/
+
+
+let pixels = new Uint8Array(
+  gl.drawingBufferWidth * gl.drawingBufferHeight * 4
+);
+gl.readPixels(
+  0,
+  0,
+  gl.drawingBufferWidth,
+  gl.drawingBufferHeight,
+  gl.RGBA,
+  gl.UNSIGNED_BYTE,
+  pixels
+);
+//log( pixels);
+{
+  let width=lx;
+  let height=ly;
+  let pixelSize = 4;
+
+  for (let y = 0; y < height; ++y) {
+   for (let x = 0; x < width; ++x) {
+     const offset = (y * width + x) * pixelSize;
+     log(x, ',', y, ':', pixels.slice(offset, offset + pixelSize)); 
+   }
+  }
+}
+
+
+
+
+
+
+function log(...args) {
+  const elem = document.createElement("pre");
+  //const elem = document.getElementById("log1");
+  elem.textContent = [...args].join(' ');
+  let log1 = document.getElementById("log1");
+  log1.appendChild(elem);
+
+  //document.body.appendChild(elem);
+}
+
+
+
+
+
+    </script>
+
+
+    <script src="../codeColor.js">
+      
+    </script>
+  </body>
+</html>
