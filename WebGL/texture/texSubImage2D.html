@@ -23,47 +23,58 @@
 
 <pre>
   let fuck= new Float32Array(
-    [ 0.1, 0.1, 0.1, 1, /*A*/    0.2, 0.2, 0.2, 1, /*B*/  0.3, 0.3, 0.3, 1, /*C*/    0.4, 0.4, 0.4, 1, /*D*/
-      0.5, 0.5, 0.5, 1, /*E*/    0.6, 0.6, 0.6, 1, /*F*/  0.7, 0.7, 0.7, 1, /*G*/    0.8, 0.8, 0.8, 1 /*H*/
+    [ 0.1, 0.1, 0.1, 1,    0.2, 0.2, 0.2, 1,   0.3, 0.3, 0.3, 1,    0.4, 0.4, 0.4, 1, 
+      0.5, 0.5, 0.5, 1,    0.6, 0.6, 0.6, 1,   0.7, 0.7, 0.7, 1,    0.8, 0.8, 0.8, 1 
     ]
   );
 </pre>
 
-<p>résultat : </p>
+<p>texture dans un canvas </p>
+<div id="tex2canv"></div>
+<p>readpixel</p>
+<div id="logTex2canv"></div>
 
-<div id="div1"></div>
-
-
-<p>Ci dessous le résultat d'un readpixel du canvas après dessin de cette texture.</p>
-<div id="log1"></div>
 <br>
-    <div id="log2"></div>
-
-    <br>
-
-<p>On ajoute avant le texImage2D l'instruction :</p>
-<code> 
- gl.texSubImage2D(
-   gl.TEXTURE_2D,
-  0,   // mip level
-  0,   // destX
-  0,   // destY
-  2,   // width
-  1,   // height
-  gl.RGBA,          // data format
-  gl.FLOAT, // data type
-  subFuck);  // data
-</code>
-
-<p>résultat : </p>
-
-
-<div id="div2"></div>
 
 
 
-<div id="log3"></div>
+<p>subtexture dans un canvas</p>
+<pre>
+    let subFuck= new Float32Array([
+      255,0,255,1,  
+      0,0,255,1
+     ]);
+  </pre>
+<pre>
+    gl.texSubImage2D(
+      gl.TEXTURE_2D,
+      0,              // mip level
+      1,              // destX
+      1,              // destY
+      2,              // width
+      1,              // height
+      gl.RGBA,        // data format
+      gl.FLOAT,       // data type
+      subFuck         // le tableau de data
+    );  
+</pre>
+<div id="subTex2canv"></div>
+<p>readpixel</p>
+<div id="logSubTex2canv"></div>
 
+<br>
+<div id="div21"></div>
+
+
+<p>texture dans un FB</p>
+<p>readpixel</p>
+<div id="logTex2Fb"></div>
+
+<br>
+
+<p>subtexture dans un FB</p>
+<p>readpixel</p>
+<div id="logSubTex2Fb"></div>
 
 
 <canvas id="canvas"></canvas>
@@ -85,12 +96,12 @@ canvasGl.height=ly;
 canvasGl.style.width= lx * 50+"px";
 canvasGl.style.display="none";
 
-//canvasGl.style.height="1px";
 canvasGl.style.imageRendering="pixelated";
-var gl = canvasGl.getContext("webgl", { preserveDrawingBuffer: false });
+var gl = canvasGl.getContext("webgl");
 
-var ext = gl.getExtension("OES_texture_float");
-var linear = gl.getExtension("OES_texture_float_linear");
+var ext1 = gl.getExtension("OES_texture_float");
+var ext2 = gl.getExtension("OES_texture_float_linear");
+const ext3 = gl.getExtension("WEBGL_color_buffer_float");
       
 let vertexShaderSource=`
   attribute vec2 vertexPosition;//[-1, -1, 1, -1, -1, 1, 1, 1]
@@ -186,7 +197,7 @@ let textureUniformLocation = gl.getUniformLocation(program,"texture");
 const indexOfTextureUnit = 5;
 
 gl.uniform1i(textureUniformLocation, indexOfTextureUnit);
-let O = gl.createTexture();
+let texture = gl.createTexture();
 
 gl.activeTexture(gl.TEXTURE0 + indexOfTextureUnit);
 
@@ -203,7 +214,7 @@ gl.activeTexture(gl.TEXTURE0 + indexOfTextureUnit);
 :
 */
 
-gl.bindTexture(gl.TEXTURE_2D, O);
+gl.bindTexture(gl.TEXTURE_2D, texture);
 
 /*
     // PSEUDO CODE!!!
@@ -220,7 +231,7 @@ gl.bindTexture(gl.TEXTURE_2D, O);
         { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
         { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
         { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
-        { TEXTURE_2D:  O  , TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D:  texture  , TEXTURE_CUBE_MAP: null, },
         { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
         { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
         { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
@@ -240,82 +251,78 @@ let fuck= new Float32Array(
 
 // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, lx, ly, 0, gl.RGBA, gl.FLOAT, fuck);//4 * 2048*1024
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, lx, ly, 0, gl.RGBA, gl.FLOAT, fuck);
 // fuck est un float32Array composé de 4*lx*ly éléments
 // 4 parce que gl.RGBA
 /*
 The first pixel transferred from the source to the WebGL implementation corresponds to the upper left corner of the source. This behavior is modified by the UNPACK_FLIP_Y_WEBGL pixel storage parameter, except for ImageBitmap arguments, as described in the abovementioned section.
 */
 
+
+// PREMIER  : on duplique le canvas dans le tex2canv
 gl.drawArrays(gl.TRIANGLES, 0, 6);
+f11("tex2canv");
+readPixelToScreen("logTex2canv",false);
 
+/*
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, lx, ly, 0, gl.RGBA, gl.FLOAT, fuck);
+gl.drawArrays(gl.TRIANGLES, 0, 6);
+f11("tex2canv");
+readPixelToScreen("logTex2canv",false);
 
-f11("div1");
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+*/
 
+  let subFuck= new Float32Array([
+    255,0,255,1,
+    0,0,255,1
+  ]);
 
-
-
-
-
-
-
-
-
-
-
-let pixelSize=4;
-
-let dataFloat = new Float32Array(lx*ly*pixelSize);
-let dataUint = new Uint8Array(lx*ly*pixelSize);
-
-gl.readPixels(0,0,lx,ly,gl.RGBA,gl.UNSIGNED_BYTE,dataUint)
-
-let result0=[];
-dataUint.forEach(a => result0.push( (a/255).toFixed(1) ));
-      
-for (let i=0;i<lx*ly*pixelSize;i=i+4)
-{
-  const elem  = document.createElement("pre");
-  elem.textContent = i + ": " + result0[i] + " , " + result0[i+1] + " , " + result0[i+2] +  " ,"  + result0[i+3];
-  let log1 = document.getElementById("log1"); 
-  log1.appendChild(elem);
-}
-
-
-
-{
-
-let subFuck= new Float32Array(
-  [ 
-   255,0,255,0,
-   255,0,255,0,
-    
-  ]
-  );
-
-gl.texSubImage2D(
+  gl.texSubImage2D(
     gl.TEXTURE_2D,
     0,   // mip level
-    0,   // destX
-    0,   // destY
+    1,   // destX
+    1,   // destY
     2,   // width
     1,   // height
     gl.RGBA,          // data format
     gl.FLOAT, // data type
     subFuck);  // data
 
+
 gl.drawArrays(gl.TRIANGLES, 0, 6);
+f11("subTex2canv");
+readPixelToScreen("logSubTex2canv",false);
 
-}
+/*
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, lx, ly, 0, gl.RGBA, gl.FLOAT, fuck);
 
-f11("div2");
-
-//      gl.readPixels(0,0,lx,ly,gl.RGBA,gl.FLOAT,data);
-
-      //gl.readPixels(0,0,lx,ly,gl.RGBA,gl.FLOAT,dataFloat);
-      gl.readPixels(0,0,lx,ly,gl.RGBA,gl.UNSIGNED_BYTE,dataUint)
+  gl.texSubImage2D(
+    gl.TEXTURE_2D,
+    0,   // mip level
+    1,   // destX
+    1,   // destY
+    2,   // width
+    1,   // height
+    gl.RGBA,          // data format
+    gl.FLOAT, // data type
+    subFuck);  // data
     
-      
+gl.drawArrays(gl.TRIANGLES, 0, 6);
+f11("subTex2canv");
+
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+*/
+
+
+
+//gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, lx, ly, 0, gl.RGBA, gl.FLOAT, fuck);
+//gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+//f11("div21");
+
 
 
 
@@ -355,33 +362,32 @@ gl.framebufferTexture2D(
         textureEcran,
         0
 );
-      
 
+//on reprend la texture initial (il n'y a plus le subFuck)  
+gl.bindTexture(gl.TEXTURE_2D, texture);
+
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, lx, ly, 0, gl.RGBA, gl.FLOAT, fuck);
 gl.drawArrays(gl.TRIANGLES, 0, 6);
 
 
-{
-
-  let dataFloat = new Float32Array(lx*ly*pixelSize);
-  let dataUint = new Uint8Array(lx*ly*pixelSize);
+readPixelToScreen("logTex2Fb",true);
 
 
-  gl.readPixels(0,0,lx,ly,gl.RGBA,gl.FLOAT,dataFloat);
-  //gl.readPixels(0,0,lx,ly,gl.RGBA,gl.UNSIGNED_BYTE,dataUint);
+gl.texSubImage2D(
+    gl.TEXTURE_2D,
+    0,   // mip level
+    1,   // destX
+    1,   // destY
+    2,   // width
+    1,   // height
+    gl.RGBA,          // data format
+    gl.FLOAT, // data type
+    subFuck);  // data
+gl.drawArrays(gl.TRIANGLES, 0, 6);
+readPixelToScreen("logSubTex2Fb",true);
 
-  let result=[];
-  dataFloat.forEach(a => result.push( a.toFixed(1) ));
 
-  for (let i=0;i<lx*ly*pixelSize;i=i+4)
-  {
-    const elem  = document.createElement("pre");
-    elem.textContent = i + ": " + result[i] + " , " + result[i+1] + " , " + result[i+2] +  " ,"  + result[i+3];
-    let log2 = document.getElementById("log2"); 
-    log2.appendChild(elem);
-  }
-}
-  
-
+/*
 let subFuck= new Float32Array(
   [ 
    123,456,789,0,
@@ -405,43 +411,52 @@ gl.texSubImage2D(
 gl.drawArrays(gl.TRIANGLES, 0, 6);
 
 
+*/
 
 
-
-
-{
-
-  let dataFloat = new Float32Array(lx*ly*pixelSize);
-  let dataUint = new Uint8Array(lx*ly*pixelSize);
-
-  gl.readPixels(0,0,lx,ly,gl.RGBA,gl.FLOAT,dataFloat);
-  let result=[];
-  dataFloat.forEach(a => result.push( a.toFixed(1) ));
-
-  for (let i=0;i<lx*ly*pixelSize;i=i+4)
-  {
-    const elem  = document.createElement("pre");
-    elem.textContent = i + ": " + result[i] + " , " + result[i+1] + " , " + result[i+2] +  " ,"  + result[i+3];
-    let log3 = document.getElementById("log3"); 
-    log3.appendChild(elem);
-  }
-}
 
 function f11(e) {
   var image = new Image();
-    image.onload = function() {
-      let div  = document.getElementById(e);
-      div.appendChild(image);
-    }
-    image.src = canvasGl.toDataURL('image/png');
+  image.onload = function() {
+    let div  = document.getElementById(e);
+    div.appendChild(image);
+  }
+  image.src = canvasGl.toDataURL('image/png');
+
 }
 
 
+function readPixelToScreen(log,isFloat) {
+  let pixelSize=4;
+  let type;
+  let data;
+  let ff;
+  if (isFloat) {
+     type = gl.FLOAT;
+     data = new Float32Array(lx*ly*pixelSize);
+     ff=1;
+  }
+  else {
+     type = gl.UNSIGNED_BYTE;
+     data = new Uint8Array(lx*ly*pixelSize);
+     ff=255;
+  }
 
+  gl.readPixels(0,0,lx,ly,gl.RGBA,type,data)
+  let result0=[];
+  data.forEach(e => result0.push( (e/ff).toFixed(1) ));
+  //data.forEach(e => result0.push(e));
+
+
+  for (let i=0;i<lx*ly*pixelSize;i=i+4) {
+    const elem  = document.createElement("pre");
+    elem.textContent = i + ": " + result0[i] + " , " + result0[i+1] + " , " + result0[i+2] +  " ,"  + result0[i+3];
+    let log1 = document.getElementById(log); 
+    log1.appendChild(elem);
+  }
+}
 
 
     </script>
   </body>
 </html>
-
-
