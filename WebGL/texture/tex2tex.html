@@ -1,1 +1,233 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+
+
+let canvas= document.getElementById('canvas');
+let gl = canvas.getContext("webgl");
+      gl.getExtension("OES_texture_float");
+      gl.getExtension("WEBGL_color_buffer_float");
+
+let lx=2;
+let ly=2;
+gl.canvas.width=lx;
+gl.canvas.height=ly;
+gl.viewport(0,0,lx,ly);
+let vertexShaderSource=`
+  void main() {
+
+  gl_Position = vec4(0, 0, 0, 1);  // center
+  gl_PointSize = 2.0;
+
+  }
+`;
+let fragmentShaderSource=`
+  precision mediump float;
+
+  uniform sampler2D texture;
+  void main() {
+
+  gl_FragColor = texture2D(texture, gl_PointCoord.xy);
+  }
+`;
+let vertex = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertex, vertexShaderSource);
+  gl.compileShader(vertex);
+  let successCompileVertex = gl.getShaderParameter(vertex, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du vertex :" + successCompileVertex);
+  if (!successCompileVertex) console.log("erreur compilation du vertex : "+gl.getShaderInfoLog(vertex));
+
+  let fragment = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragment, fragmentShaderSource);
+  gl.compileShader(fragment);
+  let successCompileFragment = gl.getShaderParameter(fragment, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du fragment :" + successCompileFragment);
+  if (!successCompileFragment) console.log("erreur compilation du fragment : "+gl.getShaderInfoLog(fragment));
+
+
+
+const program = gl.createProgram();
+gl.attachShader(program,vertex);
+gl.attachShader(program,fragment);
+gl.linkProgram(program);
+let successLink = gl.getProgramParameter(program, gl.LINK_STATUS);
+console.log("LINK_STATUS du Program : "+successLink);
+if (!successLink)  console.log(gl.getProgramInfoLog(program));
+
+gl.useProgram(program);
+
+
+
+
+
+const targetTextureWidth = lx;
+const targetTextureHeight = ly;
+const targetTexture = gl.createTexture();
+
+ gl.activeTexture(gl.TEXTURE3);
+
+/*
+const gl = {
+    ACTIVE_TEXTURE: TEXTURE3,
+      textureUnits: [    
+        { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      >>{ TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      …
+      …
+    ];
+  }
+*/
+
+let textureLoc = gl.getUniformLocation(program,"texture");
+gl.uniform1i(textureLoc,0);
+//  uniform sampler2D texture; <<< 0
+
+gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+/*
+  gl.bindTexture = function(target, texture) {
+    const textureUnit =gl.textureUnits[gl.activeTextureUnit];
+    textureUnit[target] = texture;
+  }
+
+  const gl = {
+    ACTIVE_TEXTURE: TEXTURE3,
+      textureUnits: [    
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+    >>{ TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
+      …
+      …
+    ];
+  }
+
+*/
+       
+const level = 0;
+const internalFormat = gl.RGBA;
+const border = 0;
+const format = gl.RGBA;
+const type = gl.UNSIGNED_BYTE;
+const data = null;
+
+
+gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                    targetTextureWidth, targetTextureHeight, border,
+                    format, type, data);
+
+// set the filtering so we don't need mips
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    
+
+// Create and bind the framebuffer
+const fb = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+     
+// attach the texture as the first color attachment
+const attachmentPoint = gl.COLOR_ATTACHMENT0;
+gl.framebufferTexture2D(
+gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
+// Attachment is different from binding. Objects are bound to the context; objects are attached to one another.
+
+
+//gl.clearColor(1, 0, 1, 1);  // magenta
+//gl.clear(gl.COLOR_BUFFER_BIT);
+
+
+
+
+
+const tex = gl.createTexture();
+gl.activeTexture(gl.TEXTURE0);
+/*
+  const gl = {
+    >>ACTIVE_TEXTURE: TEXTURE0,
+      textureUnits: [    
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
+      …
+      …
+    ];
+  }
+*/
+gl.bindTexture(gl.TEXTURE_2D, tex);
+//  uniform sampler2D texture; <<< 0 = tex
+
+/*
+  const gl = {
+    >>ACTIVE_TEXTURE: TEXTURE0,
+      textureUnits: [    
+      { TEXTURE_2D: tex, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
+      …
+      …
+    ];
+  }
+*/
+gl.texImage2D(
+  gl.TEXTURE_2D,
+  0,                 // level
+  gl.RGBA,           // internal format
+  2,                 // width
+  2,                 // height
+  0,                 // border
+  gl.RGBA,           // format
+  gl.UNSIGNED_BYTE,  // type
+  new Uint8Array([   // data
+          0xFF, 0x00, 0x00, 0xFF,  // red
+          0x00, 0xFF, 0x00, 0xFF,  // green
+          0x00, 0x00, 0xFF, 0xFF,  // blue
+          0xFF, 0x00, 0xFF, 0xFF,  // magenta
+        ])
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+/*
+  const gl = {
+    >>ACTIVE_TEXTURE: TEXTURE0,
+      textureUnits: [    
+      { TEXTURE_2D: tex(Uint8Array(...), TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
+      …
+      …
+    ];
+  }
+*/
+
+
+//gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+
+
+gl.drawArrays(gl.POINTS, 0, 1);
+    //let  pixels= new Float32Array(lx*ly*4);
+        let  pixels= new Uint8Array(lx*ly*4);
+
+
+     gl.readPixels(0,0,lx,ly,gl.RGBA,gl.UNSIGNED_BYTE,pixels)
+      //gl.readPixels(0,0,lx,ly,gl.RGBA,gl.FLOAT,pixels);
+     console.log(pixels);
+
+
+
+    </script>
+
+  </body>
+</html>
 
