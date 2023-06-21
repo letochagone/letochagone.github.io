@@ -211,8 +211,28 @@ gl.texImage2D(
   }
 */
 
-
+// décommenter cette ligne provoque une erreur
 //gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+/*
+  gl.bindTexture = function(target, texture) {
+    const textureUnit =gl.textureUnits[gl.activeTextureUnit];
+    textureUnit[target] = texture;
+  }
+
+  const gl = {
+    >>ACTIVE_TEXTURE: TEXTURE0,
+      textureUnits: [    
+      { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
+      …
+      …
+    ];
+  }
+*/
+      
+      
 
 
 gl.drawArrays(gl.POINTS, 0, 1);
