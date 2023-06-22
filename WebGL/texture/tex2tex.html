@@ -80,7 +80,7 @@ const gl = {
         { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
         { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
         { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
-      >>{ TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
       …
       …
     ];
@@ -128,7 +128,19 @@ gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    
+/*
+const gl = {
+  ACTIVE_TEXTURE: TEXTURE3,
+    textureUnits: [    
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: targetTexture+data, TEXTURE_CUBE_MAP: null, },
+      …
+      …
+    ];
+  }
+*/
 
 // Create and bind the framebuffer
 const fb = gl.createFramebuffer();
@@ -141,12 +153,6 @@ gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
 // Attachment is different from binding. Objects are bound to the context; objects are attached to one another.
 
 
-//gl.clearColor(1, 0, 1, 1);  // magenta
-//gl.clear(gl.COLOR_BUFFER_BIT);
-
-
-
-
 
 const tex = gl.createTexture();
 gl.activeTexture(gl.TEXTURE0);
@@ -157,26 +163,24 @@ gl.activeTexture(gl.TEXTURE0);
       { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
       { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
       { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
-      { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
+      { TEXTURE_2D: targetTexture+data, TEXTURE_CUBE_MAP: null, },
       …
       …
     ];
   }
 */
 gl.bindTexture(gl.TEXTURE_2D, tex);
-//  uniform sampler2D texture; <<< 0 = tex
-
 /*
-  const gl = {
-    >>ACTIVE_TEXTURE: TEXTURE0,
+const gl = {
+      ACTIVE_TEXTURE: TEXTURE0,
       textureUnits: [    
-      { TEXTURE_2D: tex, TEXTURE_CUBE_MAP: null, },
-      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
-      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
-      { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
-      …
-      …
-    ];
+      >>{ TEXTURE_2D: tex, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
+        …
+        …
+      ];
   }
 */
 gl.texImage2D(
@@ -199,14 +203,14 @@ gl.texImage2D(
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 /*
   const gl = {
-    >>ACTIVE_TEXTURE: TEXTURE0,
+      ACTIVE_TEXTURE: TEXTURE0,
       textureUnits: [    
-      { TEXTURE_2D: tex(Uint8Array(...), TEXTURE_CUBE_MAP: null, },
-      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
-      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
-      { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
-      …
-      …
+        { TEXTURE_2D: >>tex+Uint8Array(...), TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
+        …
+        …
     ];
   }
 */
@@ -220,15 +224,15 @@ gl.texImage2D(
   }
 
   const gl = {
-    >>ACTIVE_TEXTURE: TEXTURE0,
+      ACTIVE_TEXTURE: TEXTURE0,
       textureUnits: [    
-      { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
-      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
-      { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
-      { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
-      …
-      …
-    ];
+        { TEXTURE_2D: >>targetTexture, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: null, TEXTURE_CUBE_MAP: null, },
+        { TEXTURE_2D: targetTexture, TEXTURE_CUBE_MAP: null, },
+        …
+        …
+      ];
   }
 */
       
