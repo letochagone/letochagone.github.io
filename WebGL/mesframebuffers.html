@@ -1,1 +1,217 @@
+<!DOCTYPE html>
+<html>
 
+<body>
+<canvas id="canvas"></canvas>
+<script>
+  'use script';
+
+  /*
+  https://stackoverflow.com/questions/62478052/webgl-readpixels-with-multiple-render-targets?rq=3
+  */
+
+  const canvas = document.querySelector('canvas');
+  const gl = canvas.getContext('webgl2', {antialias: false});
+
+  const textures = [];
+  const fb = gl.createFramebuffer();
+  /*
+  ===============framebuffer[fb]=================
+  attachment point   |  level | face | attachment
+  -----------------------------------------------
+  
+
+  */
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  // en webgl 1.0 il y a un FRAMEBUFFER_BINDING ( dans le global state)
+
+
+  // en webgl 2.0 il y a DRAW_FRAMEBUFFER_BINDING (null canvas) et un READ_FRAMEBUFFER_BINDING (null canvas)
+  /*
+  draw/read buffers
+  DRAW_BUFFER0  COLOR_ATTACHMENT0
+  DRAW_BUFFER0  NONE
+  ....
+  DRAW_BUFFER7  NONE
+  READ_BUFFER   COLOR_ATTACHMENT0
+
+
+  */
+
+
+
+  let i=0;
+
+  const tex0 = gl.createTexture();
+  textures.push(tex0);
+  gl.bindTexture(gl.TEXTURE_2D, tex0);
+  let data0 = new Uint8Array(4);
+  data0[i] = 255;
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0,gl.RGBA, gl.UNSIGNED_BYTE, data0);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i,gl.TEXTURE_2D, tex0, 0);
+  /*
+  webgl 1.0 :
+  ===============framebuffer[fb]=================
+  attachment point   |  level | face | attachment
+  -----------------------------------------------
+  COLOR_ATTACHMENT0  |   0    | N/A  |   tex0
+
+
+  webgl 2.0 :
+
+  ===============framebuffer[fb]=================
+  attachment point   |  level | face | attachment
+  -----------------------------------------------
+  COLOR_ATTACHMENT0  |   0    | N/A  |   tex0
+
+
+  */
+
+  i=1;
+  const tex1 = gl.createTexture();
+  textures.push(tex1);
+  gl.bindTexture(gl.TEXTURE_2D, tex1);
+  let data1 = new Uint8Array(4);
+  data1[i] = 255;
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0,gl.RGBA, gl.UNSIGNED_BYTE, data1);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i,gl.TEXTURE_2D, tex1, 0);
+/*
+ ===============framebuffer[fb]=================
+  attachment point   |  level | face | attachment
+  -----------------------------------------------
+  COLOR_ATTACHMENT0  |   0    | N/A  |   tex0
+  -----------------------------------------------
+  COLOR_ATTACHMENT1  |   0    | N/A  |   tex1
+*/
+
+
+  i=2;
+  const tex2 = gl.createTexture();
+  textures.push(tex2);
+  gl.bindTexture(gl.TEXTURE_2D, tex2);
+  let data2 = new Uint8Array(4);
+  data2[i] = 255;
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0,gl.RGBA, gl.UNSIGNED_BYTE, data2);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i,gl.TEXTURE_2D, tex2, 0);
+/*
+ ===============framebuffer[fb]=================
+  attachment point   |  level | face | attachment
+  -----------------------------------------------
+  COLOR_ATTACHMENT0  |   0    | N/A  |   tex0
+  -----------------------------------------------
+  COLOR_ATTACHMENT1  |   0    | N/A  |   tex1
+  -----------------------------------------------
+  COLOR_ATTACHMENT2  |   0    | N/A  |   tex2
+*/
+
+  i=3;
+  const tex3 = gl.createTexture();
+  textures.push(tex3);
+  gl.bindTexture(gl.TEXTURE_2D, tex3);
+  let data3 = new Uint8Array(4);
+  data3[i] = 255;
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0,gl.RGBA, gl.UNSIGNED_BYTE, data3);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i,gl.TEXTURE_2D, tex3, 0);
+/*
+
+ ===============framebuffer[fb]=================
+  attachment point   |  level | face | attachment
+  -----------------------------------------------
+  COLOR_ATTACHMENT0  |   0    | N/A  |   tex0
+  -----------------------------------------------
+  COLOR_ATTACHMENT1  |   0    | N/A  |   tex1
+  -----------------------------------------------
+  COLOR_ATTACHMENT2  |   0    | N/A  |   tex2
+  -----------------------------------------------
+  COLOR_ATTACHMENT3  |   0    | N/A  |   tex3
+
+*/
+
+
+
+/*
+VERSION 1
+*/
+const fbs=[];
+
+  i=0;
+  const fb0=gl.createFramebuffer()
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb0);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                            gl.TEXTURE_2D, textures[i], 0);
+  fbs[i]=fb0;
+
+  i=1;
+  const fb1=gl.createFramebuffer()
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb1);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                            gl.TEXTURE_2D, textures[i], 0);
+  fbs[i]=fb1;
+
+  i=2;
+  const fb2=gl.createFramebuffer()
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb2);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                            gl.TEXTURE_2D, textures[i], 0);
+  fbs[i]=fb2;
+
+  i=3;
+  const fb3=gl.createFramebuffer()
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb3);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                            gl.TEXTURE_2D, textures[i], 0);
+  fbs[i]=fb3;
+
+  
+
+  
+  i=0;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbs[i]);
+    let pixel = new Uint8Array(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    console.log(`${i}: ${pixel}`);
+  i=1;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbs[i]);
+    pixel = new Uint8Array(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    console.log(`${i}: ${pixel}`);
+  i=2;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbs[i]);
+    pixel = new Uint8Array(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    console.log(`${i}: ${pixel}`);
+  i=3;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbs[i]);
+    pixel = new Uint8Array(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    console.log(`${i}: ${pixel}`);
+
+    /* VERSION2 */
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+  i=0;
+    gl.readBuffer(gl.COLOR_ATTACHMENT0 + i);
+    pixel = new Uint8Array(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    console.log(`${i}: ${pixel}`);
+  i=1;
+    gl.readBuffer(gl.COLOR_ATTACHMENT0 + i);
+    pixel = new Uint8Array(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    console.log(`${i}: ${pixel}`);
+  i=2;
+    gl.readBuffer(gl.COLOR_ATTACHMENT0 + i);
+    pixel = new Uint8Array(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    console.log(`${i}: ${pixel}`);
+  i=3;
+    gl.readBuffer(gl.COLOR_ATTACHMENT0 + i);
+    pixel = new Uint8Array(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    console.log(`${i}: ${pixel}`);
+</script>
+
+</body>
+
+</html>
