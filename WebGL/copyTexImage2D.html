@@ -9,6 +9,13 @@ https://stackoverflow.com/questions/39967373/copyteximage2d-in-terms-of-state-ma
     <script>
       let canvas= document.getElementsByTagName("canvas")[0];
       let gl=canvas.getContext("webgl");
+
+      let vs=`
+        void main() {
+          gl_Position= vec4(0,0,0,1);
+          gl_PixelSize = 24.0;
+        }
+      `;
     </script>
   </body>
 </html>
