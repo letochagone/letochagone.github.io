@@ -10,19 +10,32 @@ https://stackoverflow.com/questions/39967373/copyteximage2d-in-terms-of-state-ma
       let canvas= document.getElementsByTagName("canvas")[0];
       let gl=canvas.getContext("webgl");
 
-      let vs=`
+      let vertex=`
         void main() {
           gl_Position= vec4(0,0,0,1);
           gl_PointSize = 24.0;
         }
       `;
-      let fs=`
+      let fragment=`
         precision mediump float;
         void main() {
           gl_FragColor=vec4(1,0,0,1);
         }
       `;
+      
+      let prg = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(prg, vertexShader);
+      gl.attachShader(prg, fragmentShader);
+      gl.linkProgram(prg);
+      gl.useProgram(prg);
 
+      gl.drawArrays(gl.POINTS,0,1);
       
     </script>
   </body>
