@@ -7,6 +7,9 @@
   <body>
     <p>
       Si l'on veut transformer la chaine suivante : &lt;em&gt;Hello World&lt;/em&gt;
+
+      "abcd&lt;efgh&gt;ihjk".replace(/&lt;(.*?)&gt;/g,'<X$1>')
+        résultat : "abcd<Xefgh>ihjk"
     </p>
   </body>
 </html>
