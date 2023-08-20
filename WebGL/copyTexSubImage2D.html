@@ -1,0 +1,260 @@
+<!doctype html>
+<html>
+
+  <head>
+  	<style>
+  		canvas { border: 1px solid yellow; 
+  			image-rendering: pixelated;
+  			_width:14px;
+  			_height: 14px;
+  		 }
+  	</style>
+  </head>
+
+  <body>
+  	<script src="https://twgljs.org/dist/twgl-full.min.js"></script>
+<script id="vs" type="notjs">
+attribute vec4 position;
+attribute vec4 aVertexColor;
+
+varying vec2 v_texcoord;
+varying lowp vec4 vColor;
+
+void main() {
+  vColor = aVertexColor;
+  gl_Position = position;
+  v_texcoord = position.xy * 0.5 + 0.5;
+}
+</script>
+<script id="fs" type="notjs">
+precision mediump float;
+
+uniform sampler2D u_texture;
+varying vec2 v_texcoord;
+
+void main() {
+  gl_FragColor = texture2D(u_texture, v_texcoord);
+}
+</script>
+<script id="green-fs" type="notjs">
+precision mediump float;
+
+varying vec2 v_texcoord;
+varying lowp vec4 vColor;
+
+void main() {
+  gl_FragColor = vColor;
+}
+</script>
+<div>If this works there should be a white (transparent) canvas with a green rectangle inside.</div>
+<canvas id="c"></canvas>
+  	<script>
+
+
+function go() {
+  		let canvas= document.getElementById("c");
+  		canvas.width=7;
+  		canvas.height=7;
+  		let gl = canvas.getContext("webgl");
+  		//var gl = twgl.getWebGLContext(document.getElementById("c"));
+
+
+
+
+
+var programInfo = twgl.createProgramInfo(gl, ["vs", "fs"]);
+var greenProgramInfo = twgl.createProgramInfo(gl, ["vs", "green-fs"]);
+
+var arrays = {
+  position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
+};
+var bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+
+  const colorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  	1,0,0,1,  0,1,0,1,  0,0,1,1,
+  	1,1,0,1,  1,0,1,1,  0,1,1,1 
+     
+  	]
+  	), gl.STATIC_DRAW);
+
+    let  vertexColor = gl.getAttribLocation(greenProgramInfo.program, "aVertexColor");
+
+  gl.vertexAttribPointer(
+    vertexColor,
+    4,
+    gl.FLOAT,
+    false,
+    0,
+    0,
+  );
+  gl.enableVertexAttribArray(vertexColor);
+
+
+// make a texture for a framebuffer
+var fbtex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, fbtex);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 7, 7, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+	new Uint8Array([
+		/* premiere ligne à partir du bas*/
+
+		255,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  
+		0,0,0,255,  0,60,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  
+		0,0,0,255,  0,0,0,255,  0,90,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  
+		0,0,0,255,  0,0,0,255,  0,0,0,255,  0,120,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  
+		0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,150,0,255,  0,0,0,255,  0,0,0,255,  
+		0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,180,0,255,  0,0,0,255,  
+		0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,0,255,  0,0,255,255,  
+
+/*
+R
+   C1
+     C2
+       C3
+         C4
+           C5
+              B
+
+ capture ecran :
+             B
+          C5
+        C4
+      C3
+    C2
+  C1
+ R
+
+*/
+
+
+  
+	])
+);
+
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
+// create a framebuffer and attach the texture
+var fb = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbtex, 0);
+
+// clear texture to green
+//gl.clearColor(0, 1, 0, 1);
+//gl.clear(gl.COLOR_BUFFER_BIT);
+// Just to make sure let's render green instead of clear to green. (both work for me though)
+gl.useProgram(greenProgramInfo.program);
+//gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+//twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+
+//return 66;
+
+// now make a texture
+var tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 7, 7, 0, gl.RGBA, gl.UNSIGNED_BYTE,null);
+
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
+// copy part of the fbtexture to it
+// target, level, xoffset, yoffset, x, y, width, height
+//gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    0, 0,    0, 0,    7, 7);
+/*
+capture ecran :
+             B
+          C5
+        C4
+      C3
+    C2
+  C1
+ R
+*/
+//gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    0, 0,    0, 0,    6, 6);
+/*
+W W W W W W  W
+          C5 W
+        C4   W
+      C3     W
+    C2       W
+  C1         W
+ R           W
+*/
+
+//gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    1, 1,    0, 0,    6, 6);
+/*
+W           C5
+W         C4
+W       C3
+W     C2
+W   C1
+W R
+W W W  W W W W
+*/
+//gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    0, 0,    1, 1,    6, 6);
+
+/*   
+W W W W W  W W
+           B W
+        C5   W
+      C4     W
+    C3       W
+  C2         W
+C1           W
+*/
+gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    1, 1,    1, 1,    6, 6);
+/*
+W           B
+W         C5
+W       C4
+W     C3
+W   C2
+W C1
+W W W W W W W
+*/
+/*
+ The screen-aligned pixel rectangle with lower left corner at x y and with width width and height height replaces the portion of the texture array with x indices xoffset through xoffset + width - 1 , inclusive, and y indices yoffset through yoffset + height - 1 , inclusive, at the mipmap level specified by level. 
+*/
+
+/*
+         **** 50 ***
+         
+         60        60
+
+---------**** 50 ****
+
+20
+
+---10 ----
+
+
+
+
+*/
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+// now clear to red
+gl.clearColor(1, 0, 0, 1);
+gl.clear(gl.COLOR_BUFFER_BIT);
+
+// Now render with the texture
+gl.useProgram(programInfo.program);
+var uniforms = {
+  u_texture: tex,
+};
+twgl.setUniforms(programInfo, uniforms);
+twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+
+
+}
+go();
+
+
+
+  	</script>
+  </body>
+</html>
