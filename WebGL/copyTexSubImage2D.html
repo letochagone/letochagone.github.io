@@ -12,9 +12,19 @@
   </head>
 
   <body>
-  	<script src="https://twgljs.org/dist/twgl-full.min.js"></script>
-<script id="vs" type="notjs">
-attribute vec4 position;
+
+
+<canvas id="c"></canvas>
+  	<script>
+
+  		  		let canvas= document.getElementById("c");
+  		canvas.width=7;
+  		canvas.height=7;
+  		let gl = canvas.getContext("webgl");
+
+
+ const vs = `
+ attribute vec2 position;
 attribute vec4 aVertexColor;
 
 varying vec2 v_texcoord;
@@ -22,12 +32,13 @@ varying lowp vec4 vColor;
 
 void main() {
   vColor = aVertexColor;
-  gl_Position = position;
+  gl_Position = vec4(position.xy,0.0,1.0);
   v_texcoord = position.xy * 0.5 + 0.5;
 }
-</script>
-<script id="fs" type="notjs">
-precision mediump float;
+  `;
+
+  const fs = `
+  precision mediump float;
 
 uniform sampler2D u_texture;
 varying vec2 v_texcoord;
@@ -35,9 +46,11 @@ varying vec2 v_texcoord;
 void main() {
   gl_FragColor = texture2D(u_texture, v_texcoord);
 }
-</script>
-<script id="green-fs" type="notjs">
-precision mediump float;
+
+  `
+
+  const greenfs=`
+  precision mediump float;
 
 varying vec2 v_texcoord;
 varying lowp vec4 vColor;
@@ -45,42 +58,93 @@ varying lowp vec4 vColor;
 void main() {
   gl_FragColor = vColor;
 }
-</script>
-<div>If this works there should be a white (transparent) canvas with a green rectangle inside.</div>
-<canvas id="c"></canvas>
-  	<script>
+  `;
 
+let program = gl.createProgram();
+{
+let vertex = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertex, vs);
+  gl.compileShader(vertex);
+  let successCompileVertex = gl.getShaderParameter(vertex, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du vertex :" + successCompileVertex);
+  if (!successCompileVertex) console.log("erreur compilation du vertex : "+gl.getShaderInfoLog(vertex));
+
+  let fragment = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragment, fs);
+  gl.compileShader(fragment);
+  let successCompileFragment = gl.getShaderParameter(fragment, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du fragment :" + successCompileFragment);
+  if (!successCompileFragment) console.log("erreur compilation du fragment : "+gl.getShaderInfoLog(fragment));
+
+gl.attachShader(program,vertex);
+gl.attachShader(program,fragment);
+gl.linkProgram(program);
+let successLink = gl.getProgramParameter(program, gl.LINK_STATUS);
+console.log("LINK_STATUS du Program : "+successLink);
+if (!successLink)  console.log(gl.getProgramInfoLog(program));
+
+}
+
+let programGreen = gl.createProgram();
+{
+let vertex = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertex, vs);
+  gl.compileShader(vertex);
+  let successCompileVertex = gl.getShaderParameter(vertex, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du vertex :" + successCompileVertex);
+  if (!successCompileVertex) console.log("erreur compilation du vertex : "+gl.getShaderInfoLog(vertex));
+
+  let fragment = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragment, greenfs);
+  gl.compileShader(fragment);
+  let successCompileFragment = gl.getShaderParameter(fragment, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du fragment :" + successCompileFragment);
+  if (!successCompileFragment) console.log("erreur compilation du fragment : "+gl.getShaderInfoLog(fragment));
+
+gl.attachShader(programGreen,vertex);
+gl.attachShader(programGreen,fragment);
+gl.linkProgram(programGreen);
+let successLink = gl.getProgramParameter(programGreen, gl.LINK_STATUS);
+console.log("LINK_STATUS du Program : "+successLink);
+if (!successLink)  console.log(gl.getProgramInfoLog(programGreen));
+
+}
 
 function go() {
-  		let canvas= document.getElementById("c");
-  		canvas.width=7;
-  		canvas.height=7;
-  		let gl = canvas.getContext("webgl");
-  		//var gl = twgl.getWebGLContext(document.getElementById("c"));
 
 
 
 
+const vertexPositionAttributeLocation = gl.getAttribLocation( program,"position");
 
-var programInfo = twgl.createProgramInfo(gl, ["vs", "fs"]);
-var greenProgramInfo = twgl.createProgramInfo(gl, ["vs", "green-fs"]);
+let vertexPositionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, 
+  new Float32Array([
+    -1, -1,
+     1, -1,
+    -1,  1,
+    -1,  1,
+     1, -1,
+     1,  1
+  ]),
+  gl.STATIC_DRAW);
 
-var arrays = {
-  position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
-};
-var bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
-twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+gl.enableVertexAttribArray(vertexPositionAttributeLocation);
+gl.vertexAttribPointer(vertexPositionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
-  const colorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+const atexcoordLocation = gl.getAttribLocation( program,"aVertexColor");
+
+const colorBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
   	1,0,0,1,  0,1,0,1,  0,0,1,1,
   	1,1,0,1,  1,0,1,1,  0,1,1,1 
      
   	]
   	), gl.STATIC_DRAW);
 
-    let  vertexColor = gl.getAttribLocation(greenProgramInfo.program, "aVertexColor");
+let  vertexColor = gl.getAttribLocation(programGreen, "aVertexColor");
 
   gl.vertexAttribPointer(
     vertexColor,
@@ -146,7 +210,7 @@ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbt
 //gl.clearColor(0, 1, 0, 1);
 //gl.clear(gl.COLOR_BUFFER_BIT);
 // Just to make sure let's render green instead of clear to green. (both work for me though)
-gl.useProgram(greenProgramInfo.program);
+gl.useProgram(programGreen);
 //gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 //twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
 
@@ -155,7 +219,17 @@ gl.useProgram(greenProgramInfo.program);
 // now make a texture
 var tex = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, tex);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 7, 7, 0, gl.RGBA, gl.UNSIGNED_BYTE,null);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 7, 7, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+	new Uint8Array([
+		127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255, 0,0,210,255, 
+		127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  0,0,180,255,     127,127,127,255,
+		127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  0,0,150,255,      127,127,127,255, 127,127,127,255,
+		127,127,127,255,  127,127,127,255,  127,127,127,255,  0,0,120,255,      127,127,127,255,  127,127,127,255, 127,127,127,255,
+		127,127,127,255,  127,127,127,255,  0,0,90,255,       127,127,127,255,  127,127,127,255,  127,127,127,255, 127,127,127,255,
+		127,127,127,255,  0,0,60,255,       127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255, 127,127,127,255,
+		0,0,30,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255, 127,127,127,255,		
+
+		]));
 
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -206,7 +280,7 @@ W W W W W  W W
   C2         W
 C1           W
 */
-gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    1, 1,    1, 1,    6, 6);
+//gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    1, 1,    1, 1,    6, 6);
 /*
 W           B
 W         C5
@@ -217,24 +291,23 @@ W C1
 W W W W W W W
 */
 /*
+// target, level, xoffset, yoffset, x, y, width, height
+
  The screen-aligned pixel rectangle with lower left corner at x y and with width width and height height replaces the portion of the texture array with x indices xoffset through xoffset + width - 1 , inclusive, and y indices yoffset through yoffset + height - 1 , inclusive, at the mipmap level specified by level. 
 */
-
+gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    1, 1,    1, 1,    6, 6);
 /*
-         **** 50 ***
-         
-         60        60
-
----------**** 50 ****
-
-20
-
----10 ----
-
-
-
+F1
+  F2
+    F3
+      F4
+        F5
+          F6
 
 */
+
+
+
 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
 // now clear to red
@@ -242,12 +315,8 @@ gl.clearColor(1, 0, 0, 1);
 gl.clear(gl.COLOR_BUFFER_BIT);
 
 // Now render with the texture
-gl.useProgram(programInfo.program);
-var uniforms = {
-  u_texture: tex,
-};
-twgl.setUniforms(programInfo, uniforms);
-twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+gl.useProgram(program);
+gl.drawArrays(gl.TRIANGLES,0,6);
 
 
 }
