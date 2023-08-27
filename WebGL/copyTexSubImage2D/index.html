@@ -3,51 +3,69 @@
 
   <head>
   	<style>
-  		canvas , #un , #deux , #trois , img { 
+  		#c {
+  			display: none;
+  		}
+  		canvas , #un , #deux , #trois  , img { 
   			image-rendering: pixelated;
   			width:70px;
   			height: 70px;
+
+
+
 
 
   		 }
 
 
 
-  	img {
-
-  		  			    background-image:
+.grid {
+	width: 70px;
+	height: 70px;
+	  			  		  			   background-image:
       repeating-linear-gradient(#ccc 0 1px, transparent 1px 100%),
       repeating-linear-gradient(90deg, #ccc 0 1px, transparent 1px 100%);
-    background-size: 7px 7px;
-
-  	}
-
+    background-size: 10px 10px;
+    position:relative;
+    top:-70px;   
+}
   	</style>
   </head>
 
   <body>
+<p>texture initiale</p>
+  	<div id="zero"></div>
+
 <canvas id="c"></canvas>
 
 
 
-<p>  gl.copyTexSubImage2D(gl.TEXTURE_2D,0, -- 0,0,  --    0, 0,  --    7, 7);
-</p>
+<p> gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    2,   2,    3, 3,    3, 3);</p>
   	 <div id="un"></div>
 
-<br>
+<div class="grid"></div>
+
 
   <p>gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    0, 0,    0, 0,    5, 5);</p>
-  	<div id="deux"></div>
+    <div id="deux"></div><div class="grid"></div>
 
-<br>
 
-  <p>  gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    2, 1,    0, 0,    5, 5);
-</p>
-<div id="trois"></div>
+  <p>  gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    0,   0,    2, 3,    7, 7);</p><div id="trois"></div>
+  <div class="grid"></div>
 
-<br>
+
+
+
+
+
+
+
+
 
 <div id="quatre"></div>
+
+
+
 
   	<script src="code.js"></script>
 
