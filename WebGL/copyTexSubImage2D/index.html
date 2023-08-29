@@ -6,7 +6,7 @@
   		#c {
   			display: none;
   		}
-  		canvas , #un , #deux , #trois  , img { 
+  		canvas , #un , #deux , #trois  , #quatre, #cinq, img { 
   			image-rendering: pixelated;
   			width:70px;
   			height: 70px;
@@ -56,15 +56,17 @@
 
 
 
+  <p>gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    1,   2,    0, 0,    5, 5)</p><div id="quatre"></div>
+  <div class="grid"></div>
 
 
 
+  <p>gl.copyTexImage2D(gl.TEXTURE_2D, 0,   0, 0,    5, 5)</p><div id="cinq"></div>
+  <div class="grid"></div>
+/*
 
-
-
-<div id="quatre"></div>
-
-
+This function behaves as if texImage2D were called with null data, followed by copyTexSubImage2D. As in copyTexSubImage2D, for any source pixels lying outside the framebuffer, the corresponding destination texels are left untouched, and so they retain their zero-initialized contents as if texImage2D was called with null data. This has the combined effect that, for source pixels lying outside the framebuffer, corresponding destination pixels will have all channels of the associated texels initialized to 0; 
+*/
 
 
   	<script src="code.js"></script>
