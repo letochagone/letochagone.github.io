@@ -2,7 +2,7 @@
 let canvas= document.getElementById("c");
 canvas.width=7;
 canvas.height=7;
-let gl = canvas.getContext("webgl");
+let gl = canvas.getContext("webgl", {antialias: false});
 
 
 const vs = `
@@ -303,6 +303,55 @@ f11("trois");
 
 
 
+
+
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 7, 7, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+    new Uint8Array([
+      0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255,
+      0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255,  
+      0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255,  
+      0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255,  
+      0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255,  
+      0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255,  
+      0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255, 0,153,153,255,  
+]));
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+gl.copyTexSubImage2D(gl.TEXTURE_2D, 0,    1,   2,    0, 0,    5, 5);
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+gl.clearColor(1, 0, 0, 1);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.TRIANGLES,0,6);
+f11("quatre");
+
+
+
+
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+let tex5 = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D,tex5);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,     gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,     gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+gl.copyTexImage2D(gl.TEXTURE_2D, 0,  gl.RGBA, 2, 1,   7, 7,   0);
+// copyTexImaged2D est une 'read operation'
+// https://registry.khronos.org/webgl/specs/latest/1.0/  
+// 5.14.12 Read Operations
+
+//copyTexImage2D copies from the current framebuffer or canvas into the given target of the current texture unit
+/*
+ici le framebuffer courant c'est fb.
+*/
+
+//copyTexImage2D(target,  level,  internalformat,  x,  y,  width,  height,  border) 
+//https://registry.khronos.org/webgl/specs/latest/1.0/#5.14.8
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+gl.clearColor(1, 0, 0, 1);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.TRIANGLES,0,6);
+f11("cinq");
 
 
 
