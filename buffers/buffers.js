@@ -272,7 +272,13 @@ gl.texImage2D(
 
 
 
-
+///////////////////// VERSION 3
+///////////////////// VERSION 3
+///////////////////// VERSION 3
+///////////////////// VERSION 3
+///////////////////// VERSION 3
+///////////////////// VERSION 3
+///////////////////// VERSION 3
 
 
  vertex = `
@@ -370,6 +376,108 @@ gl.texImage2D(
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 
   f11("buffers3");
+
+
+
+
+//faire une 4e version avec   gl_FragCoord.xy / resolution;
+  /////// VERSION 4
+  /////// VERSION 4
+  /////// VERSION 4
+  /////// VERSION 4
+  /////// VERSION 4
+  /////// VERSION 4
+
+vertex = `
+      attribute vec2 a_position;
+
+      void main() {
+        gl_Position = vec4(a_position, 0, 1);
+      }
+    `;
+
+ fragment = `
+      precision mediump float;
+      uniform sampler2D u_image;
+      void main() {
+        vec2 coord = gl_FragCoord.xy / vec2(3,3);
+        gl_FragColor = texture2D(u_image, coord);
+
+      }
+    `;
+
+ shader = gl.createProgram();
+const vertexShader4 = gl.createShader(gl.VERTEX_SHADER);
+const fragmentShader4 = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(vertexShader4, vertex);
+gl.shaderSource(fragmentShader4, fragment);
+gl.compileShader(vertexShader4);
+gl.compileShader(fragmentShader4);
+gl.attachShader(shader, vertexShader4);
+gl.attachShader(shader, fragmentShader4);
+gl.linkProgram(shader);
+
+
+
+
+   positionLocation = gl.getAttribLocation(shader, "a_position");
+
+   positionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1,-1,
+    -1,1,
+    1,-1,
+    1,-1,
+    -1,1,
+    1,1,
+
+  ]), gl.STATIC_DRAW);
+
+
+  texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+gl.texImage2D(
+  gl.TEXTURE_2D, // target
+  0, // level
+  gl.RGBA, // internalformat
+  3, // width
+  3, // height
+  0, // border
+  gl.RGBA, // format
+  gl.UNSIGNED_BYTE, // type
+  new Uint8Array(
+    [
+      255, 0, 0, 255,      0, 255, 0, 255,   255, 0,   0, 255, 
+      255, 0, 0, 255,    255,   0, 0, 255,   255, 0, 255, 255, 
+      255, 0, 0, 255,    255, 255, 0, 255,   255, 0,   0, 255, 
+
+    ]
+  )
+
+  );
+
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+  gl.useProgram(shader);
+
+  gl.enableVertexAttribArray(positionLocation);
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+   size = 2;
+   type = gl.FLOAT;
+   normalize = false;
+   stride = 0;
+   offset = 0;
+  gl.vertexAttribPointer(positionLocation, size, type, normalize, stride, offset);
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  f11("buffers4");
 
 
 
