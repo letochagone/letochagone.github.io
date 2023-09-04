@@ -1,4 +1,94 @@
 
+/*
+coloration syntaxique
+https://idiallo.com/blog/javascript-syntax-highlighter
+
+"let x=5".replace(/x/,"cinq") 
+> let cinq=5
+
+/ab*c/: the * after "b" means "0 or more occurrences of the preceding item.
+
+"let x=5".replace(/le*t/,44) 
+>44 x=5
+
+ The "g" after the regular expression 
+ is an option or flag that performs 
+ a global search, looking in the whole 
+ string and returning all matches
+ exemple :
+ "let x=x5".replace(/x/g,"cinq") 
+ resultat : let cinq=cinq5
+
+
+"le*t x=5".replace(/le\*t/,"44")
+resultat: 44 x=5
+explication: the backslash "escapes" the "*", making it literal instead of special.
+
+"/example/".replace(/\/example\//,"exemple")
+resultat : exemple
+
+"le disque C:\ est formaté".replace(/C:\\/,"hd") 
+resultat : "le disque C: est formaté"
+ça n'a pas marché !!!
+il faut ajouter la fonction String.raw pour que javascript ne traite pas les caractères spéciaux
+String.raw`le disque C:\3 est`.replace(/C:\\/,"hd")
+"le disque hd3 est" 
+
+String.raw`le disque C:\ est formaté`.replace(/C:\\/,"dur") 
+"le disque dur est formaté" 
+
+https://stackoverflow.com/questions/2479309/javascript-and-backslashes-replace
+var a = String.raw`This is my \string`.replace(/\\/g,"\\\\");
+
+point particulier :
+"aaaa*b".replace(new RegExp("a\\*b"),"-") 
+resultat: "aaa-" 
+"aaaa*b".replace(/a\*b/,"-") 
+resultat: "aaa-
+
+pourquoi il faut modifier la chaine de caractère ?
+réponse : the backslash is an escape in string literals
+
+"gg".replace(/.g/,"*")
+le point "." matches any single character except line terminators
+"gg".replace(/.g/,"*")
+resultat: "*"
+ben oui gg c'est *g (avec *==g)
+"abc".replace(/./g,"*")
+resultat : ***
+
+deux lettres importantes après le /.../g ou /..../i
+g = global search
+i= case insensitive search
+
+
+"gr tr trh g".match(/\w+/g)
+Array(4) [ "gr", "tr", "trh", "g" ]
+
+"abc.def.ger errg erg .trh htr.hy  ".match(/(\w+\.)+\w+/g)
+Array [ "abc.def.ger", "htr.hy" ]
+
+
+"eGRE erg<free>eer eggr rrgrgre".match(/<(.*?)>/);
+Array [ "<free>", "free" ]
+
+alert( "<h1>Hi!</h1>".match(/<\/?[a-z][a-z0-9]*>/gi) );
+resultat: <h1>, </h1>
+explication :  on a ajouté un / optionnel (un ? devant spécifie ce caractère optionnel)
+
+
+
+. = a dot = any character  "zefg".match(/../g)  === ["ze" , "fg"] 
+
+
+ /"(.*?)"/g
+
+
+font-family: Menlo, Monaco, Consolas, monospace;
+
+*/
+
+
 let canvas= document.getElementById("c");
 canvas.width=7;
 canvas.height=7;
