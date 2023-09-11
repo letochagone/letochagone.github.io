@@ -2,15 +2,14 @@
 <html>
    <title>Converting string to an array in JavaScript</title>
 <head>
-   <script>
-     let ss=String.raw`c:\disqu` ;
-     let ss1=`c:\disqu` ;
+ 
+</head>
+<body>
+  <p id="div1"></p>
+  
+  
+    <script>
 
-      var string = "Oh, you are working tutorialspoint? that place is amazing! how can i join there; is there any vacancy? please let me know.";
-      const array = string.split(/[.,!,?,;]/);
-      //document.write(array);
-          // document.write(ss[2]);
-          //  document.write(ss1[2]);
      
      let pattern1 = String.raw`ab\*c` ;
      let pattern2 = /ab\*c/;
@@ -28,34 +27,51 @@
      let res3 = machaine.match(pattern2);
 
      let res4 = machaine.match(new RegExp("ab\\*c"));
+      
+      let fefe3=`
+        "grabbab*cbbcgr er".match(new RegExp(String.raw\`ab\\*c\`))
+      `;
+      let evalfefe3=
+        "grabbab*cbbcgr er".match(new RegExp(String.raw`ab\*c`))
+      ;
 
-document.write('"grabbab*cbbcgr er".match(new RegExp(String.raw`ab\\*c`))');
-     let test1="grabbab*cbbcgr er".match(new RegExp(String.raw`ab\*c`));
-             document.write('<br>');
+      let fefe4=`
+        "grabbab*cbbcgr er".match(/ab\\*c/)
+      `;
+      let evalfefe4=
+         "grabbab*cbbcgr er".match(/ab\*c/)
+      ;
 
-     document.write(`${test1}`);
+      
+      let fefe5=`
+        "grabbab*cbbcgr er".match(new RegExp("ab\\*c"))
+      `;
+      let evalfefe5=
+        "grabbab*cbbcgr er".match(new RegExp("ab\\*c"))
+      ;       
 
-     //console.log(test1);
-     
-     //document.write('<br>');
-     
-    // document.write(res1);
-     
-    /* 
-     document.write('<br>');
-     document.write(res2);
-     document.write('<br>');
-     document.write(res3);
-     document.write('<br>');
-     document.write(res4);
-          document.write('<br>');
-     
-     document.write("/ab\\*c/");
-   */
+
+     document.getElementById("div1").innerHTML = fefe3;
+     document.getElementById("div1").innerHTML += "<br>";
+     document.getElementById("div1").innerHTML += `${evalfefe3}`;
+
+     document.getElementById("div1").innerHTML += "<br>";
+
+     document.getElementById("div1").innerHTML += fefe4;
+     document.getElementById("div1").innerHTML += "<br>";
+     document.getElementById("div1").innerHTML += `${evalfefe4}`;
+      
+           document.getElementById("div1").innerHTML += "<br>";
+           document.getElementById("div1").innerHTML += fefe5;
+       document.getElementById("div1").innerHTML += "<br>";
+     document.getElementById("div1").innerHTML += `${evalfefe5}`;
+
+
+
+
+ 
 
 
    </script>
-</head>
-<body>
 </body>
 </html>
