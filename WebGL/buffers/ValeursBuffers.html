@@ -4,155 +4,196 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <style>
+    pre {
+      background-color: black;
+      color: white;
+    }
+    .string {
+      color:#A1E46D;
+    }
+    .special {
+      color:#D6665D;
+    }
+    .egale {
+      color:#FF00FF;
+    }
+  </style>
 
 </head>
 <body>
   <canvas id="canvas"></canvas>
 
+  <pre>
+    <code class="cde">
+      var x=5;
+
+    </code>
+  </pre>
+
+  <pre>
+    <code class="cde" id="dede">
+
+    let canvas = document.getElementById("canvas");
+    let gl = canvas.getContext("webgl");
+
+    gl.getExtension("OES_texture_float");
+    gl.getExtension("OES_texture_float_linear");
+    </code>
+  </pre>
+
   <script>
-    //  ctrl altGr 5
-		//https://idiallo.com/blog/javascript-syntax-highlighter
+    //https://idiallo.com/blog/javascript-syntax-highlighter
     "use strict";
 
-let canvas = document.getElementById("canvas");
-let gl = canvas.getContext("webgl");
+    let canvas = document.getElementById("canvas");
+    let gl = canvas.getContext("webgl");
 
-gl.getExtension("OES_texture_float");
-gl.getExtension("OES_texture_float_linear");
+    gl.getExtension("OES_texture_float");
+    gl.getExtension("OES_texture_float_linear");
 
-gl.canvas.width = 4;
-gl.canvas.height = 3;
-gl.canvas.style.width="90px";
+    gl.canvas.width = 4;
+    gl.canvas.height = 3;
+    gl.canvas.style.width="90px";
 
-
-
-let vertex = `
-  attribute vec2 a_position;
-  attribute vec2 a_texCoord;
+    let vertex = `
+      attribute vec2 a_position;
+      attribute vec2 a_texCoord;
 
 
-  varying vec2 v_texCoord;
-
-
-  void main() {
-
-
-    gl_Position=vec4(a_position,0,1);
-    v_texCoord = a_position;
-
-  }
-    `;
-
-let fragment = `
-      precision mediump float;
-      uniform sampler2D u_image;
       varying vec2 v_texCoord;
+
+
       void main() {
-
-
-       gl_FragColor = vec4(v_texCoord,333,999);
-
+        gl_Position=vec4(a_position,0,1);
+        v_texCoord = a_position;
       }
     `;
 
-let shader = gl.createProgram();
-const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-gl.shaderSource(vertexShader, vertex);
-gl.shaderSource(fragmentShader, fragment);
-gl.compileShader(vertexShader);
-gl.compileShader(fragmentShader);
-gl.attachShader(shader, vertexShader);
-gl.attachShader(shader, fragmentShader);
-gl.linkProgram(shader);
-  gl.useProgram(shader);
+    let fragment = `
+      precision mediump float;
+      uniform sampler2D u_image;
+      varying vec2 v_texCoord;
 
+      void main() {
+        gl_FragColor = vec4(v_texCoord,333,999);
+      }
+    `;
 
+    let shader = gl.createProgram();
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(vertexShader, vertex);
+    gl.shaderSource(fragmentShader, fragment);
+    gl.compileShader(vertexShader);
+    gl.compileShader(fragmentShader);
+    gl.attachShader(shader, vertexShader);
+    gl.attachShader(shader, fragmentShader);
+    gl.linkProgram(shader);
+    gl.useProgram(shader);
 
+    let positionLocation = gl.getAttribLocation(shader, "a_position");
+    let texcoordLocation = gl.getAttribLocation(shader, "a_texCoord");
 
-  let positionLocation = gl.getAttribLocation(shader, "a_position");
-  let texcoordLocation = gl.getAttribLocation(shader, "a_texCoord");
-
-  let positionBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
+    let positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-    -1, -1,
-    -1, 1,
-    1, -1,
-    1, -1,
-    -1, 1,
-    1, 1
-  ]), gl.STATIC_DRAW);
+      -1, -1,
+      -1, 1,
+      1, -1,
+      1, -1,
+      -1, 1,
+      1, 1
+    ]), gl.STATIC_DRAW);
+
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.enableVertexAttribArray(positionLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    let size = 2;
+    let type = gl.FLOAT;
+    let normalize = false;
+    let stride = 0;
+    let offset = 0;
+    gl.vertexAttribPointer(positionLocation, size, type, normalize, stride, offset);
+
+    let textureEcran = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, textureEcran);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,             
+      gl.RGBA,
+      canvas.width,
+      canvas.height,
+      0,
+      gl.RGBA,
+      gl.FLOAT,
+      null
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    
+    let fbEcran = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER,fbEcran);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,
+      textureEcran,
+      0
+    );
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    let ff= new Float32Array(
+  	  gl.canvas.width  *
+  	  gl.canvas.height * 4
+    );
+
+    gl.readPixels(0,0,gl.canvas.width , gl.canvas.height,gl.RGBA,gl.FLOAT,ff);
+    console.log(ff);
 
 
 
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 
 
-  gl.enableVertexAttribArray(positionLocation);
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  let size = 2;
-  let type = gl.FLOAT;
-  let normalize = false;
-  let stride = 0;
-  let offset = 0;
-  gl.vertexAttribPointer(positionLocation, size, type, normalize, stride, offset);
+    //syntax higlight
+
+let strMessage1 = document.getElementById("dede") ;
+let strReg1 = /"(.*?)"/g;  // "(fgerrge r re r)"
+let  strReg2 = /'(.*?)'/g; // '(fgerrge r re r)'  , . = a caracter  , .* , une suite de caracter , .*? la suite de caracter la plus petite
+let  specialReg = /\b(new|let|var|if|do|function|while|switch|for|foreach|in|continue|break)(?=[^\w])/g ;
+let specialJsGlobReg = /\b(document|window|Array|String|Object|Number|\$)(?=[^\w])/g ;
+let    specialJsReg = /\b(getElementsBy(TagName|ClassName|Name)|getElementById|typeof|instanceof)(?=[^\w])/g ;
+let    specialMethReg = /\b(indexOf|match|replace|toString|length)(?=[^\w])/g ; 
+let    specialCommentReg  = /(\/\*.*\*\/)/g ;
+let    inlineCommentReg = /(\/\/.*)/g;
+let  htmlTagReg = /(&lt;[^\&]*&gt;)/g;
+let egale = /(=)/g;
 
 
 
+let string = strMessage1.innerHTML;
 
 
+//let parsed = string.replace(egale,'<span class="egale">$1</span>');
 
+ let  parsed = string.replace(strReg1,'<span class="string">"$1"</span>');
+     parsed = parsed.replace(strReg2,"<span class=\"string\">'$1'</span>");
 
+    parsed = parsed.replace(specialReg,'<span class="special">$1</span>');
+    parsed = parsed.replace(specialJsGlobReg,'<span class="special-js-glob">$1</span>');
+    parsed = parsed.replace(specialJsReg,'<span class="special-js">$1</span>');
+    parsed = parsed.replace(specialMethReg,'<span class="special-js-meth">$1</span>');
+    parsed = parsed.replace(htmlTagReg,'<span class="special-html">$1</span>');
+    parsed = parsed.replace(specialCommentReg,'<span class="special-comment">$1</span>');
+    parsed = parsed.replace(inlineCommentReg,'<span class="special-comment">$1</span>');
 
-
-  let textureEcran = gl.createTexture();
-
-      gl.bindTexture(gl.TEXTURE_2D, textureEcran);
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,             
-        gl.RGBA,
-        canvas.width,
-        canvas.height,
-        0,
-        gl.RGBA,
-        gl.FLOAT,
-        null);
-      //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-
-
-      
-      let fbEcran = gl.createFramebuffer();
-      gl.bindFramebuffer(gl.FRAMEBUFFER,fbEcran);
-      gl.framebufferTexture2D(
-        gl.FRAMEBUFFER,
-        gl.COLOR_ATTACHMENT0,
-        gl.TEXTURE_2D,
-        textureEcran,
-        0
-      );
-
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-
-
-let ff= new Float32Array(
-	 gl.canvas.width  *
-	 gl.canvas.height * 
-	 4
-);
-gl.readPixels(0,0,gl.canvas.width , gl.canvas.height,gl.RGBA,gl.FLOAT,ff);
-console.log(ff);
-
+   strMessage1.innerHTML      = parsed;
 
 
 
