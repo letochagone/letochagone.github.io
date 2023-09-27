@@ -1,7 +1,3 @@
-<!--
- le fichier correspondant est dans /home/letocha/webcam2particles/
--->
-
 <!doctype html>
 <html>
 <head>
@@ -53,37 +49,38 @@
     let canvas = document.getElementById("canvas");
     let gl = canvas.getContext("webgl");
 
+    /*
+     les deux lignes suivante permettent d'envoyer dans gl_FragColor des valeurs plus grande que -1...+1
+    */
     gl.getExtension("OES_texture_float");
-    gl.getExtension("OES_texture_float_linear");
+    gl.getExtension('WEBGL_color_buffer_float');
 
     gl.canvas.width = 4;
     gl.canvas.height = 3;
-    gl.canvas.style.width="90px";
 
     let vertex = `
       attribute vec2 a_position;
-      attribute vec2 a_texCoord;
 
-
-      varying vec2 v_texCoord;
-
+      varying vec2 v_position;
 
       void main() {
         gl_Position=vec4(a_position,0,1);
-        v_texCoord = a_position;
+        v_position = a_position;
       }
     `;
 
     let fragment = `
-      precision mediump float;
-      uniform sampler2D u_image;
-      varying vec2 v_texCoord;
+      precision highp float;
+      varying vec2 v_position;
 
       void main() {
-        gl_FragColor = vec4(v_texCoord,333,999);
+        gl_FragColor = vec4(v_position,333,999);
       }
     `;
 
+    /*
+      compilation des shaders, le code résultant est dans la variable shader
+    */
     let shader = gl.createProgram();
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -96,31 +93,30 @@
     gl.linkProgram(shader);
     gl.useProgram(shader);
 
-    let positionLocation = gl.getAttribLocation(shader, "a_position");
-    let texcoordLocation = gl.getAttribLocation(shader, "a_texCoord");
+    let aPositionLocation = gl.getAttribLocation(shader, "a_position");
 
     let positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       -1, -1,
-      -1, 1,
-      1, -1,
-      1, -1,
-      -1, 1,
-      1, 1
+      -1, +1,
+      +1, -1,
+      +1, -1,
+      -1, +1,
+      +1, +1
     ]), gl.STATIC_DRAW);
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-    gl.enableVertexAttribArray(positionLocation);
+    gl.enableVertexAttribArray(aPositionLocation);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     let size = 2;
     let type = gl.FLOAT;
     let normalize = false;
     let stride = 0;
     let offset = 0;
-    gl.vertexAttribPointer(positionLocation, size, type, normalize, stride, offset);
+    gl.vertexAttribPointer(aPositionLocation, size, type, normalize, stride, offset);
+
 
     let textureEcran = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, textureEcran);
@@ -132,14 +128,18 @@
       canvas.height,
       0,
       gl.RGBA,
-      gl.FLOAT,
+      gl.FLOAT, // 
       null
     );
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    
+
+
+    /*
+      on va afficher dans une texture , attachée au framebuffer fbEcran
+    */
     let fbEcran = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER,fbEcran);
     gl.framebufferTexture2D(
@@ -156,9 +156,25 @@
   	  gl.canvas.width  *
   	  gl.canvas.height * 4
     );
+// [1,27,3,4,5,6,7,2,9,10].filter((e,i,r)=>(  ((i+1)%4) || ((i+1)%3) ))
 
     gl.readPixels(0,0,gl.canvas.width , gl.canvas.height,gl.RGBA,gl.FLOAT,ff);
-    console.log(ff);
+
+    let arr1= ff.filter((e,i,r)=>(  ((i+1)%4)  ));
+
+    let arr2=arr1.filter((e,i,r)=>(  ((i+1)%3)  )) ;
+    console.log(arr2);
+    let couple="";
+    arr2.forEach(
+      function (value, i) {
+       value= Math.round((value + Number.EPSILON) * 100) / 100 ;
+        //value=Math.round(() value+ Number.EPSILON) * 100) / 100
+        if (i%2) { couple=couple+" , "+value; console.log(couple); }
+        else {couple=value; }
+
+        //console.log('%d: %s', i, value);
+      }
+    );
 
 
 
@@ -198,6 +214,8 @@ let string = strMessage1.innerHTML;
     parsed = parsed.replace(inlineCommentReg,'<span class="special-comment">$1</span>');
 
    strMessage1.innerHTML      = parsed;
+
+
 
 
 
