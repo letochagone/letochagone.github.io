@@ -1,0 +1,366 @@
+<!doctype html>
+<html>
+
+<head>
+	<style>
+
+      div {
+        width: 210px;
+        height: 210px;
+      }
+      img {
+        width: 210px;
+        height: 210px;
+        image-rendering: pixelated;
+      }
+
+canvas {
+	background: beige;
+	width: 210px;
+	height: 210px;
+	image-rendering: pixelated;
+}
+
+      .grid {
+        width: 210px;
+        height: 210px;
+	  		background-image:
+          repeating-linear-gradient(#cccd 0 1px, transparent 1px 100%),
+          repeating-linear-gradient(90deg, #cccd 0 1px, transparent 1px 100%);
+        background-size: 30px 30px;
+        position:relative;
+        top:-70px;
+      }
+      #grid1 , #grid2{
+      	position:absolute;
+      	left:0;
+      	top:0;
+      }
+
+.caca {
+	position:relative;
+}
+
+
+
+	</style>
+
+	
+</head>
+
+<body>
+
+	<!--
+		https://webglfundamentals.org/webgl/lessons/webgl-render-to-texture.html
+	-->
+
+		<canvas id="canvas1"></canvas>
+	<br>
+
+
+
+
+<br>
+
+	<script>
+
+
+	
+
+		function main() {
+
+		let canvas1 = document.getElementById("canvas1");
+		canvas1.width=7;
+		canvas1.height=7;
+
+
+		let gl = canvas1.getContext("webgl");
+
+
+
+
+
+
+
+		let vs=`
+		  attribute vec2 positionDansCanvas;
+		  attribute vec2 positionDansTexture;
+
+		  varying vec2 vPositionDansTexture;
+
+		  void main() {
+		  	vPositionDansTexture = positionDansTexture;
+		  	gl_Position = vec4(positionDansCanvas,0,1);
+		  }
+		`;
+
+		let fs=`
+		  precision highp float;
+
+		  uniform sampler2D texture;
+		  varying vec2 vPositionDansTexture;
+
+		  void main() {
+
+		  	gl_FragColor = texture2D(texture,vPositionDansTexture);
+		  }
+		`;
+
+		let vs2=`
+		  attribute vec2 positionDansCanvas;
+		  attribute vec3 aColor;
+
+		  varying vec3 vColor;
+
+		  void main() {
+		  	vColor = aColor;
+		  	gl_Position = vec4(positionDansCanvas,0,1);
+
+		  }
+		`;
+
+		let fs2=`
+		  precision highp float;
+
+		  varying vec3 vColor;
+
+		  void main() {
+
+		  	gl_FragColor = vec4(vColor,1);
+		  //gl_FragColor=vec4(1,0,0,1);
+		  }
+		`;
+
+  let program2 = gl.createProgram();
+  {		
+  let vertex = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertex, vs2);
+  gl.compileShader(vertex);
+  let successCompileVertex = gl.getShaderParameter(vertex, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du vertex :" + successCompileVertex);
+  if (!successCompileVertex) console.log("erreur compilation du vertex : "+gl.getShaderInfoLog(vertex));
+  let fragment = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragment, fs2);
+  gl.compileShader(fragment);
+  let successCompileFragment = gl.getShaderParameter(fragment, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du fragment :" + successCompileFragment);
+  if (!successCompileFragment) console.log("erreur compilation du fragment : "+gl.getShaderInfoLog(fragment));
+
+  gl.attachShader(program2,vertex);
+  gl.attachShader(program2,fragment);
+  gl.linkProgram(program2);
+  let successLink = gl.getProgramParameter(program2, gl.LINK_STATUS);
+  console.log("LINK_STATUS du Program : "+successLink);
+  if (!successLink)  console.log(gl.getProgramInfoLog(program2));
+}
+
+
+
+gl.useProgram(program2);
+
+//buffer positino dans canvas
+{
+	let buffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+	gl.bufferData(
+	    gl.ARRAY_BUFFER,
+
+		/*
+		new Float32Array([
+		-1+1/7,-1+1/7,   -1+3/7,-1+1/7,   -1+5/7,-1+1/7,    -1+7/7,-1+1/7,    -1+9/7,-1+1/7,   -1+11/7,-1+1/7,   -1+13/7,-1+1/7,
+		-1+1/7,-1+3/7,   -1+3/7,-1+3/7,   -1+5/7,-1+3/7,    -1+7/7,-1+3/7,    -1+9/7,-1+3/7,   -1+11/7,-1+3/7,   -1+13/7,-1+3/7,
+		-1+1/7,-1+5/7,   -1+3/7,-1+5/7,   -1+5/7,-1+5/7,    -1+7/7,-1+5/7,    -1+9/7,-1+5/7,   -1+11/7,-1+5/7,   -1+13/7,-1+5/7,
+		-1+1/7,-1+7/7,   -1+3/7,-1+7/7,   -1+5/7,-1+7/7,    -1+7/7,-1+7/7,    -1+9/7,-1+7/7,   -1+11/7,-1+7/7,   -1+13/7,-1+7/7,
+		-1+1/7,-1+9/7,   -1+3/7,-1+9/7,   -1+5/7,-1+9/7,    -1+7/7,-1+9/7,    -1+9/7,-1+9/7,   -1+11/7,-1+9/7,   -1+13/7,-1+9/7,
+		-1+1/7,-1+11/7,   -1+3/7,-1+11/7,   -1+5/7,-1+11/7,    -1+7/7,-1+11/7,    -1+9/7,-1+11/7,   -1+11/7,-1+11/7,   -1+13/7,-1+11/7,
+		-1+1/7,-1+13/7,   -1+3/7,-1+13/7,   -1+5/7,-1+13/7,    -1+7/7,-1+13/7,    -1+9/7,-1+13/7,   -1+11/7,-1+13/7,   -1+13/7,-1+13/7,
+		]),
+		*/
+		new Float32Array([
+
+		-1+1/3,-1+1/3,  -1+3/3,-1+1/3,  -1+5/3,-1+1/3,
+		-1+1/3,-1+3/3,  -1+3/3,-1+3/3,  -1+5/3,-1+3/3,
+		-1+1/3,-1+5/3,  -1+3/3,-1+5/3,  -1+5/3,-1+5/3,
+		]),
+
+		gl.STATIC_DRAW
+	);
+	let locationPositionDansCanvas = gl.getAttribLocation(program2,"positionDansCanvas");
+	gl.enableVertexAttribArray(locationPositionDansCanvas);
+	gl.vertexAttribPointer(
+	    locationPositionDansCanvas,  // location
+	    2,            // size (components per iteration)
+	    gl.FLOAT,     // type of to get from buffer
+	    false,        // normalize
+	    0,            // stride (bytes to advance each iteration)
+	    0,            // offset (bytes from start of buffer)
+	);
+}
+
+
+//buffer color
+{
+	let a=[1,0,0];
+	let b=[0,1,0];
+	let c=[0,0,1];
+    let d=[1,0,1];
+    let e=[1,1,0];
+    let f=[0,1,1];
+    let h=[0.5,0.5,0.5];
+
+
+	let colors= [ 
+		a,b,a,
+		b,c,b,
+		a,b,a,
+
+
+
+		 ].flat();
+	let buffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+	gl.bufferData(
+		gl.ARRAY_BUFFER,
+		new Float32Array(colors),
+		gl.STATIC_DRAW
+	);
+	let location_aColor = gl.getAttribLocation(program2,"aColor");
+	gl.enableVertexAttribArray(location_aColor);
+	gl.vertexAttribPointer(
+	    location_aColor,  // location
+	    3,            // size (components per iteration)
+	    gl.FLOAT,     // type of to get from buffer
+	    false,        // normalize
+	    0,            // stride (bytes to advance each iteration)
+	    0,            // offset (bytes from start of buffer)
+	);
+}
+
+
+
+gl.viewport(4,4,3,3);
+gl.drawArrays(gl.POINTS, 0, 9);
+
+
+gl.viewport(0,0,4,4);
+
+//gl.viewport(0,0,7,7);
+
+//return 0;
+// now make a texture
+var tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 4, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+   //null
+	new Uint8Array([127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  127,127,127,255,  ])
+);
+
+// copy part of the fbtex to it
+// target, level, xoffset, yoffset, x, y, width, height
+gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 
+	0,0 , 4, 4, 3, 3);
+//gl.copyTexSubImage2D(gl.TEXTURE_2D ,0,    0,0,  0,0,  7,7);
+
+
+
+let program = gl.createProgram();
+  {		
+  let vertex = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertex, vs);
+  gl.compileShader(vertex);
+  let successCompileVertex = gl.getShaderParameter(vertex, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du vertex :" + successCompileVertex);
+  if (!successCompileVertex) console.log("erreur compilation du vertex : "+gl.getShaderInfoLog(vertex));
+  let fragment = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragment, fs);
+  gl.compileShader(fragment);
+  let successCompileFragment = gl.getShaderParameter(fragment, gl.COMPILE_STATUS);
+  console.log("COMPILE_STATUS du fragment :" + successCompileFragment);
+  if (!successCompileFragment) console.log("erreur compilation du fragment : "+gl.getShaderInfoLog(fragment));
+
+  gl.attachShader(program,vertex);
+  gl.attachShader(program,fragment);
+  gl.linkProgram(program);
+  let successLink = gl.getProgramParameter(program, gl.LINK_STATUS);
+  console.log("LINK_STATUS du Program : "+successLink);
+  if (!successLink)  console.log(gl.getProgramInfoLog(program));
+}
+
+
+// Now render with the texture
+gl.useProgram(program);
+
+//buffer position dans canvas
+{
+	let buffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+	gl.bufferData(
+		gl.ARRAY_BUFFER,
+		new Float32Array([-1,-1,  -1,1,  1,-1,  1,-1,  -1,1,   1,1]),
+		gl.STATIC_DRAW
+	);
+	let locationPositionDansCanvas = gl.getAttribLocation(program,"positionDansCanvas");
+    gl.enableVertexAttribArray(locationPositionDansCanvas);
+    gl.vertexAttribPointer(
+      locationPositionDansCanvas,  // location
+      2,            // size (components per iteration)
+      gl.FLOAT,     // type of to get from buffer
+      false,        // normalize
+      0,            // stride (bytes to advance each iteration)
+      0,            // offset (bytes from start of buffer)
+    );
+}
+
+//buffer position dans texture
+{
+	let buffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+	gl.bufferData(
+		gl.ARRAY_BUFFER,
+		new Float32Array([0,0,  0,1,  1,0,  1,0, 0,1,  1,1]),
+		gl.STATIC_DRAW
+	);
+	let locationPositionDansTexture = gl.getAttribLocation(program,"positionDansTexture");
+	gl.enableVertexAttribArray(locationPositionDansTexture);
+	gl.vertexAttribPointer(
+      locationPositionDansTexture,  // location
+      2,            // size (components per iteration)
+      gl.FLOAT,     // type of to get from buffer
+      false,        // normalize
+      0,            // stride (bytes to advance each iteration)
+      0,            // offset (bytes from start of buffer)
+    );
+
+}
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+
+
+gl.drawArrays(gl.TRIANGLES,0,6);
+
+
+
+
+
+
+
+
+
+
+}
+
+main();
+
+
+
+
+	</script>
+
+
+</body>
+
+</html>
