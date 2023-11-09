@@ -1,1 +1,104 @@
 
+<!doctype html>
+<html>
+
+  <head>
+  	<style>
+      canvas {
+        image-rendering: pixelated;
+      }
+      div {
+        width: 90px;
+        height: 90px;
+      }
+      img {
+        width: 90px;
+        height: 90px;
+        image-rendering: pixelated;
+      }
+
+
+
+    pre {
+      background-color: black;
+      color: white;
+    }
+    .string {
+      color:#A1E46D;
+    }
+    .special {
+      color:#D6665D;
+    }
+    .egale {
+      color:#FF00FF;
+    }
+
+  	</style>
+  </head>
+
+  <body>
+
+    <canvas id="canvas"></canvas><br>
+
+    <pre>
+    <code class="cde" id="dede">
+    "use strict";
+
+    let canvas = document.getElementById("canvas");
+    let gl = canvas.getContext("webgl");
+
+    gl.canvas.width = 3;
+    gl.canvas.height = 3;
+    gl.canvas.style.width="90px";
+
+    </code>
+    </pre>
+
+    <pre><code class="cde" id="dede2">
+      let vertex = `
+      attribute vec2 a_position;
+      attribute vec2 a_texCoord;
+
+      uniform vec2 u_resolution;
+
+      varying vec2 v_texCoord;
+
+      void main() {
+        vec2 zeroToOne = a_position / u_resolution;
+        vec2 zeroToTwo = zeroToOne * 2.0;
+        vec2 clipSpace = zeroToTwo - 1.0;
+        gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+        v_texCoord = a_texCoord;
+      }
+    `;
+
+let fragment = `
+      precision mediump float;
+      uniform sampler2D u_image;
+      varying vec2 v_texCoord;
+      void main() {
+        gl_FragColor = texture2D(u_image, v_texCoord);
+        gl_FragColor.rgb *= gl_FragColor.a;
+      }
+    `;
+
+    </code></pre>
+
+    <div id="buffers1"></div><br>
+
+    <div id="buffers2"></div><br>
+
+    <div id="buffers3"></div><br>
+
+    <div id="buffers4"></div><br>
+
+    <div id="buffers5"></div><br>
+
+
+
+
+  	<script src="buffers.js"></script>
+
+
+  </body>
+</html>
