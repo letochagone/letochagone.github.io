@@ -32,6 +32,10 @@
 
 
 <body>
+
+  <canvas id="canvas"></canvas>
+
+  
   <h1>comment calculer la couleur obtenue d'un code WebGL</h1>
   <p>
     le programme suivant affiche un point
@@ -39,8 +43,6 @@
 
   <pre><code class="cde" id="dede">
   "use strict";
-
- let global_a_glo = 4;
 
   let vertex=`
     attribute vec2 vertexPosition;
@@ -93,15 +95,20 @@
   gl.drawArrays(gl.POINTS, 0, 1);
   </code></pre>
 
-<h3>résultat</h3>
-    <canvas id="canvas1"></canvas>
-<img style="display:block" src="pipetteCouleur1.png" />
+  <h3>résultat</h3>
+  <canvas id="canvas1"></canvas>
+  <img style="display:block" src="pipetteCouleur1.png" />
 
-<p>Comparaison avec le calcul théorique</p>
+  <p>Comparaison avec le calcul théorique</p>
 
-<pre>
+  <pre>
   co = Cs * as + Cb * ab * (1-as)
   ao = as + ab * ( 1- as)
+
+  j'ai trouvé cette formule ici: 
+  https://www.w3.org/TR/compositing-1/#generalformula
+
+
 
   Cs = ( 0.4 , 0.5 , 0.3 )
   as = 0.7
@@ -111,13 +118,37 @@
   co = ( 0.7 , 0.65 , 0.51)
   ao = 1
 
+  C'est différent !!!
 
+  </pre>
 
-</pre>
-    <canvas id="canvas" width="1" height="1"></canvas>
+  <p>
+    On modifie le gl_FragColor pour tenir compte que le premultiplied est , par défaut, fixé à TRUE
+  </p>
 
-    <script>
+  <pre><code class="cde" id="dede2">
+          let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.4,
+          0.5,
+          0.3,
+          0.7
+        );
+        gl_FragColor.rgb *= gl_FragColor.a;
+      }`;
+  </code></pre>
+
+  <canvas id="canvas2" ></canvas>
+
+  <script>
       "use strict";
+
+      number1();
+      number2();
+
 
 
 
@@ -135,7 +166,7 @@
 
 
 
-      function number1() {
+      function number2() {
 
       let vertex=`
       attribute vec2 vertexPosition;
@@ -159,6 +190,67 @@
           0.7
         );
         gl_FragColor.rgb *= gl_FragColor.a;
+      }`;
+
+      var canvas = document.getElementById("canvas2");
+      
+      canvas.width=1;
+      canvas.height=1;
+      canvas.style.width="40px";
+      canvas.style.height="40px";
+      
+ 
+      var gl = canvas.getContext("webgl");
+
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      gl.drawArrays(gl.POINTS, 0, 1);
+
+
+
+    }
+
+
+
+
+
+     function number1() {
+
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+        gl_PointSize=1.0;
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.4,
+          0.5,
+          0.3,
+          0.7
+        );
       }`;
 
       var canvas = document.getElementById("canvas1");
@@ -185,13 +277,9 @@
 
       gl.useProgram(program);
 
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-   
-    
-
-     gl.drawArrays(gl.POINTS, 0, 1);
+      gl.drawArrays(gl.POINTS, 0, 1);
 
 
 
@@ -199,12 +287,8 @@
 
 
 
-number1();
 
-
-
-
-    {
+   function number3() {
 
 
 
@@ -305,10 +389,9 @@ number1();
 
 
 
-//3e version
 
 
-    {
+   function number4() {
 
 
 
@@ -407,10 +490,9 @@ number1();
 
 
 
-//4e version
 
 
-    {
+    function number5(){
 
 
 
@@ -523,10 +605,9 @@ capture ecran = (216/255 , ...)  = (0.847 , ...)
 
 
 
-//5e version , dans une texture
 
 
-    {
+  function number6()  {
 
 
 
@@ -655,6 +736,8 @@ read(gl);
 
 
     syntaxHighlight("dede");
+        syntaxHighlight("dede2");
+
 
 
 
