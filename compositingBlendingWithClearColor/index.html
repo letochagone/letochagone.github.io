@@ -1,17 +1,119 @@
 
 <!doctype html>
 <html>
-  <head>
-    <style>
-      canvas {
-        image-rendering: pixelated;
-       // background-color: rgb(44,155,66);
-      }
-  	</style>
-  </head>
+<head>
+	<style>
+		blablabla {
+			color:yellow;
+		}
 
-  <body>
-    <p id="container"></p>
+		pre {
+      background-color: black;
+      color: white;
+    }
+    .string {
+      color:#A1E46D;
+    }
+    .special {
+      color:#D6665D;
+    }
+    .egale {
+      color:#FF00FF;
+    }
+
+    .htmlWord {
+    	color:yellow;
+    }
+    .glWord {
+      color:aqua;
+    }
+  </style>
+</head>
+
+
+<body>
+  <h1>comment calculer la couleur obtenue d'un code WebGL</h1>
+  <p>
+    le programme suivant affiche un point
+  </p>
+
+  <pre><code class="cde" id="dede">
+  "use strict";
+
+ let global_a_glo = 4;
+
+  let vertex=`
+    attribute vec2 vertexPosition;
+    void main() {
+      gl_Position = vec4(
+      	0.0,
+      	0.0,
+      	0.0,
+      	1.0
+      );
+      gl_PointSize=1.0;
+    }
+  `;
+
+  let fragment=`
+    precision mediump float;
+    void main() {
+      gl_FragColor = vec4(
+        0.4,
+        0.5,
+        0.3,
+        0.7
+      );
+    }
+  `;
+
+  let canvas = document.getElementById("canvas1");
+
+  canvas.width=1;
+  canvas.height=1;
+  canvas.style.width="40px";
+  canvas.style.height="40px";
+
+  let gl = canvas.getContext("webgl");
+
+  let program = gl.createProgram();
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(vertexShader, vertex);
+  gl.shaderSource(fragmentShader, fragment);
+  gl.compileShader(vertexShader);
+  gl.compileShader(fragmentShader);
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+
+  gl.useProgram(program);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.drawArrays(gl.POINTS, 0, 1);
+  </code></pre>
+
+<h3>résultat</h3>
+    <canvas id="canvas1"></canvas>
+<img style="display:block" src="pipetteCouleur1.png" />
+
+<p>Comparaison avec le calcul théorique</p>
+
+<pre>
+  co = Cs * as + Cb * ab * (1-as)
+  ao = as + ab * ( 1- as)
+
+  Cs = ( 0.4 , 0.5 , 0.3 )
+  as = 0.7
+  Cb = ( 1 , 1 , 1)
+  ab = 1
+
+  co = ( 0.7 , 0.65 , 0.51)
+  ao = 1
+
+
+
+</pre>
     <canvas id="canvas" width="1" height="1"></canvas>
 
     <script>
@@ -33,7 +135,7 @@
 
 
 
-      {
+      function number1() {
 
       let vertex=`
       attribute vec2 vertexPosition;
@@ -43,28 +145,32 @@
           0.0,
           0.0,
           1);
+        gl_PointSize=1.0;
       }`;
 
       let fragment=`
       precision mediump float;
 
       void main() {
-        //gl_FragColor = vec4(111,222,333,444);
         gl_FragColor = vec4(
-          0.7,
-          0,
+          0.4,
           0.5,
-          0.5
+          0.3,
+          0.7
         );
+        gl_FragColor.rgb *= gl_FragColor.a;
       }`;
 
-      var canvas = document.querySelector("#canvas");
+      var canvas = document.getElementById("canvas1");
+      
       canvas.width=1;
       canvas.height=1;
+      canvas.style.width="40px";
+      canvas.style.height="40px";
+      
+ 
       var gl = canvas.getContext("webgl");
 
-      gl.getExtension("OES_texture_float");
-      gl.getExtension("WEBGL_color_buffer_float");
 
       let program = gl.createProgram();
       const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -80,46 +186,20 @@
       gl.useProgram(program);
 
 
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-
-      let texture = gl.createTexture();
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.FLOAT, 
-        new Float32Array(
-            [0.7,0.3,0.8,0.5]
-          )
-        );
    
-      const fb = gl.createFramebuffer();
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-
-      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-
-      gl.viewport(0, 0, 1, 1);
     
 
-     // gl.drawArrays(gl.POINTS, 0, 1);
+     gl.drawArrays(gl.POINTS, 0, 1);
 
-//gl.clearColor(0,0,0,10.5);
-//gl.clear(gl.COLOR_BUFFER_BIT);
-
-      let pixels= new Float32Array(1*1*4);
-
-      gl.readPixels(0,0,1,1,gl.RGBA,gl.FLOAT,pixels);
-      console.log(pixels);
-      //            [0.7,0.3,0.8,0.5]
 
 
     }
 
 
 
-
+number1();
 
 
 
@@ -151,7 +231,7 @@
         );
       }`;
 
-      var canvas = document.querySelector("#canvas");
+      var canvas = document.getElementById("canvas");
       canvas.width=1;
       canvas.height=1;
       var gl = canvas.getContext("webgl",
@@ -255,7 +335,7 @@
         );
       }`;
 
-      var canvas = document.querySelector("#canvas");
+      var canvas = document.getElementById("canvas");
       canvas.width=1;
       canvas.height=1;
       var gl = canvas.getContext("webgl",
@@ -357,7 +437,7 @@
         gl_FragColor.rgb *= gl_FragColor.a;
       }`;
 
-      var canvas = document.querySelector("#canvas");
+      var canvas = document.getElementById("canvas");
       canvas.width=1;
       canvas.height=1;
       canvas.style.width="50px";
@@ -473,7 +553,7 @@ capture ecran = (216/255 , ...)  = (0.847 , ...)
         gl_FragColor.rgb *= gl_FragColor.a;
       }`;
 
-      var canvas = document.querySelector("#canvas");
+      var canvas = document.getElementById("canvas");
       canvas.width=1;
       canvas.height=1;
      
@@ -560,6 +640,114 @@ read(gl);
 
 
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    syntaxHighlight("dede");
+
+
+
+// syntax highlight
+
+/*
+
+\b est une limite de mot
+Il s'agit de la position où un caractère de mot n'est pas suivi ou précédé d'un autre caractère de mot. Par exemple entre une lettre et un espace.
+/\bm/ correspond au "m" dans "mur".
+avant le 'm' il doit y avoir un espace , une tabulation, un saut de ligne
+
+[^\w]  tout ce qui n 'est pas un caractère abc... ou ABC ou 0123 ou _ 
+[^\w]  tout ce qui est un espace, un retour à la ligne, une tabulation
+
+/papa(?=maman)/   correspond à papa s'il est suivi de maman
+/(new|let)(?=[^\w])/    correspond à {new,let} d'un {espace,retour à la ligne, tabulation} 
+new
+new new
+eeef new let 
+feff new
+	new
+MAIS les lignes suivantes marchent:
+ let letnew newlet letlet 
+ ON RAJOUTE \b
+ \b(new|let)(?=[^\w])
+
+
+*/
+
+function syntaxHighlight(elementId) {
+
+  let strMessage1 = document.getElementById(elementId) ;
+
+  let strReg1 = /"(.*?)"/g;
+  let strReg2 = /'(.*?)'/g; // '(fgerrge r re r)'  , . = a caracter  , .* , une suite de caracter , .*? la suite de caracter la plus petite
+  
+  let strReg3 = /`([\w|\W|\s]*?)`/g ;
+  // \w matches any word caracter : a..z ou A...Z ou _
+  // \W matches any no word caracater : sauf de ligne, tabulation, espace,
+  /*
+  le ? dans  va éviter de récupérer la chaine "A...F"  "ArjgrejgegjeB"CgjgrD"EgrgrF"
+  mais va récupérer "A..B" et "E..F"
+
+
+  /<(\w+?)>/g   va récupérer fjeejfe dans <fjeejfe>
+  /<\\(\w+?)>/g va récupérer fjeejfe dans <\fjeejfe>
+
+
+  */
+
+let maReg = /(<\\(\w+?)>|<(\w+?)>)/g ;
+maReg = /(&lt;\\(\w+?)&gt;|&lt;(\w+?)&gt;)/g ;
+
+let maReg2 = /(gl[\.|\s])/g ;
+
+
+
+
+  let specialReg = /\b(new|let|var|if|do|function|while|switch|for|foreach|in|continue|break)(?=[^\w])/g ;
+
+  let specialJsGlobReg = /\b(document|window|Array|String|Object|Number|\$)(?=[^\w])/g ;
+  let specialJsReg = /\b(getElementsBy(TagName|ClassName|Name)|getElementById|typeof|instanceof)(?=[^\w])/g ;
+  let specialMethReg = /\b(indexOf|match|replace|toString|length)(?=[^\w])/g ;
+  let specialCommentReg  = /(\/\*.*\*\/)/g ;
+  let inlineCommentReg = /(\/\/.*)/g;
+  let htmlTagReg = /(&lt;[^\&]*&gt;)/g;
+
+  let string = strMessage1.innerHTML;
+
+
+  
+  let parsed = string.replace(strReg1,'<span class="string">"$1"</span>');
+
+  parsed = parsed.replace(maReg,'<span class="htmlWord">$1</span>');
+  parsed = parsed.replace(maReg2,'<span class="glWord">$1</span>');
+
+
+
+  parsed = parsed.replace(strReg2,"<span class=\"string\">'$1'</span>");
+  parsed = parsed.replace(strReg3,"<span class=\"string\">`$1`</span>");
+  parsed = parsed.replace(specialReg,'<span class="special">$1</span>');
+  parsed = parsed.replace(specialJsGlobReg,'<span class="special-js-glob">$1</span>');
+  parsed = parsed.replace(specialJsReg,'<span class="special-js">$1</span>');
+  parsed = parsed.replace(specialMethReg,'<span class="special-js-meth">$1</span>');
+  //parsed = parsed.replace(htmlTagReg,'<span class="special-html">$1</span>');
+  parsed = parsed.replace(specialCommentReg,'<span class="special-comment">$1</span>');
+  parsed = parsed.replace(inlineCommentReg,'<span class="special-comment">$1</span>');
+
+  strMessage1.innerHTML  = parsed;
+
+}
+
 
 
     </script>
