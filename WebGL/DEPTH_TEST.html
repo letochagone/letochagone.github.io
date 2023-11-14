@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+
+<body>
+    <canvas width="500" height="500" id="canvas"></canvas>
+
+
+
+    <script>
+        
+
+
+        let canvas = document.getElementById('canvas');
+        let gl = canvas.getContext('webgl');
+
+
+        let verticesTriangle1=[
+            -1,-1,0,
+            0,1,0,
+            1,-1,0
+            ];
+
+        let vertex_buffer1 = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesTriangle1), gl.STATIC_DRAW);
+
+
+
+        let verticesTriangle2=[
+            -1,1,0,
+            1,1,0,
+            0,-1,0
+      
+            ];
+
+            let vertex_buffer2 = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer2);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesTriangle2), gl.STATIC_DRAW);
+
+
+
+            let vertCode = `
+            attribute vec3 coordinates;
+            void main(void) {
+                gl_Position = vec4(coordinates, 1.0);
+            }`;
+            
+            let fragCode = `
+            precision mediump float;
+            uniform vec4 uColor;
+
+            void main(void) { 
+                gl_FragColor = uColor;
+               // gl_FragColor=vec4(1,0,0,1);
+            }`;
+
+
+            let vertShader = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vertShader, vertCode);
+            gl.compileShader(vertShader);
+            let fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fragShader, fragCode);
+            gl.compileShader(fragShader);
+            let shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertShader);
+            gl.attachShader(shaderProgram, fragShader);
+            gl.linkProgram(shaderProgram);
+            gl.useProgram(shaderProgram);
+
+
+            let coord = gl.getAttribLocation(shaderProgram, "coordinates");
+            gl.enableVertexAttribArray(coord);
+
+            let colorLoc  = gl.getUniformLocation(shaderProgram,"uColor");
+
+
+            gl.enable(gl.DEPTH_TEST);
+            gl.viewport(0, 0, canvas.width, canvas.height);
+
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer2);
+            gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+            gl.uniform4f(colorLoc,0,1,0,1);
+
+
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+        
+                                gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
+                                            gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+                                                        gl.uniform4f(colorLoc,0,0,1,1);
+
+
+
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+
+
+
+
+
+    </script>
+</body>
+
+</html>
