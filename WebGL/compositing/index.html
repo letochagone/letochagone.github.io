@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+
+<body>
+  <!--
+  
+  -->
+    <canvas id="canvas"></canvas>
+
+<p>
+    expliquer la nécessité de faire gl_fragcolor.rgb *= gl_fragcolor.a.
+
+    le readpixel fait comme si il n'y avait pas de couleur derrière le context gl
+
+    
+</p>
+
+    <script>
+        
+
+
+let canvas = document.getElementById('canvas');
+canvas.width=1;
+canvas.height=1;
+canvas.style.width="100px";
+canvas.style.height="100px";
+let gl = canvas.getContext('webgl');
+
+let tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+new Uint8Array([0, 0, 255, 255]));
+//new Uint8Array([178, 178, 178, 145]));
+
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+
+let vertCode = `
+void main(void) {
+    gl_Position = vec4(0.0,0.0,0.0, 1.0);
+    gl_PointSize =10.0;
+}`;
+
+let fragCode = `
+precision mediump float;
+
+uniform sampler2D image;
+
+void main(void) { 
+    gl_FragColor = texture2D(image,vec2(0.0,0.0));
+    gl_FragColor.rgb *= gl_FragColor.a;
+}`;
+
+
+let vertShader = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vertShader, vertCode);
+gl.compileShader(vertShader);
+let fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(fragShader, fragCode);
+gl.compileShader(fragShader);
+let shaderProgram = gl.createProgram();
+gl.attachShader(shaderProgram, vertShader);
+gl.attachShader(shaderProgram, fragShader);
+gl.linkProgram(shaderProgram);
+gl.useProgram(shaderProgram);
+
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+gl.drawArrays( gl.POINTS, 0, 1 );
+
+const pixels = new Uint8Array(
+      gl.drawingBufferWidth * gl.drawingBufferHeight * 4,
+);
+gl.readPixels(
+  0,
+  0,
+  gl.drawingBufferWidth,
+  gl.drawingBufferHeight,
+  gl.RGBA,
+  gl.UNSIGNED_BYTE,
+  pixels,
+);
+console.log(pixels); // Uint8Array
+
+
+
+
+
+let img = new Image();
+img.addEventListener('load', function() {
+
+    //return 0;
+
+    let fb = gl.createFramebuffer();
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+    let tex = gl.createTexture();
+
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,
+      tex,
+      0
+    );
+
+
+    const pixels = new Uint8Array(
+      gl.drawingBufferWidth * gl.drawingBufferHeight * 4,
+    );
+    gl.readPixels(
+      0,
+      0,
+      gl.drawingBufferWidth,
+      gl.drawingBufferHeight,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      pixels,
+    );
+    console.log(pixels);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.drawArrays( gl.POINTS, 0, 1 );
+    /*
+    composition avec la couleur du body
+    co  = Cs as + Cb ab (1-as)
+    co = 113/255*134/255 + 1*1*(1-134/255)
+    résultat identique avec celui d'une capture écran, mais
+    faut bien mettre dans gl_FragColor.rgb *= gl_FragColor.a;
+
+
+
+    */
+
+    gl.readPixels(
+      0,
+      0,
+      gl.drawingBufferWidth,
+      gl.drawingBufferHeight,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      pixels,
+    );
+    console.log(pixels); // Uint8Array
+
+
+
+});
+
+
+img.src = "rgba1x1.png";
+
+//113 184 36 134
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+
+</html>
