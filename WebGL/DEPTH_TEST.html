@@ -1,14 +1,55 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="fr">
+<meta charset="UTF-8">
+<title>DEPTH_TEST</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="">
+<style>
+html,body {font-family:"Verdana",sans-serif}
+h1,h2,h3,h4,h5,h6 {font-family:"Segoe UI",sans-serif}
 
+html, body {
+  height: 100%;
+}
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;   /* this is IMPORTANT! */
+}
+
+    pre {
+      background-color: black;
+      color: white;
+    }
+    .string {
+      color:#A1E46D;
+    }
+    .special {
+      color:#D6665D;
+    }
+    .egale {
+      color:#FF00FF;
+    }
+
+        .htmlWord {
+        color:yellow;
+    }
+    .glWord {
+      color:aqua;
+    }
+</style>
 <body>
-    <canvas width="500" height="500" id="canvas"></canvas>
+    <p>
+        le but de cette page est d'illustrer l'application d'une compréhension de WebGL.
+        Merci à Greggman.
+
+        https://stackoverflow.com/questions/27148273/what-is-the-logic-of-binding-buffers-in-webgl/27164577#27164577
+
+    </p>
+    <canvas  id="canvas"></canvas>
 
 
-
-    <script>
-        
-
+<pre><code id="dede">
 
         let canvas = document.getElementById('canvas');
         let gl = canvas.getContext('webgl');
@@ -20,7 +61,19 @@
             1,-1,0
             ];
 
+/*
+ Buffer objects (sometimes referred to as VBOs) hold vertex attribute data for the GLSL shaders. 
+*/
         let vertex_buffer1 = gl.createBuffer();
+        /*
+        https://registry.khronos.org/webgl/specs/latest/1.0/#5.14.5
+             Create a WebGLBuffer object and initialize it with a buffer object name as if by calling glGenBuffers.
+
+
+          un buffer va contenir les données pour les variables de type attribute dans le code glsl.
+
+        */
+
             gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesTriangle1), gl.STATIC_DRAW);
 
@@ -41,7 +94,7 @@
 
             let vertCode = `
             attribute vec3 coordinates;
-            void main(void) {
+            void main() {
                 gl_Position = vec4(coordinates, 1.0);
             }`;
             
@@ -49,9 +102,8 @@
             precision mediump float;
             uniform vec4 uColor;
 
-            void main(void) { 
+            void main() { 
                 gl_FragColor = uColor;
-               // gl_FragColor=vec4(1,0,0,1);
             }`;
 
 
@@ -94,6 +146,303 @@
             gl.drawArrays(gl.TRIANGLES, 0, 3);
 
 
+
+
+</code></pre>
+
+<pre><code id="section0">
+            let coord = gl.getAttribLocation(shaderProgram, "coordinates");
+            gl.enableVertexAttribArray(coord);
+
+</code></pre>
+
+<p>
+    After a program object has been linked successfully, the bindings of attribute
+variable names to indices can be queried. The command
+int GetAttribLocation( uint program, const char *name );
+returns the generic attribute index that the attribute variable named name was bound
+to when the program object named program was last linked. name must be a null-
+terminated string. If name is active and is an attribute matrix, GetAttribLocation
+returns the index of the first column of that matrix. If program has not been suc-
+cessfully linked, the error INVALID_OPERATION is generated. If name is not an
+active attribute, or if an error occurs, -1 will be returned.
+The binding of an attribute variable to a generic attribute index can also be
+specified explicitly. The command
+void BindAttribLocation( uint program, uint index, const
+char *name );
+    </p>
+<p>
+    pseudo code<br>
+
+    global state :<br>
+    -------------<br>
+    ARRAY_BUFFER_BINDING : null<br>
+
+    vertex array:<br>
+    -------------<br>
+    [
+      {enabled: false,...},
+      ...
+      {enabled: true,...},
+      ...
+      }
+    ]
+
+</p>
+
+
+
+<pre><code id="section1">
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer2);
+  gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+  gl.uniform4f(colorLoc,0,1,0,1);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+</code></pre>
+<p>
+    gl.bindbuffer :<br>
+
+    global state :<br>
+    -------------<br>
+    ARRAY_BUFFER_BINDING : vertex_buffer2= [-1,1,0,   1,1,0,   0,-1,0  ]<br>
+
+    </p>
+
+
+    <p>
+    gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0); :<br>
+
+    global state :<br>
+    -------------<br>
+    ARRAY_BUFFER_BINDING : vertex_buffer2= [-1,1,0,   1,1,0,   0,-1,0  ]<br>
+
+    vertex array:<br>
+    -------------<br>
+    [
+      {enabled: true,...}
+    ]
+    
+    </p>
+
+</body>
+
+
+
+
+
+
+
+
+
+    <script>
+        
+
+
+        let canvas = document.getElementById('canvas');
+        let gl = canvas.getContext('webgl');
+
+
+           let fragCode = `
+            precision mediump float;
+            uniform vec4 uColor;
+
+            void main() { 
+                gl_FragColor = uColor;
+            }`;
+
+            let vertCode = `
+            attribute vec3 coordinates;
+            void main() {
+                gl_Position = vec4(coordinates, 1.0);
+            }`;
+    
+            let vertShader = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vertShader, vertCode);
+            gl.compileShader(vertShader);
+            let fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fragShader, fragCode);
+            gl.compileShader(fragShader);
+            let shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertShader);
+            gl.attachShader(shaderProgram, fragShader);
+            gl.linkProgram(shaderProgram);
+            gl.useProgram(shaderProgram);
+
+ let coord = gl.getAttribLocation(shaderProgram, "coordinates");
+            gl.enableVertexAttribArray(coord);
+
+
+        let verticesTriangle1=[
+            -1,-1,0,
+            0,1,0,
+            1,-1,0
+            ];
+
+/*
+ Buffer objects (sometimes referred to as VBOs) hold vertex attribute data for the GLSL shaders. 
+*/
+        let vertex_buffer1 = gl.createBuffer();
+        /*
+        https://registry.khronos.org/webgl/specs/latest/1.0/#5.14.5
+             Create a WebGLBuffer object and initialize it with a buffer object name as if by calling glGenBuffers.
+
+
+          un buffer va contenir les données pour les variables de type attribute dans le code glsl.
+
+        */
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesTriangle1), gl.STATIC_DRAW);
+
+
+
+        let verticesTriangle2=[
+            -1,1,0,
+            1,1,0,
+            0,-1,0
+      
+            ];
+
+            let vertex_buffer2 = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer2);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesTriangle2), gl.STATIC_DRAW);
+
+
+
+        
+ 
+
+
+           
+            let colorLoc  = gl.getUniformLocation(shaderProgram,"uColor");
+
+
+            gl.enable(gl.DEPTH_TEST);
+            gl.viewport(0, 0, canvas.width, canvas.height);
+
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer2);
+            gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+            gl.uniform4f(colorLoc,0,1,0,1);
+
+
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+        
+                                gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
+                                            gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+                                                        gl.uniform4f(colorLoc,0,0,1,1);
+
+
+
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+syntaxHighlight("dede");
+syntaxHighlight("section1");
+
+
+
+
+
+
+
+function syntaxHighlight(elementId) {
+
+  let strMessage1 = document.getElementById(elementId) ;
+
+  let strReg1 = /"(.*?)"/g;
+  let strReg2 = /'(.*?)'/g; // '(fgerrge r re r)'  , . = a caracter  , .* , une suite de caracter , .*? la suite de caracter la plus petite
+  
+  let strReg3 = /`([\w|\W|\s]*?)`/g ;
+  // \w matches any word caracter : a..z ou A...Z ou _
+  // \W matches any no word caracater : sauf de ligne, tabulation, espace,
+  /*
+  le ? dans  va éviter de récupérer la chaine "A...F"  "ArjgrejgegjeB"CgjgrD"EgrgrF"
+  mais va récupérer "A..B" et "E..F"
+
+
+  /<(\w+?)>/g   va récupérer fjeejfe dans <fjeejfe>
+  /<\\(\w+?)>/g va récupérer fjeejfe dans <\fjeejfe>
+
+
+  */
+
+let maReg = /(<\\(\w+?)>|<(\w+?)>)/g ;
+maReg = /(&lt;\\(\w+?)&gt;|&lt;(\w+?)&gt;)/g ;
+
+let maReg2 = /(gl[\.|\s])/g ;
+
+
+
+
+  let specialReg = /\b(new|let|var|if|do|function|while|switch|for|foreach|in|continue|break)(?=[^\w])/g ;
+
+  let specialJsGlobReg = /\b(document|window|Array|String|Object|Number|\$)(?=[^\w])/g ;
+  let specialJsReg = /\b(getElementsBy(TagName|ClassName|Name)|getElementById|typeof|instanceof)(?=[^\w])/g ;
+  let specialMethReg = /\b(indexOf|match|replace|toString|length)(?=[^\w])/g ;
+  let specialCommentReg  = /(\/\*.*\*\/)/g ;
+  let inlineCommentReg = /(\/\/.*)/g;
+  let htmlTagReg = /(&lt;[^\&]*&gt;)/g;
+
+  let string = strMessage1.innerHTML;
+
+
+  
+  let parsed = string.replace(strReg1,'<span class="string">"$1"</span>');
+
+
+
+  parsed = parsed.replace(maReg,'<span class="htmlWord">$1</span>');
+  parsed = parsed.replace(maReg2,'<span class="glWord">$1</span>');
+
+
+
+  //parsed = parsed.replace(maReg,'<span class="htmlWord">$1</span>');
+  //parsed = parsed.replace(maReg2,'<span class="glWord">$1</span>');
+
+
+
+  parsed = parsed.replace(strReg2,"<span class=\"string\">'$1'</span>");
+  parsed = parsed.replace(strReg3,"<span class=\"string\">`$1`</span>");
+  parsed = parsed.replace(specialReg,'<span class="special">$1</span>');
+  parsed = parsed.replace(specialJsGlobReg,'<span class="special-js-glob">$1</span>');
+  parsed = parsed.replace(specialJsReg,'<span class="special-js">$1</span>');
+  parsed = parsed.replace(specialMethReg,'<span class="special-js-meth">$1</span>');
+  //parsed = parsed.replace(htmlTagReg,'<span class="special-html">$1</span>');
+  parsed = parsed.replace(specialCommentReg,'<span class="special-comment">$1</span>');
+  parsed = parsed.replace(inlineCommentReg,'<span class="special-comment">$1</span>');
+
+  strMessage1.innerHTML  = parsed;
+
+}
 
 
 
