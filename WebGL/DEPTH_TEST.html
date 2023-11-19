@@ -37,6 +37,11 @@ canvas {
     .glWord {
       color:aqua;
     }
+
+
+    .explication {
+  white-space: pre;
+}
 </style>
 <body>
     <p>
@@ -171,15 +176,15 @@ specified explicitly. The command
 void BindAttribLocation( uint program, uint index, const
 char *name );
     </p>
-<p>
-    pseudo code<br>
+<p class="explication">
+    pseudo code
 
-    global state :<br>
-    -------------<br>
-    ARRAY_BUFFER_BINDING : null<br>
+    global state :
+    -------------
+    ARRAY_BUFFER_BINDING : null
 
-    vertex array:<br>
-    -------------<br>
+    vertex array:
+    -------------
     [
       {enabled: false,...},
       ...
@@ -188,7 +193,44 @@ char *name );
       }
     ]
 
-</p>
+le tableau "Vertex Array"  contient les états des variables de type "attribute".
+ Ce type définit comment envoyer les données d'un buffer vers le vertex shader.
+Dans le tableau "vertex array", les éléments sont sous la forme :
+
+vertex array:
+=============
+ [
+  {...},{...},
+  { enabled: false, type: gl.FLOAT, size: 3, normalized: false, stride: 0, offset: 0, buffer: null },
+  {...}
+]
+
+la ligne : 
+  let coord = gl.getAttribLocation(shaderProgram, "coordinates");
+assigne l'indice de 'coordinates' :
+  attribute vec3 coordinates;
+
+dans ce tableau.
+
+la ligne 
+  gl.enableVertexAttribArray(coord);
+  //Enable the vertex attribute at index 'coord' as an array.
+  
+donne à l'élément "enabled" la valeur true :
+
+
+vertex array:
+=============
+ [
+ indice 0  {...},
+ indice 1  {...},
+  ...,
+  indice 'coord' { enabled: TRUE, type: gl.FLOAT, size: 3, normalized: false, stride: 0, offset: 0, buffer: null },
+  ...
+]
+
+
+         </p>
 
 
 
@@ -367,6 +409,8 @@ char *name );
 
 syntaxHighlight("dede");
 syntaxHighlight("section1");
+syntaxHighlight("section0");
+
 
 
 
