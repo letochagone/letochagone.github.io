@@ -42,6 +42,26 @@ canvas {
     .explication {
   white-space: pre;
 }
+
+
+
+td {
+    border: 1px solid ;
+    padding: 0.25em ;
+}
+
+
+
+
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+caption {
+    background-color: lightgray;
+}
 </style>
 <body>
     <p>
@@ -54,7 +74,7 @@ canvas {
     <canvas  id="canvas"></canvas>
 
 
-<pre><code id="dede">
+<pre><code class="lecode">
 
         let canvas = document.getElementById('canvas');
         let gl = canvas.getContext('webgl');
@@ -142,10 +162,9 @@ canvas {
 
             gl.drawArrays(gl.TRIANGLES, 0, 3);
         
-                                gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
-                                            gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
-                                                        gl.uniform4f(colorLoc,0,0,1,1);
-
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
+            gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+            gl.uniform4f(colorLoc,0,0,1,1);
 
 
             gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -155,7 +174,7 @@ canvas {
 
 </code></pre>
 
-<pre><code id="section0">
+<pre><code class="lecode">
             let coord = gl.getAttribLocation(shaderProgram, "coordinates");
             gl.enableVertexAttribArray(coord);
 
@@ -215,7 +234,7 @@ dans ce tableau.
 la ligne 
   gl.enableVertexAttribArray(coord);
   //Enable the vertex attribute at index 'coord' as an array.
-  
+
 donne à l'élément "enabled" la valeur true :
 
 
@@ -234,37 +253,153 @@ vertex array:
 
 
 
-<pre><code id="section1">
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer2);
-  gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
-  gl.uniform4f(colorLoc,0,1,0,1);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+
+<pre><code class="lecode">
+  let vertex_buffer1 = gl.createBuffer();
 
 </code></pre>
-<p>
-    gl.bindbuffer :<br>
+<p class="explication">
+  crée un buffer vertex_buffer1
+</p>
 
-    global state :<br>
-    -------------<br>
-    ARRAY_BUFFER_BINDING : vertex_buffer2= [-1,1,0,   1,1,0,   0,-1,0  ]<br>
+
+<pre><code class="lecode">
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
+
+</code></pre>
+<p class="explication">
+    le buffer vertex_buffer1 devient le buffer courant.
+    The `ARRAY_BUFFER` binding point is mostly
+just like an internal variable inside webgl. You set it by calling
+`gl.bindBuffer(gl.ARRAY_BUFFER, someBuffer);` and then all other
+buffer functions can refer to the buffer bound there."
+    
+
+    global state :
+    =============
+      ARRAY_BUFFER_BINDING : vertex_buffer1
 
     </p>
 
+<div class="globalstate">
+<table >
+    <caption>GLOBAL STATE</caption>
+    <tbody>
+        <tr>
+            <td>ARRAY_BUFFER_BINDING</td>
+            <td>vertex_buffer1</td>
+        </tr>
+  
+ 
+    </tbody>
 
-    <p>
-    gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0); :<br>
+</table>
+</div>
 
-    global state :<br>
-    -------------<br>
-    ARRAY_BUFFER_BINDING : vertex_buffer2= [-1,1,0,   1,1,0,   0,-1,0  ]<br>
 
-    vertex array:<br>
-    -------------<br>
-    [
+
+
+
+
+
+<pre><code class="lecode">
+  gl.bufferData(gl.ARRAY_BUFFER, 
+    new Float32Array([
+      -1, -1, 0,
+       0,  1, 0,
+       1, -1, 0
+    ]),
+  gl.STATIC_DRAW);
+
+</code></pre>
+
+<p class="explication">
+global state :
+=============
+  ARRAY_BUFFER_BINDING : vertex_buffer1 = [-1, -1, 0,0,  1, 0,1, -1, 0]
+
+On rempli le buffer courant.
+Le buffer courant, c'est à dire le buffer précédemment définit comme buffer courant 
+par la fonction bindbuffer.
+
+On comprend ainsi que la fonction bufferData n'a pas de paramètre de type buffer.
+
+    </p>
+
+<pre><code class="lecode">
+
+    gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);<br>
+
+</code></pre>
+
+
+<table>
+  <tr>
+    <th>enabled</th>
+    <th>size</th>
+    <th>type</th>
+    <th>normalize</th>
+    <th>stride</th>
+    <th>offset</th>
+    <th>divisor</th>
+    <th>buffer</th>
+  </tr>
+  <tr>
+    <td>Peter</td>
+    <td>Griffin</td>
+    <td>$100</td>
+  </tr>
+  <tr>
+    <td>Lois</td>
+    <td>Griffin</td>
+    <td>$150</td>
+  </tr>
+  <tr>
+    <td>Joe</td>
+    <td>Swanson</td>
+    <td>$300</td>
+  </tr>
+  <tr>
+    <td>Cleveland</td>
+    <td>Brown</td>
+    <td>$250</td>
+  </tr>
+</table>
+
+    <p class="explication">
+
+    global state :
+    ==============
+    ARRAY_BUFFER_BINDING : vertex_buffer1=  [-1, -1, 0,0,  1, 0,1, -1, 0]
+
+    vertex array:
+    ============
+    [ {enabled: false,
       {enabled: true,...}
+    }
     ]
     
     </p>
+
+
+    this.vertexAttribPointer = function(location, size, type, normalized, stride, offset) {
+  const attribute = vertexArray.attributes[location];
+  attribute.size       = size;       // num values to pull from buffer per vertex shader iteration
+  attribute.type       = type;       // type of values to pull from buffer
+  attribute.normalized = normalized; // whether or not to normalize
+  attribute.stride     = stride;     // number of bytes to advance for each iteration of the vertex shader. 0 = compute from type, size
+  attribute.offset     = offset;     // where to start in buffer.
+
+  // IMPORTANT!!! Associates whatever buffer is currently *bound* to 
+  // "arrayBuffer" to this attribute
+  attribute.buffer     = arrayBuffer;
+};
+
+
+
+
+
 
 </body>
 
@@ -407,12 +542,17 @@ vertex array:
 
 
 
-syntaxHighlight("dede");
-syntaxHighlight("section1");
-syntaxHighlight("section0");
+syntaxHighlightAll("lecode");
 
 
 
+function syntaxHighlightAll(elementsClass) {
+    let lesElements = document.getElementsByClassName(elementsClass);
+    syntaxHighlight(lesElements.item(0));
+    for (let i = 0; i < lesElements.length; i++) {
+      syntaxHighlight(lesElements.item(i));
+    }
+}
 
 
 
@@ -420,7 +560,8 @@ syntaxHighlight("section0");
 
 function syntaxHighlight(elementId) {
 
-  let strMessage1 = document.getElementById(elementId) ;
+  //let strMessage1 = document.getElementById(elementId) ;
+let strMessage1=elementId;
 
   let strReg1 = /"(.*?)"/g;
   let strReg2 = /'(.*?)'/g; // '(fgerrge r re r)'  , . = a caracter  , .* , une suite de caracter , .*? la suite de caracter la plus petite
