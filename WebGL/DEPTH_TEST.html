@@ -5,17 +5,22 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="">
 <style>
-html,body {font-family:"Verdana",sans-serif}
-h1,h2,h3,h4,h5,h6 {font-family:"Segoe UI",sans-serif}
+    html,body {
+        font-family:"Verdana",sans-serif
+    }
+    h1,h2,h3,h4,h5,h6 {
+        font-family:"Segoe UI",sans-serif
+    }
 
-html, body {
-  height: 100%;
-}
-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;   /* this is IMPORTANT! */
-}
+    html, body {
+        height: 100%;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;   /* this is IMPORTANT! */
+    }
 
     pre {
       background-color: black;
@@ -31,7 +36,7 @@ canvas {
       color:#FF00FF;
     }
 
-        .htmlWord {
+    .htmlWord {
         color:yellow;
     }
     .glWord {
@@ -40,30 +45,34 @@ canvas {
 
 
     .explication {
-  white-space: pre;
-}
+        white-space: pre;
+    }
 
+    td {
+        border: 1px solid ;
+        padding: 0.25em ;
+    }
 
+    .globalState {
+        border-radius: 5px;
+        border-width: 5px;
+        border: gray solid;
+        width: fit-content;
+    }
 
-td {
-    border: 1px solid ;
-    padding: 0.25em ;
-}
+    table {
+        border-collapse: collapse;
+        width: fit-content;
+    }
 
+    caption {
+        background-color: lightgray;
+     }
 
-
-
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-caption {
-    background-color: lightgray;
-}
-</style>
+ </style>
 <body>
+
+
     <p>
         le but de cette page est d'illustrer l'application d'une compréhension de WebGL.
         Merci à Greggman.
@@ -74,7 +83,8 @@ caption {
     <canvas  id="canvas"></canvas>
 
 
-<pre><code class="lecode">
+
+    <pre><code class="lecode">
 
         let canvas = document.getElementById('canvas');
         let gl = canvas.getContext('webgl');
@@ -167,12 +177,13 @@ caption {
             gl.uniform4f(colorLoc,0,0,1,1);
 
 
-            gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-
-
-
 </code></pre>
+
+<pre>
+    <code class="lecode">
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    </code>
+</pre>
 
 <pre><code class="lecode">
             let coord = gl.getAttribLocation(shaderProgram, "coordinates");
@@ -180,21 +191,35 @@ caption {
 
 </code></pre>
 
-<p>
-    After a program object has been linked successfully, the bindings of attribute
-variable names to indices can be queried. The command
-int GetAttribLocation( uint program, const char *name );
-returns the generic attribute index that the attribute variable named name was bound
-to when the program object named program was last linked. name must be a null-
-terminated string. If name is active and is an attribute matrix, GetAttribLocation
-returns the index of the first column of that matrix. If program has not been suc-
-cessfully linked, the error INVALID_OPERATION is generated. If name is not an
-active attribute, or if an error occurs, -1 will be returned.
-The binding of an attribute variable to a generic attribute index can also be
-specified explicitly. The command
-void BindAttribLocation( uint program, uint index, const
-char *name );
-    </p>
+<div>
+        After a program object has been linked successfully, the bindings of attribute
+    variable names to indices can be queried. The command
+    int GetAttribLocation( uint program, const char *name );
+    returns the generic attribute index that the attribute variable named name was bound
+    to when the program object named program was last linked. name must be a null-
+    terminated string. If name is active and is an attribute matrix, GetAttribLocation
+    returns the index of the first column of that matrix. If program has not been suc-
+    cessfully linked, the error INVALID_OPERATION is generated. If name is not an
+    active attribute, or if an error occurs, -1 will be returned.
+    The binding of an attribute variable to a generic attribute index can also be
+    specified explicitly. The command
+    void BindAttribLocation( uint program, uint index, const
+    char *name );
+</div>
+
+<div class="globalState">
+    <table >
+        <caption>vertex array</caption>
+        <tbody>
+            <tr>
+                <td>enabled</td>
+                <td>size</td>
+
+            </tr>
+        </tbody>
+    </table>
+</div>
+
 <p class="explication">
     pseudo code
 
@@ -259,9 +284,25 @@ vertex array:
   let vertex_buffer1 = gl.createBuffer();
 
 </code></pre>
+
 <p class="explication">
   crée un buffer vertex_buffer1
 </p>
+
+<div class="globalState">
+<table >
+    <caption>buffer[vertex_buffer1]</caption>
+    <tbody>
+        <tr>
+            <td>data</td>
+            <td>null</td>
+        </tr>
+  
+ 
+    </tbody>
+
+</table>
+</div>
 
 
 <pre><code class="lecode">
@@ -276,15 +317,12 @@ just like an internal variable inside webgl. You set it by calling
 buffer functions can refer to the buffer bound there."
     
 
-    global state :
-    =============
-      ARRAY_BUFFER_BINDING : vertex_buffer1
 
     </p>
 
-<div class="globalstate">
+<div class="globalState">
 <table >
-    <caption>GLOBAL STATE</caption>
+    <caption>GLOBALSTATEeg_bg_gegregeg_ergeerge_eg_ege </caption>
     <tbody>
         <tr>
             <td>ARRAY_BUFFER_BINDING</td>
@@ -548,7 +586,7 @@ syntaxHighlightAll("lecode");
 
 function syntaxHighlightAll(elementsClass) {
     let lesElements = document.getElementsByClassName(elementsClass);
-    syntaxHighlight(lesElements.item(0));
+    //syntaxHighlight(lesElements.item(0));
     for (let i = 0; i < lesElements.length; i++) {
       syntaxHighlight(lesElements.item(i));
     }
