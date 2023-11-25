@@ -8,6 +8,7 @@
     html,body {
         font-family:"Verdana",sans-serif
     }
+
     h1,h2,h3,h4,h5,h6 {
         font-family:"Segoe UI",sans-serif
     }
@@ -17,30 +18,34 @@
     }
 
     canvas {
-      width: 100%;
-      height: 100%;
-      display: block;   /* this is IMPORTANT! */
+        width: 100%;
+        height: 100%;
+        display: block;   /* this is IMPORTANT! */
     }
 
     pre {
-      background-color: black;
-      color: white;
+        background-color: black;
+        color: white;
     }
+
     .string {
-      color:#A1E46D;
+        color:#A1E46D;
     }
+
     .special {
-      color:#D6665D;
+        color:#D6665D;
     }
+
     .egale {
-      color:#FF00FF;
+        color:#FF00FF;
     }
 
     .htmlWord {
         color:yellow;
     }
+
     .glWord {
-      color:aqua;
+        color:aqua;
     }
 
 
@@ -49,6 +54,11 @@
     }
 
     td {
+        border: 1px solid ;
+        padding: 0.25em ;
+    }
+
+    th {
         border: 1px solid ;
         padding: 0.25em ;
     }
@@ -67,11 +77,10 @@
 
     caption {
         background-color: lightgray;
-     }
+    }
 
- </style>
+</style>
 <body>
-
 
     <p>
         le but de cette page est d'illustrer l'application d'une compréhension de WebGL.
@@ -80,15 +89,13 @@
         https://stackoverflow.com/questions/27148273/what-is-the-logic-of-binding-buffers-in-webgl/27164577#27164577
 
     </p>
+
     <canvas  id="canvas"></canvas>
-
-
 
     <pre><code class="lecode">
 
         let canvas = document.getElementById('canvas');
         let gl = canvas.getContext('webgl');
-
 
         let verticesTriangle1=[
             -1,-1,0,
@@ -96,129 +103,197 @@
             1,-1,0
             ];
 
-/*
- Buffer objects (sometimes referred to as VBOs) hold vertex attribute data for the GLSL shaders. 
-*/
-        let vertex_buffer1 = gl.createBuffer();
         /*
-        https://registry.khronos.org/webgl/specs/latest/1.0/#5.14.5
-             Create a WebGLBuffer object and initialize it with a buffer object name as if by calling glGenBuffers.
-
-
-          un buffer va contenir les données pour les variables de type attribute dans le code glsl.
-
+        Buffer objects (sometimes referred to as VBOs) hold vertex attribute data for the GLSL shaders. 
         */
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesTriangle1), gl.STATIC_DRAW);
+        let vertex_buffer1 = gl.createBuffer();
+
+
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesTriangle1), gl.STATIC_DRAW);
 
 
 
         let verticesTriangle2=[
-            -1,1,0,
-            1,1,0,
-            0,-1,0
-      
-            ];
+            -1, 1, 0,
+             1, 1, 0,
+             0,-1, 0
+        ];
 
-            let vertex_buffer2 = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer2);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesTriangle2), gl.STATIC_DRAW);
+        let vertex_buffer2 = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer2);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesTriangle2), gl.STATIC_DRAW);
 
-
-
-            let vertCode = `
+        
+        let vertCode = `
             attribute vec3 coordinates;
             void main() {
                 gl_Position = vec4(coordinates, 1.0);
-            }`;
+            }
+        `;
             
-            let fragCode = `
-            precision mediump float;
+        let fragCode = `
+            #ifdef GL_FRAGMENT_PRECISION_HIGH
+                precision highp float;
+            #else
+                precision mediump float;
+            #endif
+            
             uniform vec4 uColor;
 
             void main() { 
                 gl_FragColor = uColor;
-            }`;
+            }
+        `;
 
 
-            let vertShader = gl.createShader(gl.VERTEX_SHADER);
-            gl.shaderSource(vertShader, vertCode);
-            gl.compileShader(vertShader);
-            let fragShader = gl.createShader(gl.FRAGMENT_SHADER);
-            gl.shaderSource(fragShader, fragCode);
-            gl.compileShader(fragShader);
-            let shaderProgram = gl.createProgram();
-            gl.attachShader(shaderProgram, vertShader);
-            gl.attachShader(shaderProgram, fragShader);
-            gl.linkProgram(shaderProgram);
-            gl.useProgram(shaderProgram);
+        let vertShader = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertShader, vertCode);
+        gl.compileShader(vertShader);
+        let fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fragShader, fragCode);
+        gl.compileShader(fragShader);
+        let shaderProgram = gl.createProgram();
+        gl.attachShader(shaderProgram, vertShader);
+        gl.attachShader(shaderProgram, fragShader);
+        gl.linkProgram(shaderProgram);
+        gl.useProgram(shaderProgram);
 
 
-            let coord = gl.getAttribLocation(shaderProgram, "coordinates");
-            gl.enableVertexAttribArray(coord);
+        let coord = gl.getAttribLocation(shaderProgram, "coordinates");
+        gl.enableVertexAttribArray(coord);
 
-            let colorLoc  = gl.getUniformLocation(shaderProgram,"uColor");
-
-
-            gl.enable(gl.DEPTH_TEST);
-            gl.viewport(0, 0, canvas.width, canvas.height);
+        let colorLoc  = gl.getUniformLocation(shaderProgram,"uColor");
 
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer2);
-            gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
-            gl.uniform4f(colorLoc,0,1,0,1);
+        gl.enable(gl.DEPTH_TEST);
+        gl.viewport(0, 0, canvas.width, canvas.height);
 
 
-            gl.drawArrays(gl.TRIANGLES, 0, 3);
-        
-            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
-            gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
-            gl.uniform4f(colorLoc,0,0,1,1);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer2);
+        gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+        gl.uniform4f(colorLoc,0,1,0,1);
 
 
-</code></pre>
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+    
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer1);
+        gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
+        gl.uniform4f(colorLoc,0,0,1,1);
 
-<pre>
-    <code class="lecode">
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-    </code>
-</pre>
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-<pre><code class="lecode">
-            let coord = gl.getAttribLocation(shaderProgram, "coordinates");
-            gl.enableVertexAttribArray(coord);
+    </code></pre>
 
-</code></pre>
+    <p>explication du code</p>
 
-<div>
+    <pre><code class="lecode">
+        let vertex_buffer1 = gl.createBuffer();
+    </code></pre>
+    <p class="explication">
+        crée un buffer.
+        un buffer va contenir les données pour les variables de type attribute dans le code glsl.
+        https://registry.khronos.org/webgl/specs/latest/1.0/#5.14.5
+
+    </p>
+
+    <pre><code class="lecode">
+        let coord = gl.getAttribLocation(shaderProgram, "coordinates");
+        gl.enableVertexAttribArray(coord);
+    </code></pre>
+
+    <div>
+        donner le lien vers ce texte
+
         After a program object has been linked successfully, the bindings of attribute
-    variable names to indices can be queried. The command
-    int GetAttribLocation( uint program, const char *name );
-    returns the generic attribute index that the attribute variable named name was bound
-    to when the program object named program was last linked. name must be a null-
-    terminated string. If name is active and is an attribute matrix, GetAttribLocation
-    returns the index of the first column of that matrix. If program has not been suc-
-    cessfully linked, the error INVALID_OPERATION is generated. If name is not an
-    active attribute, or if an error occurs, -1 will be returned.
-    The binding of an attribute variable to a generic attribute index can also be
-    specified explicitly. The command
-    void BindAttribLocation( uint program, uint index, const
-    char *name );
-</div>
+        variable names to indices can be queried. The command
+        int GetAttribLocation( uint program, const char *name );
+        returns the generic attribute index that the attribute variable named name was bound
+        to when the program object named program was last linked.
+    </div>
 
-<div class="globalState">
-    <table >
-        <caption>vertex array</caption>
-        <tbody>
-            <tr>
-                <td>enabled</td>
-                <td>size</td>
+    <p class="explication">
+        On va maintenant décrire l'état du contexte WebGL après chaque instruction.
 
-            </tr>
-        </tbody>
-    </table>
-</div>
+        Le tableau suivant, Vertex Arrays , stocke les états des attributs.
+        Exemple d'un attribut dans le code glsl :
+                    attribute vec3 coordinates;
+
+        Les attributs établissent la façon d'amener les données des buffers vers le shader de type vertex.
+    </p>
+
+    <div class="globalState">
+        <table >
+            <caption>vertex array</caption>
+            <tbody>
+                <tr>
+                    <th>enabled</th>
+                    <th>size</th>
+                    <th>type</th>
+                    <th>normalize</th>
+                    <th>stride</th>
+                    <th>offset</th>
+                    <th>buffer</th>
+                </tr>
+                <tr>
+                    <td>true</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+                <tr>
+                    <td>false</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+                <tr>
+                    <td>false</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+                <tr>
+                    <td>false</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+                <tr>
+                    <td>false</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+                <tr>
+                    <td>false</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
 <p class="explication">
     pseudo code
@@ -280,14 +355,7 @@ vertex array:
 
 
 
-<pre><code class="lecode">
-  let vertex_buffer1 = gl.createBuffer();
 
-</code></pre>
-
-<p class="explication">
-  crée un buffer vertex_buffer1
-</p>
 
 <div class="globalState">
 <table >
