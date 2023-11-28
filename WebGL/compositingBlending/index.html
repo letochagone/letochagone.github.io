@@ -1,0 +1,1377 @@
+
+<!doctype html>
+<html>
+<head>
+	<style>
+
+    @font-face {
+    font-family: 'calligraffiti';
+    src: url('./Calligraffitti/Calligraffitti-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+   h1 {
+    font:4em/1 calligraffiti, Arial, Helvetica, sans-serif;
+  font-weight:bold;
+  text-shadow:-5px -5px 5px #114973, 0 0 10px rgb(255, 255, 255);
+  }
+
+    .pipette {
+      width: 50%;
+      display: block;
+    }
+    .theorie {
+      font-family: sans-serif;
+      color:black;
+    }
+		blablabla {
+			color:yellow;
+		}
+
+		pre {
+      background-color: black;
+      color: white;
+    }
+    .string {
+      color:#A1E46D;
+    }
+    .special {
+      color:#D6665D;
+    }
+    .egale {
+      color:#FF00FF;
+    }
+
+    .htmlWord {
+    	color:yellow;
+    }
+    .glWord {
+      color:aqua;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <canvas id="canvas"></canvas>
+
+
+  <h1>comment calculer la couleur obtenue d'un code WebGL</h1>
+  <p>
+    le programme suivant affiche un point
+  </p>
+
+  <pre><code class="cde" id="dede">
+  "use strict";
+
+  let vertex=`
+    attribute vec2 vertexPosition;
+    void main() {
+      gl_Position = vec4(
+      	0.0,
+      	0.0,
+      	0.0,
+      	1.0
+      );
+      gl_PointSize=3.0;
+    }
+  `;
+
+  let fragment=`
+    precision mediump float;
+    void main() {
+      gl_FragColor = vec4(
+        0.4,
+        0.5,
+        0.3,
+        0.7
+      );
+    }
+  `;
+
+  let canvas = document.getElementById("canvas1");
+
+  canvas.width=5;
+  canvas.height=5;
+  canvas.style.width="100px";
+  canvas.style.height="100px";
+  canvas.style.border = "1px outset gray";
+  canvas.style.imageRendering="pixelated";
+
+
+  let gl = canvas.getContext("webgl");
+
+  let program = gl.createProgram();
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(vertexShader, vertex);
+  gl.shaderSource(fragmentShader, fragment);
+  gl.compileShader(vertexShader);
+  gl.compileShader(fragmentShader);
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+
+  gl.useProgram(program);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.drawArrays(gl.POINTS, 0, 1);
+  </code></pre>
+
+
+
+  <h3>résultat</h3>
+  <p>le carré suivant avec une bordure est le canvas.
+    Le carré intérieur est le point tracé en WebGL.
+
+  </p>
+
+  <canvas id="canvas1"></canvas>
+
+  <p>Une capture d'écran collée dans Gimp, pour connaitre la valeur de la couleur.</p>
+
+  <img class="pipette" src="pipetteCouleur1.png" />
+
+  <div class="theorie">
+    <p>Comparaison avec le calcul théorique</p>
+
+    <p>  co = Cs * as + Cb * ab * (1-as)</p>
+    <p>  ao = as + ab * ( 1- as)</p>
+    <p> j'ai trouvé cette formule ici: 
+        www.w3.org/TR/compositing-1/#generalformula</p>
+    <p>
+
+
+    <p>Cs = ( 0.4 , 0.5 , 0.3 )</p>
+    <p>as = 0.7</p>
+    <p>Cb = ( 1 , 1 , 1)</p>
+    <p>ab = 1</p>
+
+    <p>co = ( 0.58 , 0.65 , 0.51)</p>
+    <p>ao = 1</p>
+
+    <p>C'est différent !!!</p>
+
+  </div>
+
+  <p>
+    On modifie le gl_FragColor pour tenir compte que le premultiplied est , par défaut, fixé à TRUE
+  </p>
+
+  <pre><code class="cde" id="dede2">
+  let fragment=`
+    precision mediump float;
+
+    void main() {
+      gl_FragColor = vec4(
+          0.4,
+          0.5,
+          0.3,
+          0.7
+      );
+      gl_FragColor.rgb *= gl_FragColor.a;
+    }`;
+  </code></pre>
+
+  <h3>résultat</h3>
+
+  <canvas id="canvas2" ></canvas>
+  <img class="pipette" src="pipetteCouleur2.png" />
+
+  <p>On a bien la même couleur que celle calculée:
+      RGB= ( 0.58 , 0.65 , 0.51) 
+  </p>
+
+  <p>Un peut aussi fixer le premultiplied à faux.</p>
+
+  <pre><code class="cde" id="dede3">
+  let gl = canvas.getContext("webgl",
+    {premultipliedAlpha: false}
+  );
+
+  </code></pre>
+  
+  <p>
+    Dans ce cas, inutile d'effectuer la prémutiplication dans le fragment.
+  </p>
+
+  <pre><code class="cde" id="dede32">
+  precision mediump float;
+  void main() {
+    gl_FragColor = vec4(
+      0.4,
+      0.5,
+      0.3,
+      0.7
+    );
+
+
+  }
+  </code></pre>
+<h3>Résultat :</h3>
+<canvas id="canvas3"></canvas>
+
+
+
+
+<h3>On utilise maintenant la fonction clearColor</h3>
+  <pre><code class="cde" id="dede4">
+  ...
+  ...
+  gl.clearColor(0.5,0.5,1,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.POINTS, 0, 1);
+
+  </code></pre>
+
+
+  <p>
+    On note que le clearcolor affecte la couleur du canvas,
+    mais pas celle du point !
+
+  </p>
+  <canvas id="canvas4"></canvas>
+
+
+
+<p>on ajoute une blendfunc</p>
+
+  <pre><code class="cde" id="dede4">
+
+     gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA)
+  </code></pre>
+
+  <canvas id="canvas5"></canvas>
+
+  <p>la couleur du point est maintenant affectée.
+    Il ne reste plus qu'à la calculer
+  </p>
+
+  <p>
+        test avec premultiplied alpha false
+  </p>
+
+
+  <pre><code class="cde" id="dede6">
+  let vertex=`
+  attribute vec2 vertexPosition;
+  void main() {
+    gl_Position = vec4(
+      0.0,
+      0.0,
+      0.0,
+      1);
+    gl_PointSize=3.0;
+  }`;
+
+  let fragment=`
+  precision mediump float;
+
+  void main() {
+    gl_FragColor = vec4(
+      0.4,
+      0.5,
+      0.3,
+      0.7
+    );
+  }`;
+
+  //...les lignes où l'on crée le canvas...
+
+  let gl = canvas.getContext("webgl",{premultipliedAlpha:false});
+
+  //... les lignes où l'on compile le shader...
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  gl.enable(gl.BLEND);
+  gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA );
+
+  gl.clearColor(0.5,0.5,1,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.drawArrays(gl.POINTS, 0, 1);
+
+</code></pre>
+
+<p>
+   gl.enable(gl.BLEND);
+  gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA );
+  /*
+    RGB = SRC_ALPHA * sourceColor + (1-SRC_ALPHA) * destColor
+      A = SRC_ALPHA + destAlpha * ( 1 - SRC_ALPHA)
+
+    sourceColor = gl_FragColor
+    destColor = clearColor
+
+    RGB = 0.7 * ( 0.4 , 0.5 , 0.3) + 0.3 * ( 0.5 0.5 1) = 
+        = (0.43 , 0.5 , 0.51)
+      A = 0.7 + 1 * 0.3 = 1
+
+    
+  */
+
+ gl.clearColor(0.5,0.5,1,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  let array1=[]
+  const mulArrays = (arr1, arr2) => {
+    return arr1.map((e, index) => e * arr2[index]);
+  }
+
+</p>
+
+  <canvas id="canvas6"></canvas>
+
+
+
+
+
+
+
+
+
+
+  <script>
+      "use strict";
+
+      number1();
+      number2();
+      number3();
+
+       number4();
+              number5();
+              number6();
+
+
+
+
+
+      function read(ctx) {
+        const pixel = new Uint8Array(4);
+        ctx.readPixels(0, 0, 1, 1, ctx.RGBA, ctx.UNSIGNED_BYTE, pixel);
+        log(pixel);
+      }
+
+      function log(...args) {
+        const elem = document.createElement("pre");
+        elem.textContent = [...args].join(' ');
+        document.body.appendChild(elem);
+      }
+
+
+
+
+
+
+     function number1() {
+
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+        gl_PointSize=3.0;
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.4,
+          0.5,
+          0.3,
+          0.7
+        );
+      }`;
+
+      var canvas = document.getElementById("canvas1");
+      
+      canvas.width=5;
+      canvas.height=5;
+      canvas.style.width="100px";
+      canvas.style.height="100px";
+      canvas.style.border = "1px outset gray";
+      canvas.style.imageRendering="pixelated";
+      
+ 
+      var gl = canvas.getContext("webgl");
+
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      gl.drawArrays(gl.POINTS, 0, 1);
+
+
+
+    }
+
+
+
+
+      function number2() {
+
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+        gl_PointSize=3.0;
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.4,
+          0.5,
+          0.3,
+          0.7
+        );
+        gl_FragColor.rgb *= gl_FragColor.a;
+      }`;
+
+      var canvas = document.getElementById("canvas2");
+      
+      canvas.width=5;
+      canvas.height=5;
+      canvas.style.width="100px";
+      canvas.style.height="100px";
+      canvas.style.border = "1px outset gray";
+      canvas.style.imageRendering="pixelated";
+      
+ 
+      var gl = canvas.getContext("webgl");
+
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      gl.drawArrays(gl.POINTS, 0, 1);
+
+
+
+    }
+
+
+
+
+   function number3() {
+
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+        gl_PointSize=3.0;
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.4,
+          0.5,
+          0.3,
+          0.7
+        );
+      }`;
+
+      var canvas = document.getElementById("canvas3");
+
+
+      canvas.width=5;
+      canvas.height=5;
+      canvas.style.width="100px";
+      canvas.style.height="100px";
+      canvas.style.border = "1px outset gray";
+      canvas.style.imageRendering="pixelated";
+      
+ 
+      var gl = canvas.getContext("webgl",{premultipliedAlpha:false});
+
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      gl.drawArrays(gl.POINTS, 0, 1);
+
+
+
+    }
+
+
+
+ function number4() {
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+        gl_PointSize=3.0;
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.4,
+          0.5,
+          0.3,
+          0.7
+        );
+      }`;
+      let canvas = document.getElementById("canvas4");
+      
+      canvas.width=5;
+      canvas.height=5;
+      canvas.style.width="100px";
+      canvas.style.height="100px";
+      canvas.style.border = "1px outset gray";
+      canvas.style.imageRendering="pixelated";
+
+//const collection = document.getElementsByTagName("body")[0];
+//collection.style.backgroundColor="rgb(155,155,155)";
+
+      
+/*
+si on met la couleur du body a rgb(155,155,155)
+alors la couleur du point webgl donne:
+  0.46 0.53 0.39
+
+
+
+*/
+ 
+      let gl = canvas.getContext("webgl",{premultipliedAlpha:false});
+
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      //gl.enable(gl.BLEND);
+      //gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+
+     gl.clearColor(0.5,0.5,1,1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+
+      gl.drawArrays(gl.POINTS, 0, 1);
+
+  
+
+
+
+
+    }
+
+
+function number5() {
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+        gl_PointSize=3.0;
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.4,
+          0.5,
+          0.3,
+          0.7
+        );
+        gl_FragColor.rgb *= gl_FragColor.a;
+      }`;
+      let canvas = document.getElementById("canvas5");
+      
+      canvas.width=5;
+      canvas.height=5;
+      canvas.style.width="100px";
+      canvas.style.height="100px";
+      canvas.style.border = "1px outset gray";
+      canvas.style.imageRendering="pixelated";
+
+
+ 
+      let gl = canvas.getContext("webgl",{premultipliedAlpha:true});
+
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+      /*
+        RGBA = SRC_ALPHA * sourceColor + (1-SRC_ALPHA) * destColor
+
+        RGBA = 0.7 * ( 0.4 , 0.5 , 0.3 , 0.7) + 0.3 * ( 0.5 0.5 1 1)
+
+        RGBA= 
+      */
+
+     gl.clearColor(0.5,0.5,1,1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+
+      gl.drawArrays(gl.POINTS, 0, 1);
+
+  
+
+
+
+
+    }
+
+function number6() {
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+        gl_PointSize=3.0;
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.4,
+          0.5,
+          0.3,
+          0.7
+        );
+      }`;
+      let canvas = document.getElementById("canvas6");
+      
+      canvas.width=5;
+      canvas.height=5;
+      canvas.style.width="100px";
+      canvas.style.height="100px";
+      canvas.style.border = "1px outset gray";
+      canvas.style.imageRendering="pixelated";
+
+
+ 
+      let gl = canvas.getContext("webgl",{premultipliedAlpha:false});
+
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      gl.enable(gl.BLEND);
+      gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA );
+      /*
+        RGB = SRC_ALPHA * sourceColor + (1-SRC_ALPHA) * destColor
+          A = SRC_ALPHA + destAlpha * ( 1 - SRC_ALPHA)
+
+        sourceColor = gl_FragColor
+        destColor = clearColor
+
+        RGB = 0.7 * ( 0.4 , 0.5 , 0.3) + 0.3 * ( 0.5 0.5 1) = 
+            = (0.43 , 0.5 , 0.51)
+          A = 0.7 + 1 * 0.3 = 1
+
+        
+      */
+
+     gl.clearColor(0.5,0.5,1,1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+
+      gl.drawArrays(gl.POINTS, 0, 1);
+let array1=[]
+      const mulArrays = (arr1, arr2) => {
+        return arr1.map((e, index) => e * arr2[index]);
+      }
+
+  
+
+
+/*
+blendfunc :
+ color RGBA = gl_fragcolor * SRC_ALPHA + clearcolor * (1-SRC_ALPHA)
+             = (0.4 0.5 0.3 0.7) * 0.7 + (0.5 0.5 1 1 ) * ( 1-0.7)
+              = (0.28 0.35 0.21 0.49) + 0.15 0.15 0.3 0.3
+              = 0.43 0.5 0.51 0.79
+
+ color RGB = srcColor * srcAlpha + destColor * (1-srcAlpha)  // destColor = canvas sans clearcolor
+           = 0.43 0.5 0.51 * 0.79 + (1 1 1) * (1 - 0.79)
+*/
+
+
+    }
+
+
+
+
+   function number5__() {
+
+
+
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.7,
+          0,
+          0.5,
+          0.5
+        );
+      }`;
+
+      var canvas = document.getElementById("canvas");
+      canvas.width=1;
+      canvas.height=1;
+      var gl = canvas.getContext("webgl",
+        {
+          premultipliedAlpha:false
+        }
+
+      );
+
+      gl.getExtension("OES_texture_float");
+      gl.getExtension("WEBGL_color_buffer_float");
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+
+
+
+      let texture = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, 
+        new Uint8Array(
+            [0.7*255,0.3*255,0.8*255,0.5*255]
+          )
+        );
+     const fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+
+
+      gl.viewport(0, 0, 1, 1);
+    
+
+     // gl.drawArrays(gl.POINTS, 0, 1);
+
+//gl.clearColor(0,0,0,10.5);
+//gl.clear(gl.COLOR_BUFFER_BIT);
+
+      let pixels= new Uint8Array(1*1*4);
+
+      gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+      console.log(pixels);
+      //            [0.7,0.3,0.8,0.5]
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+   function number7() {
+
+
+
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        //gl_FragColor = vec4(111,222,333,444);
+        gl_FragColor = vec4(
+          0.7,
+          0,
+          0.5,
+          0.5
+        );
+      }`;
+
+      var canvas = document.getElementById("canvas");
+      canvas.width=1;
+      canvas.height=1;
+      var gl = canvas.getContext("webgl",
+        {
+          premultipliedAlpha:true
+        }
+
+      );
+
+      gl.getExtension("OES_texture_float");
+      gl.getExtension("WEBGL_color_buffer_float");
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+
+
+
+      let texture = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, 
+        new Uint8Array(
+            [0.7*255,0.3*255,0.8*255,0.5*255]
+          )
+        );
+     const fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+
+
+      gl.viewport(0, 0, 1, 1);
+    
+
+     // gl.drawArrays(gl.POINTS, 0, 1);
+
+//gl.clearColor(0,0,0,10.5);
+//gl.clear(gl.COLOR_BUFFER_BIT);
+
+      let pixels= new Uint8Array(1*1*4);
+
+      gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+      console.log(pixels);
+      //            [0.7,0.3,0.8,0.5]
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+    function number8(){
+
+
+
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.7,
+          0,
+          0.5,
+          0.5
+        );
+        gl_FragColor.rgb *= gl_FragColor.a;
+      }`;
+
+      var canvas = document.getElementById("canvas");
+      canvas.width=1;
+      canvas.height=1;
+      canvas.style.width="50px";
+      canvas.style.height="50px";
+
+      var gl = canvas.getContext("webgl",
+        {
+          premultipliedAlpha:true
+        }
+
+      );
+
+  
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+
+
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+
+
+      gl.viewport(0, 0, 1, 1);
+
+     // gl.enable(gl.BLEND);
+     // gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+      // 111, ....
+
+
+      gl.enable(gl.BLEND);
+     gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+     //ici il y a juste une composition de la couleur d'un point tracé en WebgL
+     // et de la couleur du canvas. 
+     //capture ecran = 0.43 , ...
+
+      // 
+      
+
+gl.clearColor(1,1,1,1);
+gl.clear(gl.COLOR_BUFFER_BIT);
+    
+
+     gl.drawArrays(gl.POINTS, 0, 1);
+
+read(gl);
+/*
+co= Cs*as + Cb*ab(1-as)
+ao = as + ab*(1-as)
+Cs= 0.7, 0 , 0.5  as=0.5
+Cb= 1 1 1         ab =1
+
+co= (0.7*0.5 , ... ) + (1,..)*1*(1-0.5)
+    =  (0.35, ... ) + (0.5 , ... )
+    =  (0.85  , ...  )
+ao = 0.5 + 1 * ( 1-0.5) = 0.5 + 1 - 0.5 = 1
+
+capture ecran = (216/255 , ...)  = (0.847 , ...)
+
+
+*/
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+  function number9()  {
+
+
+
+      let vertex=`
+      attribute vec2 vertexPosition;
+      void main() {
+        gl_Position = vec4(
+          0.0,
+          0.0,
+          0.0,
+          1);
+      }`;
+
+      let fragment=`
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(
+          0.7,
+          0,
+          0.5,
+          0.5
+        );
+        gl_FragColor.rgb *= gl_FragColor.a;
+      }`;
+
+      var canvas = document.getElementById("canvas");
+      canvas.width=1;
+      canvas.height=1;
+     
+
+      var gl = canvas.getContext("webgl",
+        {
+          premultipliedAlpha:true
+        }
+
+      );
+
+  
+
+      let program = gl.createProgram();
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vertexShader, vertex);
+      gl.shaderSource(fragmentShader, fragment);
+      gl.compileShader(vertexShader);
+      gl.compileShader(fragmentShader);
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      gl.useProgram(program);
+
+
+
+      let texture = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, 
+        new Uint8Array(
+            [0,0,0,0]
+          )
+        );
+     const fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+
+
+
+
+      gl.viewport(0, 0, 1, 1);
+
+      gl.enable(gl.BLEND);
+   gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+
+     /*
+     
+
+     co= Cs*as + Cb*ab(1-as)
+ao = as + ab*(1-as)
+Cs= 0.7, 0 , 0.5  as=0.5
+Cb= 0 0 0         ab =0
+
+co= (0.7*0.5 , ... ) + (0,0,0)
+    =  (0.35, ... ) + (0.5 , ... )
+    =  (0.85  , ...  )
+ao = 0.5 + 0 * ( 1-0.5) = 0.5 
+
+readpixels     */
+
+
+  
+      
+
+
+    
+
+    gl.drawArrays(gl.POINTS, 0, 1);
+
+read(gl);
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    syntaxHighlight("dede");
+        syntaxHighlight("dede2");
+        syntaxHighlight("dede3");
+        syntaxHighlight("dede32");
+
+        syntaxHighlight("dede4");
+                syntaxHighlight("dede6");
+
+
+
+
+// syntax highlight
+
+/*
+
+\b est une limite de mot
+Il s'agit de la position où un caractère de mot n'est pas suivi ou précédé d'un autre caractère de mot. Par exemple entre une lettre et un espace.
+/\bm/ correspond au "m" dans "mur".
+avant le 'm' il doit y avoir un espace , une tabulation, un saut de ligne
+
+[^\w]  tout ce qui n 'est pas un caractère abc... ou ABC ou 0123 ou _ 
+[^\w]  tout ce qui est un espace, un retour à la ligne, une tabulation
+
+/papa(?=maman)/   correspond à papa s'il est suivi de maman
+/(new|let)(?=[^\w])/    correspond à {new,let} d'un {espace,retour à la ligne, tabulation} 
+new
+new new
+eeef new let 
+feff new
+	new
+MAIS les lignes suivantes marchent:
+ let letnew newlet letlet 
+ ON RAJOUTE \b
+ \b(new|let)(?=[^\w])
+
+
+*/
+
+function syntaxHighlight(elementId) {
+
+  let strMessage1 = document.getElementById(elementId) ;
+
+  let strReg1 = /"(.*?)"/g;
+  let strReg2 = /'(.*?)'/g; // '(fgerrge r re r)'  , . = a caracter  , .* , une suite de caracter , .*? la suite de caracter la plus petite
+  
+  let strReg3 = /`([\w|\W|\s]*?)`/g ;
+  // \w matches any word caracter : a..z ou A...Z ou _
+  // \W matches any no word caracater : sauf de ligne, tabulation, espace,
+  /*
+  le ? dans  va éviter de récupérer la chaine "A...F"  "ArjgrejgegjeB"CgjgrD"EgrgrF"
+  mais va récupérer "A..B" et "E..F"
+
+
+  /<(\w+?)>/g   va récupérer fjeejfe dans <fjeejfe>
+  /<\\(\w+?)>/g va récupérer fjeejfe dans <\fjeejfe>
+
+
+  */
+
+let maReg = /(<\\(\w+?)>|<(\w+?)>)/g ;
+maReg = /(&lt;\\(\w+?)&gt;|&lt;(\w+?)&gt;)/g ;
+
+let maReg2 = /(gl[\.|\s])/g ;
+
+
+
+
+  let specialReg = /\b(new|let|var|if|do|function|while|switch|for|foreach|in|continue|break)(?=[^\w])/g ;
+
+  let specialJsGlobReg = /\b(document|window|Array|String|Object|Number|\$)(?=[^\w])/g ;
+  let specialJsReg = /\b(getElementsBy(TagName|ClassName|Name)|getElementById|typeof|instanceof)(?=[^\w])/g ;
+  let specialMethReg = /\b(indexOf|match|replace|toString|length)(?=[^\w])/g ;
+  let specialCommentReg  = /(\/\*.*\*\/)/g ;
+  let inlineCommentReg = /(\/\/.*)/g;
+  let htmlTagReg = /(&lt;[^\&]*&gt;)/g;
+
+  let string = strMessage1.innerHTML;
+
+
+  
+  let parsed = string.replace(strReg1,'<span class="string">"$1"</span>');
+
+
+
+  parsed = parsed.replace(maReg,'<span class="htmlWord">$1</span>');
+  parsed = parsed.replace(maReg2,'<span class="glWord">$1</span>');
+
+
+
+  //parsed = parsed.replace(maReg,'<span class="htmlWord">$1</span>');
+  //parsed = parsed.replace(maReg2,'<span class="glWord">$1</span>');
+
+
+
+  parsed = parsed.replace(strReg2,"<span class=\"string\">'$1'</span>");
+  parsed = parsed.replace(strReg3,"<span class=\"string\">`$1`</span>");
+  parsed = parsed.replace(specialReg,'<span class="special">$1</span>');
+  parsed = parsed.replace(specialJsGlobReg,'<span class="special-js-glob">$1</span>');
+  parsed = parsed.replace(specialJsReg,'<span class="special-js">$1</span>');
+  parsed = parsed.replace(specialMethReg,'<span class="special-js-meth">$1</span>');
+  //parsed = parsed.replace(htmlTagReg,'<span class="special-html">$1</span>');
+  parsed = parsed.replace(specialCommentReg,'<span class="special-comment">$1</span>');
+  parsed = parsed.replace(inlineCommentReg,'<span class="special-comment">$1</span>');
+
+  strMessage1.innerHTML  = parsed;
+
+}
+
+
+
+    </script>
+
+
+
+
+
+  </body>
+</html>
