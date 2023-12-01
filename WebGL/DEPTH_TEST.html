@@ -70,7 +70,7 @@
         width: fit-content;
     }
 
-    table {
+    .globalStateTable {
         border-collapse: collapse;
         width: fit-content;
     }
@@ -79,6 +79,28 @@
         background-color: lightgray;
     }
 
+    .globalState tbody tr {
+        background-color: #444;
+        color: #888;
+    }
+
+    .globalState td, .globalState th {
+    border: 1px solid hsla(0, 0%, 100%, 0.5);
+    padding: 0.25em;
+    white-space: pre;
+}
+
+    .buffer {
+        white-space: nowrap;
+        width: fit-content;
+    }
+
+    .buffer table {
+        border-collapse: collapse;
+    }
+    .buffer caption {
+        display: block;
+    }
 </style>
 <body>
 
@@ -225,9 +247,9 @@
     </p>
 
     <div class="globalState">
-        <table >
+        <table class="globalStateTable" >
             <caption>vertex array</caption>
-            <tbody>
+            <thead>
                 <tr>
                     <th>enabled</th>
                     <th>size</th>
@@ -237,8 +259,11 @@
                     <th>offset</th>
                     <th>buffer</th>
                 </tr>
+            </thead>
+
+            <tbody>
                 <tr>
-                    <td>true</td>
+                    <td>false</td>
                     <td>4</td>
                     <td>FLOAT</td>
                     <td>false</td>
@@ -296,33 +321,12 @@
     </div>
 
 <p class="explication">
-    pseudo code
 
-    global state :
-    -------------
-    ARRAY_BUFFER_BINDING : null
-
-    vertex array:
-    -------------
-    [
-      {enabled: false,...},
-      ...
-      {enabled: true,...},
-      ...
-      }
-    ]
 
 le tableau "Vertex Array"  contient les états des variables de type "attribute".
  Ce type définit comment envoyer les données d'un buffer vers le vertex shader.
 Dans le tableau "vertex array", les éléments sont sous la forme :
 
-vertex array:
-=============
- [
-  {...},{...},
-  { enabled: false, type: gl.FLOAT, size: 3, normalized: false, stride: 0, offset: 0, buffer: null },
-  {...}
-]
 
 la ligne : 
   let coord = gl.getAttribLocation(shaderProgram, "coordinates");
@@ -337,35 +341,94 @@ la ligne
 
 donne à l'élément "enabled" la valeur true :
 
+</p>
+   <div class="globalState">
+        <table class="globalStateTable" >
+            <caption>vertex array</caption>
+            <thead>
+                <tr>
+                    <th>enabled</th>
+                    <th>size</th>
+                    <th>type</th>
+                    <th>normalize</th>
+                    <th>stride</th>
+                    <th>offset</th>
+                    <th>buffer</th>
+                </tr>
+            </thead>
 
-vertex array:
-=============
- [
- indice 0  {...},
- indice 1  {...},
-  ...,
-  indice 'coord' { enabled: TRUE, type: gl.FLOAT, size: 3, normalized: false, stride: 0, offset: 0, buffer: null },
-  ...
-]
+            <tbody>
+                <tr>
+                    <td style="background: chartreuse;">true</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+                <tr>
+                    <td>false</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+                <tr>
+                    <td>false</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+                <tr>
+                    <td>false</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+                <tr>
+                    <td>false</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+                <tr>
+                    <td>false</td>
+                    <td>4</td>
+                    <td>FLOAT</td>
+                    <td>false</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>null</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <pre><code class="lecode">
+        let vertex_buffer1 = gl.createBuffer();
+    </code></pre>
 
 
-         </p>
-
-
-
-
-
-
-
-<div class="globalState">
+<div class="buffer">
 <table >
-    <caption>buffer[vertex_buffer1]</caption>
+    <caption>buffer := vertex_buffer1</caption>
+
     <tbody>
         <tr>
-            <td>data</td>
             <td>null</td>
         </tr>
-  
  
     </tbody>
 
@@ -390,7 +453,7 @@ buffer functions can refer to the buffer bound there."
 
 <div class="globalState">
 <table >
-    <caption>GLOBALSTATEeg_bg_gegregeg_ergeerge_eg_ege </caption>
+    <caption>GLOBALSTATEeg_bg_gegregeg_erge</caption>
     <tbody>
         <tr>
             <td>ARRAY_BUFFER_BINDING</td>
@@ -517,9 +580,9 @@ On comprend ainsi que la fonction bufferData n'a pas de paramètre de type buffe
 
 
 
-    <script>
+    <script type="module">
         
-
+import {syntaxHighlightAll} from './colorizeur.js';
 
         let canvas = document.getElementById('canvas');
         let gl = canvas.getContext('webgl');
@@ -649,91 +712,6 @@ On comprend ainsi que la fonction bufferData n'a pas de paramètre de type buffe
 
 
 syntaxHighlightAll("lecode");
-
-
-
-function syntaxHighlightAll(elementsClass) {
-    let lesElements = document.getElementsByClassName(elementsClass);
-    //syntaxHighlight(lesElements.item(0));
-    for (let i = 0; i < lesElements.length; i++) {
-      syntaxHighlight(lesElements.item(i));
-    }
-}
-
-
-
-
-
-function syntaxHighlight(elementId) {
-
-  //let strMessage1 = document.getElementById(elementId) ;
-let strMessage1=elementId;
-
-  let strReg1 = /"(.*?)"/g;
-  let strReg2 = /'(.*?)'/g; // '(fgerrge r re r)'  , . = a caracter  , .* , une suite de caracter , .*? la suite de caracter la plus petite
-  
-  let strReg3 = /`([\w|\W|\s]*?)`/g ;
-  // \w matches any word caracter : a..z ou A...Z ou _
-  // \W matches any no word caracater : sauf de ligne, tabulation, espace,
-  /*
-  le ? dans  va éviter de récupérer la chaine "A...F"  "ArjgrejgegjeB"CgjgrD"EgrgrF"
-  mais va récupérer "A..B" et "E..F"
-
-
-  /<(\w+?)>/g   va récupérer fjeejfe dans <fjeejfe>
-  /<\\(\w+?)>/g va récupérer fjeejfe dans <\fjeejfe>
-
-
-  */
-
-let maReg = /(<\\(\w+?)>|<(\w+?)>)/g ;
-maReg = /(&lt;\\(\w+?)&gt;|&lt;(\w+?)&gt;)/g ;
-
-let maReg2 = /(gl[\.|\s])/g ;
-
-
-
-
-  let specialReg = /\b(new|let|var|if|do|function|while|switch|for|foreach|in|continue|break)(?=[^\w])/g ;
-
-  let specialJsGlobReg = /\b(document|window|Array|String|Object|Number|\$)(?=[^\w])/g ;
-  let specialJsReg = /\b(getElementsBy(TagName|ClassName|Name)|getElementById|typeof|instanceof)(?=[^\w])/g ;
-  let specialMethReg = /\b(indexOf|match|replace|toString|length)(?=[^\w])/g ;
-  let specialCommentReg  = /(\/\*.*\*\/)/g ;
-  let inlineCommentReg = /(\/\/.*)/g;
-  let htmlTagReg = /(&lt;[^\&]*&gt;)/g;
-
-  let string = strMessage1.innerHTML;
-
-
-  
-  let parsed = string.replace(strReg1,'<span class="string">"$1"</span>');
-
-
-
-  parsed = parsed.replace(maReg,'<span class="htmlWord">$1</span>');
-  parsed = parsed.replace(maReg2,'<span class="glWord">$1</span>');
-
-
-
-  //parsed = parsed.replace(maReg,'<span class="htmlWord">$1</span>');
-  //parsed = parsed.replace(maReg2,'<span class="glWord">$1</span>');
-
-
-
-  parsed = parsed.replace(strReg2,"<span class=\"string\">'$1'</span>");
-  parsed = parsed.replace(strReg3,"<span class=\"string\">`$1`</span>");
-  parsed = parsed.replace(specialReg,'<span class="special">$1</span>');
-  parsed = parsed.replace(specialJsGlobReg,'<span class="special-js-glob">$1</span>');
-  parsed = parsed.replace(specialJsReg,'<span class="special-js">$1</span>');
-  parsed = parsed.replace(specialMethReg,'<span class="special-js-meth">$1</span>');
-  //parsed = parsed.replace(htmlTagReg,'<span class="special-html">$1</span>');
-  parsed = parsed.replace(specialCommentReg,'<span class="special-comment">$1</span>');
-  parsed = parsed.replace(inlineCommentReg,'<span class="special-comment">$1</span>');
-
-  strMessage1.innerHTML  = parsed;
-
-}
 
 
 
