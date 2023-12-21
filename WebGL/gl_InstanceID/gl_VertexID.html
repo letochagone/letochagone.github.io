@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>All non-0 divisors should render in WebGL2</title>
+    <style>
+canvas { border: 1px solid black; }
+    </style>
+  </head>
+  <body>
+<canvas></canvas>
+
+  </body>
+  <script>
+let lx=3;
+let ly=1;
+let canvas= document.querySelector('canvas');
+canvas.width=lx;
+canvas.width=ly;
+const gl = canvas.getContext('webgl2');
+const ext = gl.getExtension("EXT_color_buffer_float");
+gl.viewport(0,0,lx,ly);
+const vs = `#version 300 es
+flat  out int ffe;
+
+void main() {
+  float k = float(gl_VertexID);
+
+  float x= -1.0 + ( 2.0*k+1.0)/3.0;
+
+  ffe=gl_VertexID;
+
+  gl_Position = vec4(
+     x, 
+     0,
+     0,
+     1);
+  gl_PointSize = 1.0;
+
+}
+`;
+
+const fs = `#version 300 es
+precision highp float;
+
+flat in int ffe;
+
+out vec4 outColor;
+void main() {
+  outColor = vec4(1,ffe, 0, 1);
+}
+`;
+
+function createShader(gl, type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  return sh;
+}
+
+const prg = gl.createProgram(gl);
+gl.attachShader(prg, createShader(gl, gl.VERTEX_SHADER, vs));
+gl.attachShader(prg, createShader(gl, gl.FRAGMENT_SHADER, fs));
+gl.linkProgram(prg);
+gl.useProgram(prg);
+
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ARRAY_BUFFER,  0, gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0);
+gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 0, 0);
+
+    // create to render to
+ 
+    const targetTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+     
+    {
+      // define size and format of level 0
+      const level = 0;
+      const internalFormat = gl.RGBA32F;
+      const border = 0;
+      const format = gl.RGBA;
+      const type = gl.FLOAT;
+      const data = null;
+      gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                    lx, ly, border,
+                    format, type, data);
+     
+      // set the filtering so we don't need mips
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    }
+
+    // Create and bind the framebuffer
+    const fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+     
+    // attach the texture as the first color attachment
+    const attachmentPoint = gl.COLOR_ATTACHMENT0;
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, 0);
+
+
+gl.drawArrays(gl.POINTS, 0, 3);
+
+ const data = new Float32Array(4*lx*ly);
+
+  const format = gl.RGBA;
+  const type = gl.FLOAT;
+  gl.readPixels(0, 0, lx, ly, format, type, data);
+
+    log(glEnumToString(gl, gl.COLOR_ATTACHMENT0), data);
+
+
+function glEnumToString(gl, value) {
+  for (let key in gl) {
+    if (gl[key] === value) {
+      return key;
+    }
+  }
+  return `0x${value.toString(16)}`;
+}
+
+function log(...args) {
+  const elem = document.createElement("pre");
+  elem.textContent = [...args].join(' ');
+  document.body.appendChild(elem);
+}
+
+
+
+/*
+
+0,0,0,0,  0,0,0,0,  0,0,0,0,
+1,0,0,1,  0,0,0,0,  0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0
+
+0,0,0,0, 0,0,0,0 ,0,0,0,0, 
+1,0,0,1, 1,0,0,1, 1,0,0,1,
+0,0,0,0,0,0,0,0,0,0,0,0
+*/
+  </script>
+</html>
