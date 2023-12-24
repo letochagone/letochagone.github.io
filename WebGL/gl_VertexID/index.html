@@ -23,7 +23,7 @@ const ext = gl.getExtension("EXT_color_buffer_float");
 gl.viewport(0,0,lx,ly);
 const vs = `#version 300 es
   
-  
+
 </code></pre>
   </body>
 
@@ -129,14 +129,44 @@ gl.drawArrays(gl.POINTS, 0, lx);
   gl.readPixels(0, 0, lx, ly, format, type, data);
 
 
+/*
 
+function log(...args) {
+  const elem = document.createElement("pre");
+  elem.className="console";
+  elem.style.color="white";
+  //elem.style.backgroundColor="#300a24";
+  elem.textContent = [...args].join(' ');
+
+g.appendChild(elem);
+
+   
+
+}
+let g =document.createElement("div");
+
+g.style.backgroundColor="red";
+g.style.display="block";
+document.body.appendChild(g);
+
+
+*/
 
 
 function log(...args) {
   const elem = document.createElement("pre");
   elem.textContent = [...args].join(' ');
-  document.body.appendChild(elem);
+  //document.body.appendChild(elem);
+  g.appendChild(elem);
+
 }
+
+let g =document.createElement("div");
+
+g.style.backgroundColor="gray";
+g.style.display="block";
+document.body.appendChild(g);
+
 
 while (data.length) {
   log(data.slice(0,4)); // affiche le 0+1=1er element jusqu'au 4e element
@@ -144,6 +174,9 @@ while (data.length) {
 }
 
 syntaxHighlightAll("lecode");
+
+
+
 
 
 
