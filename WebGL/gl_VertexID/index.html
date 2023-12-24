@@ -3,19 +3,37 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>All non-0 divisors should render in WebGL2</title>
-    <style>
-canvas { border: 1px solid black; }
-    </style>
+    <title>gl_VertexID</title>
+  
   </head>
   <body>
-<canvas></canvas>
+    <p>
+      le but est de comprendre l'élément gl_VertexID.
 
-  </body>
-  <script>
-let lx=3;
+    </p>
+
+<pre><code class="lecode">
+let lx=5;
 let ly=1;
-let canvas= document.querySelector('canvas');
+let canvas = document.createElement("canvas");
+canvas.width=lx;
+canvas.width=ly;
+const gl = canvas.getContext('webgl2');
+const ext = gl.getExtension("EXT_color_buffer_float");
+gl.viewport(0,0,lx,ly);
+const vs = `#version 300 es
+  
+  
+</code></pre>
+  </body>
+
+
+  <script type="module">
+ import {syntaxHighlightAll} from './colorizeur.js';
+
+let lx=5;
+let ly=1;
+let canvas = document.createElement("canvas");
 canvas.width=lx;
 canvas.width=ly;
 const gl = canvas.getContext('webgl2');
@@ -27,7 +45,7 @@ const vs = `#version 300 es
 void main() {
   float k = float(gl_VertexID);
 
-  float x= -1.0 + ( 2.0*k+1.0)/3.0;
+  float x= -1.0 + ( 2.0*k+1.0)/${lx}.0;
 
   ffe=float(gl_VertexID);
 
@@ -102,25 +120,17 @@ gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 0, 0);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, 0);
 
 
-gl.drawArrays(gl.POINTS, 0, 3);
+gl.drawArrays(gl.POINTS, 0, lx);
 
- const data = new Float32Array(4*lx*ly);
+ let data = new Float32Array(4*lx*ly);
 
   const format = gl.RGBA;
   const type = gl.FLOAT;
   gl.readPixels(0, 0, lx, ly, format, type, data);
 
-    log(glEnumToString(gl, gl.COLOR_ATTACHMENT0), data);
 
 
-function glEnumToString(gl, value) {
-  for (let key in gl) {
-    if (gl[key] === value) {
-      return key;
-    }
-  }
-  return `0x${value.toString(16)}`;
-}
+
 
 function log(...args) {
   const elem = document.createElement("pre");
@@ -128,17 +138,15 @@ function log(...args) {
   document.body.appendChild(elem);
 }
 
+while (data.length) {
+  log(data.slice(0,4)); // affiche le 0+1=1er element jusqu'au 4e element
+  data=data.slice(4,data.length);//extrait du 4+1=5e element jusqu'au (data.length)ieme element
+}
+
+syntaxHighlightAll("lecode");
 
 
-/*
 
-0,0,0,0,  0,0,0,0,  0,0,0,0,
-1,0,0,1,  0,0,0,0,  0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0
 
-0,0,0,0, 0,0,0,0 ,0,0,0,0, 
-1,0,0,1, 1,0,0,1, 1,0,0,1,
-0,0,0,0,0,0,0,0,0,0,0,0
-*/
   </script>
 </html>
