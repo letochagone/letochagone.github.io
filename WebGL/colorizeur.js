@@ -128,6 +128,7 @@ function syntaxHighlight(elementId) {
 const code =dzdz.parentElement;
     code.style.backgroundColor = "black";
     code.style.color = "white";
+    code.style.padding="2vw";
   }
 
 
