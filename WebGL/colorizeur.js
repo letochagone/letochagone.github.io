@@ -3,12 +3,30 @@
 // https://fr.javascript.info/modules-intro
 
 /*
+debut du code javascript
+ import {syntaxHighlightAll} from 'colorizeur.js';
+
+syntaxHighlightAll("lecode");
 
 
+<pre><code class="lecode">
+  blablabla...
+  let c=efe...
+  ..blablabla
+</code></pre>
 
 */
 
 export function syntaxHighlightAll(elementsClass) {
+/*
+  for (const dzdz of document.getElementsByClassName(elementsClass)) {
+const code =dzdz.parentElement;
+    code.style.backgroundColor = "black";
+    code.style.color = "red";
+  }
+
+*/
+
   let lesElements = document.getElementsByClassName(elementsClass);
   for (let i = 0; i < lesElements.length; i++) {
     syntaxHighlight(lesElements.item(i));
@@ -106,11 +124,12 @@ function syntaxHighlight(elementId) {
   }
   
 
-  const allParas = document.getElementsByTagName("pre");
-  for (const para of allParas) {
-    para.style.backgroundColor = "black";
-    para.style.color = "white";
+    for (const dzdz of document.getElementsByClassName("lecode")) {
+const code =dzdz.parentElement;
+    code.style.backgroundColor = "black";
+    code.style.color = "white";
   }
+
 
   const AllSpecials = document.getElementsByClassName('special');
   for (const special of AllSpecials) {
