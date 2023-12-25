@@ -120,14 +120,14 @@ const gl = canvas.getContext('webgl2');
 const ext = gl.getExtension("EXT_color_buffer_float");
 gl.viewport(0,0,lx,ly);
 const vs = `#version 300 es
-  out float ffe;
+  out float glvertexid;
 
 void main() {
   float k = float(gl_VertexID);
 
   float x= -1.0 + ( 2.0*k+1.0)/${lx}.0;
 
-  ffe=float(gl_VertexID);
+  glvertexid=float(gl_VertexID);
 
   gl_Position = vec4(
      x, 
@@ -142,11 +142,11 @@ void main() {
 const fs = `#version 300 es
 precision highp float;
 
- in float ffe;
+ in float glvertexid;
 
 out vec4 outColor;
 void main() {
-  outColor = vec4(ffe,ffe, ffe, ffe);
+  outColor = vec4(glvertexid,glvertexid, glvertexid, glvertexid);
 }
 `;
 
@@ -207,7 +207,8 @@ gl.drawArrays(gl.POINTS, 0, lx);
   const format = gl.RGBA;
   const type = gl.FLOAT;
   gl.readPixels(0, 0, lx, ly, format, type, data);
-  log(data);
+  console.log(data);
+    log(data);
 
 
 function log(donnees) {
@@ -218,14 +219,14 @@ g.style.display="block";
 document.body.appendChild(g);
 
 
-while (data.length) {
+while (donnees.length) {
     const elem = document.createElement("pre");
     elem.textContent = donnees.slice(0,4);
   g.appendChild(elem);
 
   //log(data.slice(0,4)); // affiche le 0+1=1er element jusqu'au 4e element
 
-  data=data.slice(4,donnees.length);//extrait du 4+1=5e element jusqu'au (data.length)ieme element
+  donnees=donnees.slice(4,donnees.length);//extrait du 4+1=5e element jusqu'au (data.length)ieme element
 }
 }
 
