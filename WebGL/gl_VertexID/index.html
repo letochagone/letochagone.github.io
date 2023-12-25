@@ -207,20 +207,11 @@ gl.drawArrays(gl.POINTS, 0, lx);
   const format = gl.RGBA;
   const type = gl.FLOAT;
   gl.readPixels(0, 0, lx, ly, format, type, data);
+  log(data);
 
 
-
-
-
-function log(...args) {
-  const elem = document.createElement("pre");
-  elem.textContent = [...args].join(' ');
-  //document.body.appendChild(elem);
-  g.appendChild(elem);
-
-}
-
-let g =document.createElement("div");
+function log(donnees) {
+  let g =document.createElement("div");
 
 g.style.backgroundColor="gray";
 g.style.display="block";
@@ -228,9 +219,17 @@ document.body.appendChild(g);
 
 
 while (data.length) {
-  log(data.slice(0,4)); // affiche le 0+1=1er element jusqu'au 4e element
-  data=data.slice(4,data.length);//extrait du 4+1=5e element jusqu'au (data.length)ieme element
+    const elem = document.createElement("pre");
+    elem.textContent = donnees.slice(0,4);
+  g.appendChild(elem);
+
+  //log(data.slice(0,4)); // affiche le 0+1=1er element jusqu'au 4e element
+
+  data=data.slice(4,donnees.length);//extrait du 4+1=5e element jusqu'au (data.length)ieme element
 }
+}
+
+
 
 syntaxHighlightAll("lecode");
 
