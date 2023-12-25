@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>gl_VertexID</title>
+  
+  </head>
+  <body>
+    <p>
+      le but est de comprendre l'élément gl_VertexID.
+
+    </p>
+
+<pre><code class="lecode">let lx=5;
+let ly=1;
+let canvas = document.createElement("canvas");
+canvas.width=lx;
+canvas.width=ly;
+const gl = canvas.getContext('webgl');
+const ext = gl.getExtension("OES_texture_float");
+
+gl.viewport(0,0,lx,ly);
+const vs = `
+  varying float glvertexid;
+
+  attribute float gl_VertexID;
+
+
+  void main() {
+    float k = gl_VertexID;
+
+    float x= -1.0 + ( 2.0*k+1.0)/${lx}.0;
+
+    glvertexid = gl_VertexID;
+
+    gl_Position = vec4(x, 0, 0, 1);
+    gl_PointSize = 1.0;
+  }
+`;
+
+const fs = `#version 300 es
+  precision highp float;
+
+  varying float glvertexid;
+
+
+  void main() {
+    gl_FragColor = vec4(glvertexid,glvertexid, glvertexid, glvertexid);
+  }
+`;
+
+function createShader(gl, type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  return sh;
+}
+
+const prg = gl.createProgram(gl);
+gl.attachShader(prg, createShader(gl, gl.VERTEX_SHADER, vs));
+gl.attachShader(prg, createShader(gl, gl.FRAGMENT_SHADER, fs));
+gl.linkProgram(prg);
+gl.useProgram(prg);
+
+
+
+
+const numVerts = 20;
+const vertexIds = new Float32Array(numVerts);
+vertexIds.forEach((v, i) => {
+  vertexIds[i] = i;
+});
+     
+const idBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, idBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, vertexIds, gl.STATIC_DRAW);
+
+
+
+//gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+//gl.bufferData(gl.ARRAY_BUFFER,  0, gl.STATIC_DRAW);
+//gl.enableVertexAttribArray(0);
+//gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 0, 0);
+
+ 
+const targetTexture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+
+{
+  const level = 0;
+  const internalFormat = gl.RGBA32F;
+  const border = 0;
+  const format = gl.RGBA;
+  const type = gl.FLOAT;
+  const data = null;
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    level,
+    internalFormat,
+    lx, ly,
+    border,
+    format,
+    type,
+    data
+  );
+
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+}
+
+// Create and bind the framebuffer
+const fb = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+// attach the texture as the first color attachment
+const attachmentPoint = gl.COLOR_ATTACHMENT0;
+gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, 0);
+
+gl.drawArrays(gl.POINTS, 0, lx);
+
+let data = new Float32Array(4*lx*ly);
+
+gl.readPixels(0, 0, lx, ly, gl.RGBA, gl.FLOAT, data);</code></pre>
+  </body>
+
+
+  <script type="module">
+ import {syntaxHighlightAll} from '../colorizeur.js';
+
+
+let lx=5;
+let ly=1;
+let canvas = document.createElement("canvas");
+canvas.width=lx;
+canvas.width=ly;
+const gl = canvas.getContext('webgl');
+const ext = gl.getExtension("OES_texture_float");
+
+gl.viewport(0,0,lx,ly);
+const vs = `
+  varying float vGlVertexID;
+
+  attribute float aGlVertexID;
+
+
+  void main() {
+    float k = aGlVertexID;
+
+    float x= -1.0 + ( 2.0*k+1.0)/${lx}.0;
+
+    vGlVertexID = aGlVertexID;
+
+    gl_Position = vec4(x, 0, 0, 1);
+    gl_PointSize = 1.0;
+  }
+`;
+
+const fs = `
+  precision highp float;
+
+  varying float vGlVertexID;
+
+
+  void main() {
+    gl_FragColor = vec4(vGlVertexID,vGlVertexID, vGlVertexID, vGlVertexID);
+  }
+`;
+
+function createShader(gl, type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  return sh;
+}
+
+const prg = gl.createProgram(gl);
+gl.attachShader(prg, createShader(gl, gl.VERTEX_SHADER, vs));
+gl.attachShader(prg, createShader(gl, gl.FRAGMENT_SHADER, fs));
+gl.linkProgram(prg);
+gl.useProgram(prg);
+
+
+
+
+const numVerts = lx;
+const vertexIds = new Float32Array(numVerts);
+vertexIds.forEach((v, i) => {
+  vertexIds[i] = i;
+});
+//vertexIds=[0,1,2,3,4,.....lx-1]
+     
+const idBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, idBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, vertexIds, gl.STATIC_DRAW);
+
+
+
+const vertexIdLoc = gl.getAttribLocation(prg, 'aGlVertexID');
+
+gl.enableVertexAttribArray(vertexIdLoc);
+
+gl.bindBuffer(gl.ARRAY_BUFFER, idBuffer);
+
+gl.vertexAttribPointer(
+      vertexIdLoc, 1, gl.FLOAT, false, 0, 0);
+
+
+
+
+
+
+//gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+//gl.bufferData(gl.ARRAY_BUFFER,  0, gl.STATIC_DRAW);
+//gl.enableVertexAttribArray(0);
+//gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 0, 0);
+
+ 
+const targetTexture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+
+{
+  const level = 0;
+  const internalFormat = gl.RGBA;
+  const border = 0;
+  const format = gl.RGBA;
+  const type = gl.FLOAT;
+  const data = null;
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    level,
+    internalFormat,
+    lx, ly,
+    border,
+    format,
+    type,
+    data
+  );
+
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+}
+
+// Create and bind the framebuffer
+const fb = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+// attach the texture as the first color attachment
+const attachmentPoint = gl.COLOR_ATTACHMENT0;
+gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, 0);
+
+gl.drawArrays(gl.POINTS, 0, lx);
+
+let data = new Float32Array(4*lx*ly);
+
+gl.readPixels(0, 0, lx, ly, gl.RGBA, gl.FLOAT, data);
+
+
+
+  console.log(data);
+    log(data);
+
+
+function log(donnees) {
+  let g =document.createElement("div");
+
+g.style.backgroundColor="gray";
+g.style.display="block";
+document.body.appendChild(g);
+
+
+while (donnees.length) {
+    const elem = document.createElement("pre");
+    elem.textContent = donnees.slice(0,4);
+  g.appendChild(elem);
+
+  //log(data.slice(0,4)); // affiche le 0+1=1er element jusqu'au 4e element
+
+  donnees=donnees.slice(4,donnees.length);//extrait du 4+1=5e element jusqu'au (data.length)ieme element
+}
+}
+
+
+
+syntaxHighlightAll("lecode");
+
+
+
+
+
+
+
+  </script>
+</html>
