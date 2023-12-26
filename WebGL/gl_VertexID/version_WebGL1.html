@@ -16,12 +16,11 @@
   
   </head>
   <body>
-    <p>
+<p>
       le but est de comprendre l'élément gl_VertexID.
 
-    </p>
-<pre>ceci est un element PRE zef f zf  zf ze f fze ze zzf ze fzfzef ze zf zef zefzefZEFZE EZF  zefzef zfe fe ZFZEf fZE ZF ezfzf zef zef zef ZEF ZE FZEF </pre>
-<code>ceci est un element CODE rrgeg erg erg erg reg er gre ger greg erg erg er greg er gre reg regrrgergre er egre erg eg erg erg erg er gerg erg ergeggerg </code>
+</p>
+
 <pre><code class="lecode">let lx=5;
 let ly=1;
 let canvas = document.createElement("canvas");
@@ -42,18 +41,19 @@ const ext = gl.getExtension("OES_texture_float");
   Ici, le rôle du buffer est d'implémenter la variable gl_VertexID du WebGL version 2.0.
   De la simuler.
 </p>
-<pre><code class="lecode">const vs = `
-  varying float glvertexid;
+<pre><code class="lecode">
+  const vs = `
+  varying float vGlVertexID;
 
-  attribute float gl_VertexID;
+  attribute float aGlVertexID;
 
 
   void main() {
-    float k = gl_VertexID;
+    float k = aGlVertexID;
 
-    float x= -1.0 + ( 2.0 * k + 1.0) / ${lx}.0 ;
+    float x= -1.0 + ( 2.0*k+1.0)/${lx}.0;
 
-    glvertexid = gl_VertexID;
+    vGlVertexID = aGlVertexID;
 
     gl_Position = vec4(x, 0, 0, 1);
     gl_PointSize = 1.0;
@@ -63,26 +63,34 @@ const ext = gl.getExtension("OES_texture_float");
 const fs = `
   precision highp float;
 
-  varying float glvertexid;
+  varying float vGlVertexID;
 
 
   void main() {
-    gl_FragColor = vec4(glvertexid,glvertexid, glvertexid, glvertexid);
+    gl_FragColor = vec4(vGlVertexID,vGlVertexID, vGlVertexID, vGlVertexID);
   }
 `;
 
 </code></pre>
+<p>
+  On a un attribute 'aGlVertexID' de type float. 
+  Ces valeurs vont être chargées à partir d'un buffer que j'explique plus tard.
+  Pour chaque valeur on calcule la position 'x' sur l'écran.
+  Sur cette position la couleur est définie dans le shader 'fs'.
+  Ici le but n'est pas de définir une couleur, mais une valeur qui nous permettra de comprendre de simuler gl_VertexID.
+</p>
 
-<pre><code class="lecode">function createShader(gl, type, src) {
-  const sh = gl.createShader(type);
-  gl.shaderSource(sh, src);
-  gl.compileShader(sh);
-  return sh;
-}
+<pre><code class="lecode">let vertexShader = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vertexShader, vs);
+gl.compileShader(vertexShader);
+
+let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(fragmentShader, fs);
+gl.compileShader(fragmentShader);
 
 const prg = gl.createProgram(gl);
-gl.attachShader(prg, createShader(gl, gl.VERTEX_SHADER, vs));
-gl.attachShader(prg, createShader(gl, gl.FRAGMENT_SHADER, fs));
+gl.attachShader(prg, vertexShader);
+gl.attachShader(prg, fragmentShader);
 gl.linkProgram(prg);
 gl.useProgram(prg);
 
@@ -98,13 +106,6 @@ vertexIds.forEach((v, i) => {
 const idBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, idBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, vertexIds, gl.STATIC_DRAW);
-
-
-
-//gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-//gl.bufferData(gl.ARRAY_BUFFER,  0, gl.STATIC_DRAW);
-//gl.enableVertexAttribArray(0);
-//gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 0, 0);
 
  
 const targetTexture = gl.createTexture();
@@ -150,7 +151,7 @@ gl.readPixels(0, 0, lx, ly, gl.RGBA, gl.FLOAT, data);</code></pre>
 
 
   <script type="module">
- import {syntaxHighlightAll} from '../colorizeur.js';
+import {syntaxHighlightAll} from '../colorizeur.js';
 
 
 let lx=5;
