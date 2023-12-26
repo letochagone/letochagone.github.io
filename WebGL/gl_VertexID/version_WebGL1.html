@@ -4,6 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>gl_VertexID</title>
+
+    <style>
+      body {
+        font-size: calc(15px + 0.390625vw);
+      }
+      code {
+        _display: block;
+      }
+    </style>
   
   </head>
   <body>
@@ -11,7 +20,8 @@
       le but est de comprendre l'élément gl_VertexID.
 
     </p>
-
+<pre>ceci est un element PRE zef f zf  zf ze f fze ze zzf ze fzfzef ze zf zef zefzefZEFZE EZF  zefzef zfe fe ZFZEf fZE ZF ezfzf zef zef zef ZEF ZE FZEF </pre>
+<code>ceci est un element CODE rrgeg erg erg erg reg er gre ger greg erg erg er greg er gre reg regrrgergre er egre erg eg erg erg erg er gerg erg ergeggerg </code>
 <pre><code class="lecode">let lx=5;
 let ly=1;
 let canvas = document.createElement("canvas");
@@ -19,9 +29,20 @@ canvas.width=lx;
 canvas.width=ly;
 const gl = canvas.getContext('webgl');
 const ext = gl.getExtension("OES_texture_float");
-
-gl.viewport(0,0,lx,ly);
-const vs = `
+</code></pre>
+<p>"OES_texture_float" cette extension permet d'écrire dans les textures des nombres réels, au delà de l'intervalle [0,1] </p>
+<pre><code class="lecode">gl.viewport(0,0,lx,ly);
+</code></pre>
+<p>
+  ci-dessous, les 2 shaders, le vertex shader et le fragment shader.
+</p>
+<p>
+  Dans le vertex, on donne les positions des points, et dans le fragment leurs couleurs.
+  Les positions sont  données à partir d'un buffer.
+  Ici, le rôle du buffer est d'implémenter la variable gl_VertexID du WebGL version 2.0.
+  De la simuler.
+</p>
+<pre><code class="lecode">const vs = `
   varying float glvertexid;
 
   attribute float gl_VertexID;
@@ -30,7 +51,7 @@ const vs = `
   void main() {
     float k = gl_VertexID;
 
-    float x= -1.0 + ( 2.0*k+1.0)/${lx}.0;
+    float x= -1.0 + ( 2.0 * k + 1.0) / ${lx}.0 ;
 
     glvertexid = gl_VertexID;
 
@@ -39,7 +60,7 @@ const vs = `
   }
 `;
 
-const fs = `#version 300 es
+const fs = `
   precision highp float;
 
   varying float glvertexid;
@@ -50,7 +71,9 @@ const fs = `#version 300 es
   }
 `;
 
-function createShader(gl, type, src) {
+</code></pre>
+
+<pre><code class="lecode">function createShader(gl, type, src) {
   const sh = gl.createShader(type);
   gl.shaderSource(sh, src);
   gl.compileShader(sh);
