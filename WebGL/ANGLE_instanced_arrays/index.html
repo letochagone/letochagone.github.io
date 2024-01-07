@@ -73,7 +73,16 @@ void main() {
 }
 `;
 
-const prg = twgl.createProgram(gl, [pointsVS, pointsFS]);
+let vertShader = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vertShader, pointsVS);
+	        gl.compileShader(vertShader);
+	        let fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+	        gl.shaderSource(fragShader, pointsFS);
+	        gl.compileShader(fragShader);
+	        let prg = gl.createProgram();
+	        gl.attachShader(prg, vertShader);
+	        gl.attachShader(prg, fragShader);
+	        gl.linkProgram(prg);
 gl.useProgram(prg);
 
 const posLoc = gl.getAttribLocation(prg, "position");
