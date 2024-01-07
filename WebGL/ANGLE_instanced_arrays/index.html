@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emulated (Better) gl.POINTS</title>
+    <style>
+html, body { margin: 0; height: 100%; }
+canvas { width: 100%; height: 100%; display: block; }
+#info {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 0.5em;
+  font-family: monospace;
+}
+#info a {
+  color: orange;
+}
+    </style>
+  </head>
+  <body>
+<canvas></canvas>
+<div id="info">See <a target="_blank" href="https://jsgist.org/?src=dd9bea6a850447dde59dc50eeb402c1c">here</a> for non-emulated gl.POINTS</div>
+
+  </body>
+  <script>
+
+const canvas=document.querySelector('canvas');
+const gl = canvas.getContext('webgl');
+const ext = gl.getExtension('ANGLE_instanced_arrays');
+
+const displayWidth  = canvas.clientWidth;
+const displayHeight = canvas.clientHeight;
+ // Check if the canvas is not the same size.
+const needResize = canvas.width  !== displayWidth || canvas.height !== displayHeight;
+if (needResize) {
+  // Make the canvas the same size
+  canvas.width  = displayWidth;
+  canvas.height = displayHeight;
+}
+gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+
+const pointsVS = `
+attribute vec2 position;
+attribute vec2 unitQuad;
+uniform vec2 resolution;
+
+varying vec2 vemu_PointCoord;
+
+void main() { 
+
+  float emu_PointSize = 64.0;
+  
+  gl_Position = vec4(position,0,1);
+
+  // emu
+  gl_Position.xy += (unitQuad - 0.5) * 2.0 * emu_PointSize / resolution;
+
+  vemu_PointCoord = vec2(unitQuad.x, 1.0 - unitQuad.y);
+}
+`;
+
+const pointsFS = `
+precision mediump float;
+varying vec2 vemu_PointCoord;
+void main() {
+  gl_FragColor = vec4(vemu_PointCoord, 0, 1);
+
+}
+`;
+
+const prg = twgl.createProgram(gl, [pointsVS, pointsFS]);
+gl.useProgram(prg);
+
+const posLoc = gl.getAttribLocation(prg, "position");
+const unitQuadLoc = gl.getAttribLocation(prg, "unitQuad");
+const resLoc = gl.getUniformLocation(prg, "resolution");
+
+
+const pointsBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, pointsBuffer);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
+  -0.5,-0.5,
+  0.5,0.5,
+  0.6,0.6,
+  -0.3,-0.3,
+  ]), gl.DYNAMIC_DRAW);
+gl.enableVertexAttribArray(posLoc);
+gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+ext.vertexAttribDivisorANGLE(posLoc, 2);   // don't forget to reset to this zero if you draw something else 
+ 
+const unitQuadBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, unitQuadBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+   0,  0,
+   1,  0,
+   0,  1,
+   0,  1,
+   1,  0,
+   1,  1,
+]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(unitQuadLoc);
+gl.vertexAttribPointer(unitQuadLoc, 2, gl.FLOAT, false, 0, 0);
+
+
+ 
+gl.useProgram(prg);
+gl.uniform2f(resLoc, gl.canvas.width, gl.canvas.height);
+const numPoints = 4;
+ext.drawArraysInstancedANGLE(gl.TRIANGLES, 0, 6, numPoints);
+
+
+  </script>
+</html>
