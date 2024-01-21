@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emulated (Better) gl.POINTS</title>
+    <style>
+html, body { margin: 0; height: 100%; }
+canvas { width: 100%; height: 100%; display: block; }
+#info {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 0.5em;
+  font-family: monospace;
+}
+#info a {
+  color: orange;
+}
+    </style>
+  </head>
+  <body>
+
+	  <p>le putain d'objectif de cette page est d'expliquer par un exemple, la théorie du lien suivant
+		  https://registry.khronos.org/OpenGL/extensions/ANGLE/ANGLE_instanced_arrays.txt</p>
+<canvas></canvas>
+<div id="info">See <a target="_blank" href="https://jsgist.org/?src=dd9bea6a850447dde59dc50eeb402c1c">here</a> for non-emulated gl.POINTS</div>
+
+  </body>
+  <script>
+    "use strict";
+let images=[];
+
+function main() {
+
+
+
+
+const canvas=document.querySelector('canvas');
+const gl = canvas.getContext('webgl');
+const ext = gl.getExtension('ANGLE_instanced_arrays');
+
+const displayWidth  = canvas.clientWidth;
+const displayHeight = canvas.clientHeight;
+ // Check if the canvas is not the same size.
+const needResize = canvas.width  !== displayWidth || canvas.height !== displayHeight;
+if (needResize) {
+  // Make the canvas the same size
+  canvas.width  = displayWidth;
+  canvas.height = displayHeight;
+}
+gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+
+const pointsVS = `
+attribute vec2 position;
+attribute vec2 unitQuad;
+uniform vec2 resolution;
+
+varying vec2 vemu_PointCoord;
+
+void main() { 
+
+  float emu_PointSize = 128.0;
+  
+  gl_Position = vec4(position,0,1);
+
+  // emu
+  gl_Position.xy += (unitQuad - 0.5) * 2.0 * emu_PointSize / resolution;
+
+  vemu_PointCoord = vec2(unitQuad.x, 1.0 - unitQuad.y);
+}
+`;
+
+const pointsFS = `
+precision mediump float;
+varying vec2 vemu_PointCoord;
+
+uniform sampler2D pic;
+void main() {
+  gl_FragColor = vec4(vemu_PointCoord, 0, 1);
+  //vec4 color = texture2D(pic,gl_PointCoord);
+    gl_FragColor = vec4(vemu_PointCoord, 0, 1);
+    gl_FragColor = texture2D(pic,
+    vemu_PointCoord
+    );
+    //gl_FragColor=vec4(vemu_PointCoord,0.0,1.0);
+
+
+}
+`;
+
+let vertShader = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vertShader, pointsVS);
+gl.compileShader(vertShader);
+let fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(fragShader, pointsFS);
+gl.compileShader(fragShader);
+let prg = gl.createProgram();
+gl.attachShader(prg, vertShader);
+gl.attachShader(prg, fragShader);
+gl.linkProgram(prg);
+gl.useProgram(prg);
+
+const posLoc = gl.getAttribLocation(prg, "position");
+const unitQuadLoc = gl.getAttribLocation(prg, "unitQuad");
+const resLoc = gl.getUniformLocation(prg, "resolution");
+
+
+const pointsBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, pointsBuffer);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
+  -0.5,-0.5,
+  0.5,0.5,
+  0.6,0.6,
+  -0.3,-0.3,
+  ]), gl.DYNAMIC_DRAW);
+gl.enableVertexAttribArray(posLoc);
+gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+ext.vertexAttribDivisorANGLE(posLoc, 2);   // don't forget to reset to this zero if you draw something else 
+ 
+const unitQuadBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, unitQuadBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+   0,  0,
+   1,  0,
+   0,  1,
+   0,  1,
+   1,  0,
+   1,  1,
+]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(unitQuadLoc);
+gl.vertexAttribPointer(unitQuadLoc, 2, gl.FLOAT, false, 0, 0);
+
+
+
+
+let texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D,texture);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[0]);
+
+gl.uniform2f(resLoc, gl.canvas.width, gl.canvas.height);
+const numPoints = 4;
+
+// Tell WebGL how to convert from clip space to pixels
+gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+ext.drawArraysInstancedANGLE(gl.TRIANGLES, 0, 6, numPoints);
+
+}
+
+
+
+
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+  });
+}
+
+
+async function loadImages(imgs) {
+  images = await Promise.all(imgs.map(loadImage));
+}
+
+async function init() {
+  await loadImages([
+     'face.png'
+       //'face.png'
+   // 'https://webglfundamentals.org/webgl/resources/f-texture.png',
+   // 'https://webglfundamentals.org/webgl/lessons/resources/noodles-01.jpg',
+  ]);
+console.log(images[0]);
+
+     let img = document.createElement('img');
+            img.src = images[0].src;
+
+            let body = document.querySelector("body");
+            body.appendChild(img);
+
+  main();
+}
+
+init();
+
+
+  </script>
+</html>
+
+<!--
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+  });
+}
+
+async function loadImages(imgs) {
+  images = await Promise.all(imgs.map(loadImage));
+}
+
+async function main() {
+  await loadImages([
+       'pic.png'
+   // 'https://webglfundamentals.org/webgl/resources/f-texture.png',
+   // 'https://webglfundamentals.org/webgl/lessons/resources/noodles-01.jpg',
+  ]);
+  init();
+}
+main();
+-->
+
