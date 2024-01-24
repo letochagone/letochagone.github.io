@@ -7,14 +7,14 @@
 <body>
 
 
-  <h1 style="color:white">Ceci est l'image particle.png intégrée dans le document html par l'élément &lt;img&gt;</h1>
+  <h1 style="color:white">superposition de 2 éléments &lt;img&gt; contenant particle.png </h1>
   <image src="particle.png">
     <image src="particle.png" style="position:relative;left:-128px">
 
   <br>
 
 
-  <h1 style="color:white">canvas</h1>
+  <h1 style="color:white">...la même chose en WebGL</h1>
   <canvas id="glcanvas"></canvas>
   <br>
 
@@ -52,7 +52,6 @@ let fragment=`
 
             vec4 color= texture2D(particle, gl_PointCoord);
             gl_FragColor = vec4( color.rgb * color.a , color.a);
-            //gl_FragColor=color;
 
 
         }
@@ -136,9 +135,35 @@ main();
 
       let aPosition = gl.getAttribLocation(program,"position");
       gl.enableVertexAttribArray(aPosition);
+      /*
+      global state:
+        vertex_array_binding: null (defaut VAO)
+           vertex_array[*defaut*]
+             attributes:
+               enabled | size | type | normalize | stride | offset | divisor | buffer
+               ======================================================================
+               true    | 4    | FLOAT| false     |    0   |      0 |       0 | null
+ 
+
+      */
 
       let buffer= gl.createBuffer();
+      /*
+      buffer[buffer]
+      =============
+      data:
+
+      */
       gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+      /*
+      comon_state
+      --------------------------------
+      | ARRAY_BUFFER_BINDING | buffer| ========> buffer[buffer]
+      ---------------------------------          ==============
+      |                      |       |           data:
+      ---------------------------------
+
+      */
       gl.bufferData(
         gl.ARRAY_BUFFER,
         new Float32Array(
@@ -149,16 +174,77 @@ main();
         ),
         gl.STATIC_DRAW
       );
+      /*
+          
+      comon_state
+      --------------------------------
+      | ARRAY_BUFFER_BINDING | buffer| ========> buffer[buffer]
+      ---------------------------------          ==============
+      |                      |       |           data: -0.5 , 0.0,, 0.0 , 0.0
+      ---------------------------------
+
+      
+      */
 
       gl.vertexAttribPointer(aPosition,2,gl.FLOAT,false ,0,0);
+      /*
+      global state:
+        vertex_array_binding: null (defaut VAO)
+           vertex_array[*defaut*]
+             attributes:
+               enabled | size | type | normalize | stride | offset | divisor | buffer
+               ======================================================================
+               true    | 2    | FLOAT| false     |    0   |      0 |       0 | buffer (le buffer 'bindé', actuellement lié, currently bound)
+               ----------------------------------------------------------------------
+               ....
+               .....
+ 
 
+      */
+
+//Textures provide random access data to shaders. Most often they contain image data but not always.
 
       let imageTexture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, imageTexture);
+      /*
+        texture[imageTexture]
+        =====================
+        mips:
+        texture state:
+      */
+      //and bound to a texture unit bind point (target) with
+      let texUnitIndex= 3;
+      gl.activeTexture(gl.TEXTURE0 + texUnitIndex);
+      const bindPoint = gl.TEXTURE_2D;
+      gl.bindTexture(bindPoint, imageTexture);
+//All texture functions reference textures through the bind points on the active texture unit. ie.
+//texture = texture_units[activeTexture][bindPoint
+/*
+global state:
+  vertex_array_binding:...
+   vertex_array[*defaut*]
+   ....
+
+   texture_units:
+     TEXTURE_2D     | TEXTURE_CUBE_MAP
+     ===============================
+  0:   null         | null
+  1:   null         | null
+  2:   null         | null
+  3:   imageTexture | null
+  4:   null         | null
+  5:   null         | null
+  6:   null         | null
+  7:   null         | null
+
+*/
+
 
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[0]);
       //gl.generateMipmap(gl.TEXTURE_2D);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    //the texture affected is the current active texture on the specified bind point
+      //webglState.textureUnits[activeTexture][bindPoint]
+
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
