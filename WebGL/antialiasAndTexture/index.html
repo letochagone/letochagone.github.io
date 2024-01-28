@@ -2,26 +2,69 @@
 
 <html>
 <style>
-  body {background-color: rgb(0,0,0)}
+
+  .damier {
+    background: conic-gradient(
+      #999 0.25turn,
+      #666 0.25turn 0.5turn,
+      #999 0.5turn 0.75turn,
+      #666 0.75turn
+    ) top left / 25% 25% repeat;
+
+    background-size: 8px 8px;
+  }
+
+
 </style>
 <body>
+  <p>
+    le but de cette page est d'expliquer l'importance du "premultiplied alpha" en WebGL.
+
+  </p>
+
+  <p>on a une image au format png, comportant des zones plus ou moins transparentes.</p>
+
+  <p>cliquez sur l'image pour la télécharger :<p>
+<a href="uneParticle.png" download>
+  <img class="damier" src="uneParticle.png"  width="64" height="64">
+</a>
+  <p>Voici cette image chargée dans le logiciel Pinta</p>
+  <img src="a.png" style="width:50%">
 
 
-  <h1 style="color:white">superposition de 2 éléments &lt;img&gt; contenant particle.png </h1>
-  <image src="particle.png">
-    <image src="particle.png" style="position:relative;left:-128px">
 
+
+  <p>
+    On ajoute un calque au dessous . On le rempli avec la couleur noire.
+  </p>
+  <img src="b.png" style="width:50%">
+
+
+
+
+  <p>Plaçons cette image comme élément d'une balise &lt;img&gt; (avec un fond noir)
+     <br>
+       &lt;img src="particle.png" style="background-color:black" &gt;
+
+
+  </p>
+  <img src="uneParticle.png" style="background-color: black;">
+
+
+  <h4>
+    Enfin  avec du code WebGL
+  </h4>
+ <div id="buffers1"></div>
   <br>
 
-
-  <h1 style="color:white">...la même chose en WebGL</h1>
-  <canvas id="glcanvas"></canvas>
+  <canvas id="glcanvas1"></canvas>
   <br>
 
+  <h1>oups....mais y a un problème !</h1>
 
-  <h1 style="color:white">buffer 1</h1>
-  <div id="buffers1"></div>
-  <br>
+  <canvas id="glcanvas2"></canvas>
+
+ 
 
   <h1 style="color:white">buffer 2</h1>
   <div id="buffers2"></div>
@@ -33,33 +76,7 @@
 
 
 
-    let vertex=`
-
-        attribute vec2 position;
-
-        void main() {
-          gl_Position = vec4(position,0, 1); 
-          gl_PointSize = 256.0;
-
-
-        }
-`;
-let fragment=`
-
-        precision highp float;
-        uniform sampler2D particle;
-        void main() {
-
-            vec4 color= texture2D(particle, gl_PointCoord);
-            gl_FragColor = vec4( color.rgb * color.a , color.a);
-
-
-        }
-`;
     
-  
-
-
 
 /*
     let image=new Image();
@@ -86,56 +103,75 @@ async function loadImages(imgs) {
 
 async function main() {
   await loadImages([
-       'particle.png'
+       'uneParticle.png'
   ]);
-  go();
+
+    let vertex=`
+    attribute vec2 position;
+    void main() {
+      gl_Position = vec4(position,0, 1);
+      gl_PointSize = 256.0;
+    }
+  `;
+  let fragment=`
+    precision highp float;
+    uniform sampler2D particle;
+    void main() {
+      vec4 color= texture2D(particle, gl_PointCoord);
+      gl_FragColor = vec4( color.rgb * color.a , color.a);
+      gl_FragColor=color;
+    }
+  `;
+  go1("glcanvas1",vertex,fragment);
+
+   fragment=`
+    precision highp float;
+    uniform sampler2D particle;
+    void main() {
+      vec4 color= texture2D(particle, gl_PointCoord);
+      gl_FragColor = vec4( color.rgb * color.a , color.a);
+    }
+  `;
+  go1("glcanvas2",vertex,fragment);
+
+  //go2();
+         //duplicateCanvas2(canvas,"buffers1");
+
 }
+
+
+
+
+
 main();
 
 
 
 
+function go1(leCanvas,vertex,fragment) {
 
 
+  const canvas = document.getElementById(leCanvas);
+  canvas.width=256;
+  canvas.height=256;
+  const gl = canvas.getContext("webgl");
 
+  let program = gl.createProgram();
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(vertexShader, vertex);
+  gl.shaderSource(fragmentShader, fragment);
+  gl.compileShader(vertexShader);
+  gl.compileShader(fragmentShader);
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
 
+  gl.useProgram(program);
 
-
-
-
-    function go() {
-
-
-      const canvas = document.getElementById("glcanvas");
-      canvas.width=512;
-      canvas.height=256;
-      //canvas.style.backgroundColor="black";
-      const gl = canvas.getContext(
-            "webgl",
-            {
-                //depth: false,
-                //alpha: false,
-                //stencil: false,
-                //premultipliedAlpha: false,
-            }
-          );
-
-      let program = gl.createProgram();
-      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-      gl.shaderSource(vertexShader, vertex);
-      gl.shaderSource(fragmentShader, fragment);
-      gl.compileShader(vertexShader);
-      gl.compileShader(fragmentShader);
-      gl.attachShader(program, vertexShader);
-      gl.attachShader(program, fragmentShader);
-      gl.linkProgram(program);
-
-      gl.useProgram(program);
-
-      let aPosition = gl.getAttribLocation(program,"position");
-      gl.enableVertexAttribArray(aPosition);
-      /*
+  let aPosition = gl.getAttribLocation(program,"position");
+  gl.enableVertexAttribArray(aPosition);
+  /*
       global state:
         vertex_array_binding: null (defaut VAO)
            vertex_array[*defaut*]
@@ -145,84 +181,84 @@ main();
                true    | 4    | FLOAT| false     |    0   |      0 |       0 | null
  
 
-      */
+  */
 
-      let particleLoc = gl.getUniformLocation(program,"particle");
+  let particleLoc = gl.getUniformLocation(program,"particle");
 
-      let buffer= gl.createBuffer();
-      /*
-      buffer[buffer]
-      =============
-      data:
+  let buffer= gl.createBuffer();
+  /*
+  buffer[buffer]
+  =============
+  data:
 
-      */
-      gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
-      /*
-      comon_state
-      --------------------------------
-      | ARRAY_BUFFER_BINDING | buffer| ========> buffer[buffer]
-      ---------------------------------          ==============
-      |                      |       |           data:
-      ---------------------------------
+  */
+  gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+  /*
+  comon_state
+  --------------------------------
+  | ARRAY_BUFFER_BINDING | buffer| ========> buffer[buffer]
+  ---------------------------------          ==============
+  |                      |       |           data:
+  ---------------------------------
 
-      */
-      gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array(
-          [
-            -0.5, 0.0,
-            +0.0, 0.0
-          ]
-        ),
-        gl.STATIC_DRAW
-      );
-      /*
-          
-      comon_state
-      --------------------------------
-      | ARRAY_BUFFER_BINDING | buffer| ========> buffer[buffer]
-      ---------------------------------          ==============
-      |                      |       |           data: -0.5 , 0.0,, 0.0 , 0.0
-      ---------------------------------
-
+  */
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(
+      [
+        -0.0, 0.0,
+        //+0.5, 0.0
+      ]
+    ),
+    gl.STATIC_DRAW
+  );
+  /*
       
-      */
+  comon_state
+  --------------------------------
+  | ARRAY_BUFFER_BINDING | buffer| ========> buffer[buffer]
+  ---------------------------------          ==============
+  |                      |       |           data: -0.5 , 0.0,, 0.0 , 0.0
+  ---------------------------------
 
-      gl.vertexAttribPointer(aPosition,2,gl.FLOAT,false ,0,0);
-      /*
-      global state:
-        vertex_array_binding: null (defaut VAO)
-           vertex_array[*defaut*]
-             attributes:
-               enabled | size | type | normalize | stride | offset | divisor | buffer
-               ======================================================================
-               true    | 2    | FLOAT| false     |    0   |      0 |       0 | buffer (le buffer 'bindé', actuellement lié, currently bound)
-               ----------------------------------------------------------------------
-               ....
-               .....
- 
+  
+  */
 
-      */
+  gl.vertexAttribPointer(aPosition,2,gl.FLOAT,false ,0,0);
+  /*
+  global state:
+    vertex_array_binding: null (defaut VAO)
+       vertex_array[*defaut*]
+         attributes:
+           enabled | size | type | normalize | stride | offset | divisor | buffer
+           ======================================================================
+           true    | 2    | FLOAT| false     |    0   |      0 |       0 | buffer (le buffer 'bindé', actuellement lié, currently bound)
+           ----------------------------------------------------------------------
+           ....
+           .....
 
-//Textures provide random access data to shaders. Most often they contain image data but not always.
 
-      let imageTexture = gl.createTexture();
-      /*
-        texture[imageTexture]
-        =====================
-        mips:
-        texture state:
-      */
-      //and bound to a texture unit bind point (target) with
-      let texUnitIndex= 3;
-      gl.activeTexture(gl.TEXTURE0 + texUnitIndex);
-      const bindPoint = gl.TEXTURE_2D;
-      gl.bindTexture(bindPoint, imageTexture);
-//All texture functions reference textures through the bind points on the active texture unit. ie.
-//texture = texture_units[activeTexture][bindPoint
-/*
-global state:
-  vertex_array_binding:...
+  */
+
+
+  let imageTexture = gl.createTexture();
+  /*
+    texture[imageTexture]
+    =====================
+    mips:
+    texture state:
+  */
+  //and bound to a texture unit bind point (target) with
+  let texUnitIndex= 3;
+  gl.activeTexture(gl.TEXTURE0 + texUnitIndex);
+  const bindPoint = gl.TEXTURE_2D;
+  gl.bindTexture(bindPoint, imageTexture);
+
+  //All texture functions reference textures through the bind points on the active texture unit. ie.
+  //texture = texture_units[activeTexture][bindPoint]
+  /*
+  global state:
+    vertex_array_binding:...
    vertex_array[*defaut*]
    ....
 
@@ -240,40 +276,44 @@ global state:
 
 */
 
-      gl.uniform1i(particleLoc, texUnitIndex);
+  gl.uniform1i(particleLoc, texUnitIndex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[0]);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  //the texture affected is the current active texture on the specified bind point
+  //webglState.textureUnits[activeTexture][bindPoint]
 
-
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[0]);
-      //gl.generateMipmap(gl.TEXTURE_2D);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    //the texture affected is the current active texture on the specified bind point
-      //webglState.textureUnits[activeTexture][bindPoint]
-
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-      gl.enable(gl.BLEND);
-    //gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-
-    gl.drawArrays(gl.POINTS, 0, 2);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  gl.clearColor(0,0,0,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.POINTS, 0, 1);
 
 
 
-/*
 
-        let  buffers1= document.getElementById("buffers1");
-        buffers1.style.width="400px";
-        buffers1.style.height="400px";
-        buffers1.style.backgroundColor="black";
 
-       duplicateCanvas("buffers1");
+       // let  buffers1= document.getElementById("buffers1");
+       // buffers1.style.width="256px";
+       // buffers1.style.height="256px";
 
-      //   gl.drawArrays(gl.POINTS, 0, 2);
+       //duplicateCanvas("buffers1");
+
+
+
+
+
+
+//https://stackoverflow.com/questions/14641618/webgl-invalid-value-attachshader-no-object-or-object-deleted-is-this-secretl
+
+
+       /*
+
 
         let  buffers2= document.getElementById("buffers2");
-        buffers2.style.width="400px";
-        buffers2.style.height="400px";
+        buffers2.style.width="256px";
+        buffers2.style.height="256px";
         buffers2.style.backgroundColor="black";
          duplicateCanvas("buffers2");
 
@@ -290,6 +330,14 @@ global state:
       image.src = glcanvas.toDataURL('image/png');
     }
 
+    function duplicateCanvas2(source,destination) {
+      let image = new Image();
+      image.onload = function() {
+        let div  = document.getElementById(destination);
+        div.appendChild(image);
+      }
+      image.src = source.toDataURL('image/png');
+    }
 
 
   </script>
