@@ -37,14 +37,13 @@ const code =dzdz.parentElement;
 
 function syntaxHighlight(elementId) {
 
-  let strMessage1=elementId;
 
-  let strReg1 = /"(.*?)"/g;
-  let strReg2 = /'(.*?)'/g; 
+  //let strReg1 = /"(.*?)"/g;// "abc" Fe3f e "def" =>  abc , def
+  //let strReg2 = /'(.*?)'/g; // 'abc' fzef 'def' =>  abc , def
 
   // '(fgerrge r re r)'  , . = a caracter  , .* , une suite de caracter , .*? la suite de caracter la plus petite
 
-  let strReg3 = /`([\w|\W|\s]*?)`/g ;
+  //let strReg3 = /`([\w|\W|\s]*?)`/g ;
 
   // \w matches any word caracter : a..z ou A...Z ou _
   // \W matches any no word caracater : sauf de ligne, tabulation, espace,
@@ -54,8 +53,8 @@ function syntaxHighlight(elementId) {
   /<(\w+?)>/g   va récupérer fjeejfe dans <fjeejfe>
   /<\\(\w+?)>/g va récupérer fjeejfe dans <\fjeejfe>
   */
-
-  //let maReg = /(<\\(\w+?)>|<(\w+?)>)/g ;
+  /*
+  let maReg = /(<\\(\w+?)>|<(\w+?)>)/g ;
   let maReg = /(&lt;\\(\w+?)&gt;|&lt;(\w+?)&gt;)/g ;
   let maReg2 = /(gl[\.|\s])/g ;
 
@@ -67,9 +66,8 @@ function syntaxHighlight(elementId) {
   let inlineCommentReg = /(\/\/.*)/g;
   let htmlTagReg = /(&lt;[^\&]*&gt;)/g;
 
-  let string = strMessage1.innerHTML;
 
-/*
+
   let parsed = string.replace(strReg1,'<span class="string">"$1"</span>');
   parsed = parsed.replace(maReg,'<span class="htmlWord">$1</span>');
   parsed = parsed.replace(maReg2,'<span class="glWord">$1</span>');
@@ -82,13 +80,53 @@ function syntaxHighlight(elementId) {
   //parsed = parsed.replace(htmlTagReg,'<span class="special-html">$1</span>');
   parsed = parsed.replace(specialCommentReg,'<span class="special-comment">$1</span>');
   parsed = parsed.replace(inlineCommentReg,'<span class="special-comment">$1</span>');
+  */
+ // (^\w|\w$|\W\w|\w\W)
 
-*/
+  let string = elementId.innerHTML;
+
   let  parsed ;
   {
     let reg = /\b(const|new|let|var|if|do|function|while|switch|for|foreach|in|continue|break)(?=[^\w])/g ;
+    /*
+     \b = limite de mots
+     f(?=[^\w]) = tous les f qui sont suivis d'autre chose qu'un caractere d'un mot
+     exemple: f;   f(espace)     f=   f!   
+     \b est une assertion sur la position courante dans le string
+     
+     The ?=n quantifier matches any string that is followed by a specific string n.  
+     example ?=ag  sur la chaine ahraghr donne ahr^aghr
+     (?=[^\w])  à la position après le dernier caractere d'un mot
+     exemple : zfeg^ ezf^  f^ 
+     \b avant le premier caracatere d'un mot
+
+       ^const^?    ^const^=  ^let^!
+    */
     parsed = string.replace(reg,'<span class="special">$1</span>');
   }
+
+
+  {
+    let reg = /\b(uniform|sampler2D)(?=[^\w])/g ;
+    /*
+     \b = limite de mots
+     f(?=[^\w]) = tous les f qui sont suivis d'autre chose qu'un caractere d'un mot
+     exemple: f;   f(espace)     f=   f!   
+     \b est une assertion sur la position courante dans le string
+     
+     The ?=n quantifier matches any string that is followed by a specific string n.  
+     example ?=ag  sur la chaine ahraghr donne ahr^aghr
+     (?=[^\w])  à la position après le dernier caractere d'un mot
+     exemple : zfeg^ ezf^  f^ 
+     \b avant le premier caracatere d'un mot
+
+       ^const^?    ^const^=  ^let^!
+    */
+    parsed = string.replace(reg,'<span class="glsl1">$1</span>');
+  }
+
+
+
 
 
   {
@@ -113,7 +151,7 @@ function syntaxHighlight(elementId) {
 
   }
 
-  strMessage1.innerHTML  = parsed;
+  elementId.innerHTML  = parsed;
 
 
 
@@ -129,6 +167,7 @@ const code =dzdz.parentElement;
     code.style.backgroundColor = "black";
     code.style.color = "white";
     code.style.padding="2vw";
+    code.style.whiteSpace="pre-wrap";
   }
 
 
@@ -136,6 +175,13 @@ const code =dzdz.parentElement;
   for (const special of AllSpecials) {
     special.style.color = '#D6665D';
   }
+
+  const AllTest1 = document.getElementsByClassName('glsl1');
+  for (const special of AllTest1) {
+    special.style.color = '#ff0000';
+  }
+
+
 
   const AllglWords = document.getElementsByClassName('glWord');
   for (const glWord of AllglWords) {
