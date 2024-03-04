@@ -1,0 +1,293 @@
+<!doctype html>
+<html>
+
+  <head>
+
+  	<style>
+
+canvas {
+width: 400px;
+height: 400px;
+image-rendering: pixelated;}
+  	</style>
+  </head>
+
+  <body>
+  	<canvas id="canvas"></canvas>
+
+
+<script>
+	"use strict";
+
+
+	let vertex=`
+    attribute vec2 coord;
+    uniform sampler2D positionTex;
+
+    void main() {
+
+      //float random(vec2 co) {
+      //return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+
+      vec2 position = texture2D(positionTex, coord).xy;
+      gl_Position = vec4(position, 0, 1);
+      gl_PointSize=1.0;
+    }
+  `;
+
+  let fragment=`
+    precision highp float;
+
+    void main() {
+      gl_FragColor=vec4(1,0,0,1);
+    }
+  `;
+
+  let vertex2=`
+    attribute vec2 coord;
+    attribute vec2 texCoord;
+
+
+    varying vec2 vCoord;
+    varying vec2 vTexCoord;
+
+    void main() {
+      vCoord = coord;
+      vTexCoord = texCoord;
+
+      gl_Position = vec4(coord, 0, 1);
+      gl_PointSize=1.0;
+    }
+  `;
+  let fragment2=`
+    precision highp float;
+
+    varying vec2 vCoord;
+    varying vec2 vTexCoord;
+
+    uniform sampler2D inTexture;
+
+    void main() {
+      vec4 inCol = texture2D(inTexture,vTexCoord );
+      //inCol.x=inCol.x+ 0.2;
+      gl_FragColor=inCol;
+    }
+  `;
+
+
+  var canvas = document.querySelector("#canvas");
+  canvas.width=40;
+  canvas.height=40;
+  var gl = canvas.getContext("webgl");
+  gl.getExtension('OES_texture_float');
+
+  var nllePositionsTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, nllePositionsTexture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA,    
+    3,          
+    1,        
+    0,   
+    gl.RGBA,
+    gl.FLOAT,
+    null);
+
+  var positionsTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, positionsTexture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texImage2D(
+    gl.TEXTURE_2D, 0, gl.RGBA,    
+    3,          
+    1,        
+    0,   
+    gl.RGBA,
+    gl.FLOAT,
+    new Float32Array([
+      -1+3/40,-1+3/40,0,0,
+      -1+47/40,-1+47/40,0,0,
+      -1+9/40,-1+9/40,0,0,
+    ])
+  );
+
+
+  let program = gl.createProgram();
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(vertexShader, vertex);
+  gl.shaderSource(fragmentShader, fragment);
+  gl.compileShader(vertexShader);
+  gl.compileShader(fragmentShader);
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+
+  let program2 = gl.createProgram();
+  const vertexShader2 = gl.createShader(gl.VERTEX_SHADER);
+  const fragmentShader2 = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(vertexShader2, vertex2);
+  gl.shaderSource(fragmentShader2, fragment2);
+  gl.compileShader(vertexShader2);
+  gl.compileShader(fragmentShader2);
+  gl.attachShader(program2, vertexShader2);
+  gl.attachShader(program2, fragmentShader2);
+  gl.linkProgram(program2);
+
+
+function go() {
+
+
+  gl.useProgram(program);
+
+  let coord = gl.getAttribLocation(program,"coord");
+  gl.enableVertexAttribArray(coord);
+
+  let coordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,coordBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER,
+    new Float32Array(
+      [ 
+        (0+0.5)/3,(0+0.5)/1,
+        (1+0.5)/3,(0+0.5)/1,
+        (2+0.5)/3,(0+0.5)/1,
+   
+      ]
+    ),
+    gl.STATIC_DRAW
+  );  
+  gl.vertexAttribPointer(coord,2,gl.FLOAT,false,0,0);
+
+  gl.viewport(0, 0, gl.canvas.width,gl.canvas.height);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+
+  gl.bindTexture(gl.TEXTURE_2D, positionsTexture);
+
+  gl.drawArrays(gl.POINTS, 0, 3);
+
+  lireTexture(positionsTexture,3,1);
+
+
+
+
+
+  gl.useProgram(program2);
+  gl.viewport(0,0,3,1);
+
+  let coord2 = gl.getAttribLocation(program2,"coord");
+  gl.enableVertexAttribArray(coord2);
+  let coordBuffer2 = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,coordBuffer2);
+  gl.bufferData(gl.ARRAY_BUFFER,
+    new Float32Array(
+      [ 
+        -1,-1,
+        -1,+1,
+        +1,-1,
+        +1,-1,
+        -1,+1,
+        +1,+1,
+   
+      ]
+    ),
+    gl.STATIC_DRAW
+  );
+  gl.vertexAttribPointer(coord2,2,gl.FLOAT,false,0,0);
+
+  let texCoord = gl.getAttribLocation(program2,"texCoord");
+  gl.enableVertexAttribArray(texCoord);
+  let texCoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,texCoordBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER,
+    new Float32Array(
+      [
+        0,0,
+        0,1,
+        1,0,
+        1,0,
+        0,1,
+        1,1,
+   
+      ]
+    ),
+    gl.STATIC_DRAW
+  );
+  gl.vertexAttribPointer(texCoord,2,gl.FLOAT,false,0,0);
+
+  gl.bindTexture(gl.TEXTURE_2D, positionsTexture);
+
+  var fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, nllePositionsTexture, 0);
+
+  gl.drawArrays(gl.TRIANGLES,0,6);
+  lireTexture(nllePositionsTexture,3,1);
+
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  gl.viewport(0, 0, gl.canvas.width,gl.canvas.height);
+  gl.useProgram(program);
+  gl.clearColor(0,0,1,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+
+
+  gl.bindBuffer(gl.ARRAY_BUFFER,coordBuffer); //ligne1
+    gl.vertexAttribPointer(coord,2,gl.FLOAT,false,0,0); //ligne2
+
+/*
+j'avais pas mis ligne 1 et lign2
+ensuite j'ai mis que ligne 1 sans mettre ligne 2
+expliquer pourquoi la ligne 1 , changement du buffer, nécessite qu'elle soit suivi de la ligne 2
+*/
+
+
+  gl.bindTexture(gl.TEXTURE_2D, nllePositionsTexture);
+
+  gl.drawArrays(gl.POINTS, 0, 3);
+
+
+
+}
+
+
+
+function lireTexture(tex,width,height) {
+
+let currentFramebuffer=gl.getParameter(gl.FRAMEBUFFER_BINDING);
+
+var fb = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE) {
+  var pixels = new Float32Array(width * height * 4);
+  gl.readPixels(0, 0, width, height, gl.RGBA, gl.FLOAT, pixels);
+  console.log(pixels);
+}
+
+gl.bindFramebuffer(gl.FRAMEBUFFER, currentFramebuffer);
+
+}
+
+
+
+go()
+/*
+https://webglfundamentals.org/webgl/lessons/webgl-qna-how-to-process-particle-positions.html
+
+
+-afficher positionsTexture sur écran
+-modifier positionsTexture et afficher dans nellePositionTexture  
+
+tmp = positionsTexture
+positionTexture=nllePositionTexture
+nllePositionTexture=tmp
+
+*/
+</script>
+  </body>
+</html>
