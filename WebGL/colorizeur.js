@@ -122,7 +122,7 @@ function syntaxHighlight(elementId) {
 
        ^const^?    ^const^=  ^let^!
     */
-    parsed = string.replace(reg,'<span class="glsl1">$1</span>');
+    parsed = parsed.replace(reg,'<span class="glsl1">$1</span>');
   }
 
 
@@ -173,7 +173,9 @@ const code =dzdz.parentElement;
 
   const AllSpecials = document.getElementsByClassName('special');
   for (const special of AllSpecials) {
-    special.style.color = '#D6665D';
+    //special.style.color = '#D6665D';
+        special.style.color = '#00ff00';
+
   }
 
   const AllTest1 = document.getElementsByClassName('glsl1');
