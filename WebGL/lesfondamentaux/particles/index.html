@@ -1,4 +1,7 @@
 <!doctype html>
+<!--
+https://github.com/letochagone/letochagone.github.io/tree/master/WebGL/lesfondamentaux/particles
+-->
 <html>
 
   <head>
@@ -6,6 +9,7 @@
   	<style>
 
 canvas {
+  background: gray;
 width: 400px;
 height: 400px;
 image-rendering: pixelated;}
@@ -21,15 +25,15 @@ image-rendering: pixelated;}
 
 
 	let vertex=`
-    attribute vec2 coord;
-    uniform sampler2D positionTex;
+    attribute vec2 a_texcoord;
+    uniform sampler2D u_texture;
 
     void main() {
 
       //float random(vec2 co) {
       //return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
 
-      vec2 position = texture2D(positionTex, coord).xy;
+      vec2 position = texture2D(u_texture, a_texcoord).xy;
       gl_Position = vec4(position, 0, 1);
       gl_PointSize=1.0;
     }
@@ -44,18 +48,18 @@ image-rendering: pixelated;}
   `;
 
   let vertex2=`
-    attribute vec2 coord;
-    attribute vec2 texCoord;
+    attribute vec2 a_position;
+    attribute vec2 a_texcoord;
 
 
     varying vec2 vCoord;
     varying vec2 vTexCoord;
 
     void main() {
-      vCoord = coord;
-      vTexCoord = texCoord;
+      vCoord = a_position;
+      vTexCoord = a_texcoord;
 
-      gl_Position = vec4(coord, 0, 1);
+      gl_Position = vec4(a_position, 0, 1);
       gl_PointSize=1.0;
     }
   `;
@@ -65,12 +69,38 @@ image-rendering: pixelated;}
     varying vec2 vCoord;
     varying vec2 vTexCoord;
 
-    uniform sampler2D inTexture;
+    uniform sampler2D u_texture;
 
+    vec4 euclideanModulo(vec4 n, vec4 m) {
+      return mod(mod(n, m) + m, m);
+    }
+
+    float random(vec2 co) {
+        return
+          fract(
+            sin(
+              dot(
+                co.xy,
+                vec2(12.9898, 78.233)
+              )
+            ) * 43758.5453
+          );
+    }
     void main() {
-      vec4 inCol = texture2D(inTexture,vTexCoord );
-      //inCol.x=inCol.x+ 0.2;
-      gl_FragColor=inCol;
+      vec4 pos = texture2D(u_texture,vTexCoord );
+      pos.x=pos.x+ 2.0/40.0;
+            //pos.y=pos.y+ 0.01;
+
+      
+
+    //outColor = euclideanModulo(curPos + velocity * deltaTime, vec4(resolution, 1, 1));
+    //pos = euclideanModulo(pos, vec4(resolution, 1, 1));
+       if (pos.x > 1.0 || pos.x < -1.0 || pos.y >1.0 || pos.y < -1.0) {
+              // pos.xy= vec2( (random(pos.xy) ) , (random(pos.xy+0.654) ));  
+        pos.x=-1.0+1.0/40.0;
+        }
+
+      gl_FragColor=pos;
     }
   `;
 
@@ -80,6 +110,9 @@ image-rendering: pixelated;}
   canvas.height=40;
   var gl = canvas.getContext("webgl");
   gl.getExtension('OES_texture_float');
+
+  const {width, height} = gl.canvas;
+
 
   var nllePositionsTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, nllePositionsTexture);
@@ -111,44 +144,37 @@ image-rendering: pixelated;}
     new Float32Array([
       -1+3/40,-1+3/40,0,0,
       -1+47/40,-1+47/40,0,0,
-      -1+9/40,-1+9/40,0,0,
+      -1+59/40,-1+69/40,0,0,
     ])
   );
 
 
-  let program = gl.createProgram();
+  let programAffichage = gl.createProgram();
   const vertexShader = gl.createShader(gl.VERTEX_SHADER);
   const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
   gl.shaderSource(vertexShader, vertex);
   gl.shaderSource(fragmentShader, fragment);
   gl.compileShader(vertexShader);
   gl.compileShader(fragmentShader);
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
+  gl.attachShader(programAffichage, vertexShader);
+  gl.attachShader(programAffichage, fragmentShader);
+  gl.linkProgram(programAffichage);
 
-  let program2 = gl.createProgram();
+  let programCalculPosition = gl.createProgram();
   const vertexShader2 = gl.createShader(gl.VERTEX_SHADER);
   const fragmentShader2 = gl.createShader(gl.FRAGMENT_SHADER);
   gl.shaderSource(vertexShader2, vertex2);
   gl.shaderSource(fragmentShader2, fragment2);
   gl.compileShader(vertexShader2);
   gl.compileShader(fragmentShader2);
-  gl.attachShader(program2, vertexShader2);
-  gl.attachShader(program2, fragmentShader2);
-  gl.linkProgram(program2);
+  gl.attachShader(programCalculPosition, vertexShader2);
+  gl.attachShader(programCalculPosition, fragmentShader2);
+  gl.linkProgram(programCalculPosition);
 
 
-function go() {
 
-
-  gl.useProgram(program);
-
-  let coord = gl.getAttribLocation(program,"coord");
-  gl.enableVertexAttribArray(coord);
-
-  let coordBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER,coordBuffer);
+  let texcoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,texcoordBuffer);
   gl.bufferData(gl.ARRAY_BUFFER,
     new Float32Array(
       [ 
@@ -160,28 +186,9 @@ function go() {
     ),
     gl.STATIC_DRAW
   );  
-  gl.vertexAttribPointer(coord,2,gl.FLOAT,false,0,0);
 
-  gl.viewport(0, 0, gl.canvas.width,gl.canvas.height);
-  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-
-  gl.bindTexture(gl.TEXTURE_2D, positionsTexture);
-
-  gl.drawArrays(gl.POINTS, 0, 3);
-
-  lireTexture(positionsTexture,3,1);
-
-
-
-
-
-  gl.useProgram(program2);
-  gl.viewport(0,0,3,1);
-
-  let coord2 = gl.getAttribLocation(program2,"coord");
-  gl.enableVertexAttribArray(coord2);
-  let coordBuffer2 = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER,coordBuffer2);
+  let positionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,positionBuffer);
   gl.bufferData(gl.ARRAY_BUFFER,
     new Float32Array(
       [ 
@@ -196,10 +203,8 @@ function go() {
     ),
     gl.STATIC_DRAW
   );
-  gl.vertexAttribPointer(coord2,2,gl.FLOAT,false,0,0);
 
-  let texCoord = gl.getAttribLocation(program2,"texCoord");
-  gl.enableVertexAttribArray(texCoord);
+
   let texCoordBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER,texCoordBuffer);
   gl.bufferData(gl.ARRAY_BUFFER,
@@ -216,7 +221,56 @@ function go() {
     ),
     gl.STATIC_DRAW
   );
-  gl.vertexAttribPointer(texCoord,2,gl.FLOAT,false,0,0);
+
+
+
+
+let then = 0;
+function go(now) {
+  now *= 0.001;  // convert to seconds
+  const deltaTime = now - then;
+  then = now;
+
+  gl.useProgram(programAffichage);
+
+  {
+      let texcoordLoc = gl.getAttribLocation(programAffichage,"a_texcoord");
+  gl.enableVertexAttribArray(texcoordLoc);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER,texcoordBuffer);
+
+  gl.vertexAttribPointer(texcoordLoc,2,gl.FLOAT,false,0,0);
+  }
+
+
+  gl.viewport(0, 0, gl.canvas.width,gl.canvas.height);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+
+  gl.bindTexture(gl.TEXTURE_2D, positionsTexture);
+
+  gl.drawArrays(gl.POINTS, 0, 3);
+
+  //lireTexture(positionsTexture,3,1);
+
+
+
+  gl.useProgram(programCalculPosition);
+  gl.viewport(0,0,3,1);
+
+  let positionLoc = gl.getAttribLocation(programCalculPosition,"a_position");
+  gl.enableVertexAttribArray(positionLoc);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER,positionBuffer);
+
+  gl.vertexAttribPointer(positionLoc,2,gl.FLOAT,false,0,0);
+
+  {
+    let texcoordLoc = gl.getAttribLocation(programCalculPosition,"a_texcoord");
+  gl.enableVertexAttribArray(texcoordLoc);
+  gl.bindBuffer(gl.ARRAY_BUFFER,texCoordBuffer);
+  gl.vertexAttribPointer(texcoordLoc,2,gl.FLOAT,false,0,0);
+  }
+
 
   gl.bindTexture(gl.TEXTURE_2D, positionsTexture);
 
@@ -225,30 +279,17 @@ function go() {
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, nllePositionsTexture, 0);
 
   gl.drawArrays(gl.TRIANGLES,0,6);
-  lireTexture(nllePositionsTexture,3,1);
-
-
-  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-  gl.viewport(0, 0, gl.canvas.width,gl.canvas.height);
-  gl.useProgram(program);
-  gl.clearColor(0,0,1,1);
-  gl.clear(gl.COLOR_BUFFER_BIT);
+  //lireTexture(nllePositionsTexture,3,1);
 
 
 
-  gl.bindBuffer(gl.ARRAY_BUFFER,coordBuffer); //ligne1
-    gl.vertexAttribPointer(coord,2,gl.FLOAT,false,0,0); //ligne2
-
-/*
-j'avais pas mis ligne 1 et lign2
-ensuite j'ai mis que ligne 1 sans mettre ligne 2
-expliquer pourquoi la ligne 1 , changement du buffer, nécessite qu'elle soit suivi de la ligne 2
-*/
 
 
-  gl.bindTexture(gl.TEXTURE_2D, nllePositionsTexture);
 
-  gl.drawArrays(gl.POINTS, 0, 3);
+let tmp = positionsTexture;
+positionsTexture=nllePositionsTexture;
+nllePositionsTexture=tmp;
+requestAnimationFrame(go);
 
 
 
@@ -274,8 +315,9 @@ gl.bindFramebuffer(gl.FRAMEBUFFER, currentFramebuffer);
 }
 
 
+    requestAnimationFrame(go);
 
-go()
+
 /*
 https://webglfundamentals.org/webgl/lessons/webgl-qna-how-to-process-particle-positions.html
 
