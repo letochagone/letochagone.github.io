@@ -20,9 +20,11 @@ https://github.com/letochagone/letochagone.github.io/tree/master/WebGL/lesfondam
   <canvas id="canvas"></canvas>
 
 
-  <script>
+  <script type="module">
     "use strict";
-
+    
+    import {syntaxHighlightAll} from '../../colorizeur.hs';
+    syntaxHighlightAll("lecode");
 
     let vertex = `
     attribute vec2 a_texcoord;
