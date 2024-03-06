@@ -335,7 +335,302 @@ https://github.com/letochagone/letochagone.github.io/tree/master/WebGL/lesfondam
   </script>
 
     <pre><code class="lecode">
-    let canvas= 
+
+
+ let vertex = `
+    attribute vec2 a_texcoord;
+    uniform sampler2D u_texture;
+
+    void main() {
+
+      //float random(vec2 co) {
+      //return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+
+      vec2 position = texture2D(u_texture, a_texcoord).xy;
+      gl_Position = vec4(position, 0, 1);
+      gl_PointSize=1.0;
+    }
+  `;
+
+    let fragment = `
+    precision highp float;
+
+    void main() {
+      gl_FragColor=vec4(1,0,0,1);
+    }
+  `;
+
+    let vertex2 = `
+    attribute vec2 a_position;
+    attribute vec2 a_texcoord;
+
+
+    varying vec2 vCoord;
+    varying vec2 vTexCoord;
+
+    void main() {
+      vCoord = a_position;
+      vTexCoord = a_texcoord;
+
+      gl_Position = vec4(a_position, 0, 1);
+      gl_PointSize=1.0;
+    }
+  `;
+    let fragment2 = `
+    precision highp float;
+
+    varying vec2 vCoord;
+    varying vec2 vTexCoord;
+
+    uniform sampler2D u_texture;
+
+    vec4 euclideanModulo(vec4 n, vec4 m) {
+      return mod(mod(n, m) + m, m);
+    }
+
+    float random(vec2 co) {
+        return
+          fract(
+            sin(
+              dot(
+                co.xy,
+                vec2(12.9898, 78.233)
+              )
+            ) * 43758.5453
+          );
+    }
+    void main() {
+      vec4 pos = texture2D(u_texture,vTexCoord );
+      pos.x=pos.x+ 2.0/40.0;
+            //pos.y=pos.y+ 0.01;
+
+      
+
+    //outColor = euclideanModulo(curPos + velocity * deltaTime, vec4(resolution, 1, 1));
+    //pos = euclideanModulo(pos, vec4(resolution, 1, 1));
+       if (pos.x > 1.0 || pos.x < -1.0 || pos.y >1.0 || pos.y < -1.0) {
+              // pos.xy= vec2( (random(pos.xy) ) , (random(pos.xy+0.654) ));  
+        pos.x=-1.0+1.0/40.0;
+        }
+
+      gl_FragColor=pos;
+    }
+  `;
+
+
+    var canvas = document.querySelector("#canvas");
+    canvas.width = 40;
+    canvas.height = 40;
+    var gl = canvas.getContext("webgl");
+    gl.getExtension('OES_texture_float');
+
+    const { width, height } = gl.canvas;
+
+
+    var nllePositionsTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, nllePositionsTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
+      3,
+      1,
+      0,
+      gl.RGBA,
+      gl.FLOAT,
+      null);
+
+    var positionsTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, positionsTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.RGBA,
+      3,
+      1,
+      0,
+      gl.RGBA,
+      gl.FLOAT,
+      new Float32Array([
+        -1 + 3 / 40, -1 + 3 / 40, 0, 0,
+        -1 + 47 / 40, -1 + 47 / 40, 0, 0,
+        -1 + 59 / 40, -1 + 69 / 40, 0, 0,
+      ])
+    );
+
+
+    let programAffichage = gl.createProgram();
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(vertexShader, vertex);
+    gl.shaderSource(fragmentShader, fragment);
+    gl.compileShader(vertexShader);
+    gl.compileShader(fragmentShader);
+    gl.attachShader(programAffichage, vertexShader);
+    gl.attachShader(programAffichage, fragmentShader);
+    gl.linkProgram(programAffichage);
+
+    let programCalculPosition = gl.createProgram();
+    const vertexShader2 = gl.createShader(gl.VERTEX_SHADER);
+    const fragmentShader2 = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(vertexShader2, vertex2);
+    gl.shaderSource(fragmentShader2, fragment2);
+    gl.compileShader(vertexShader2);
+    gl.compileShader(fragmentShader2);
+    gl.attachShader(programCalculPosition, vertexShader2);
+    gl.attachShader(programCalculPosition, fragmentShader2);
+    gl.linkProgram(programCalculPosition);
+
+
+
+    let texcoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER,
+      new Float32Array(
+        [
+          (0 + 0.5) / 3, (0 + 0.5) / 1,
+          (1 + 0.5) / 3, (0 + 0.5) / 1,
+          (2 + 0.5) / 3, (0 + 0.5) / 1,
+
+        ]
+      ),
+      gl.STATIC_DRAW
+    );
+
+    let positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER,
+      new Float32Array(
+        [
+          -1, -1,
+          -1, +1,
+          +1, -1,
+          +1, -1,
+          -1, +1,
+          +1, +1,
+
+        ]
+      ),
+      gl.STATIC_DRAW
+    );
+
+
+    let texCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER,
+      new Float32Array(
+        [
+          0, 0,
+          0, 1,
+          1, 0,
+          1, 0,
+          0, 1,
+          1, 1,
+
+        ]
+      ),
+      gl.STATIC_DRAW
+    );
+
+
+
+
+    let then = 0;
+    function go(now) {
+      now *= 0.001;  // convert to seconds
+      const deltaTime = now - then;
+      then = now;
+
+      gl.useProgram(programAffichage);
+
+      {
+        let texcoordLoc = gl.getAttribLocation(programAffichage, "a_texcoord");
+        gl.enableVertexAttribArray(texcoordLoc);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+
+        gl.vertexAttribPointer(texcoordLoc, 2, gl.FLOAT, false, 0, 0);
+      }
+
+
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      gl.bindTexture(gl.TEXTURE_2D, positionsTexture);
+
+      gl.drawArrays(gl.POINTS, 0, 3);
+
+      //lireTexture(positionsTexture,3,1);
+
+
+
+      gl.useProgram(programCalculPosition);
+      gl.viewport(0, 0, 3, 1);
+
+      let positionLoc = gl.getAttribLocation(programCalculPosition, "a_position");
+      gl.enableVertexAttribArray(positionLoc);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+      gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
+
+      {
+        let texcoordLoc = gl.getAttribLocation(programCalculPosition, "a_texcoord");
+        gl.enableVertexAttribArray(texcoordLoc);
+        gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+        gl.vertexAttribPointer(texcoordLoc, 2, gl.FLOAT, false, 0, 0);
+      }
+
+
+      gl.bindTexture(gl.TEXTURE_2D, positionsTexture);
+
+      var fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, nllePositionsTexture, 0);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      //lireTexture(nllePositionsTexture,3,1);
+
+
+
+
+
+
+      let tmp = positionsTexture;
+      positionsTexture = nllePositionsTexture;
+      nllePositionsTexture = tmp;
+      requestAnimationFrame(go);
+
+
+
+    }
+
+
+
+    function lireTexture(tex, width, height) {
+
+      let currentFramebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+
+      var fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+      if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE) {
+        var pixels = new Float32Array(width * height * 4);
+        gl.readPixels(0, 0, width, height, gl.RGBA, gl.FLOAT, pixels);
+        console.log(pixels);
+      }
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, currentFramebuffer);
+
+    }
+
+
+    requestAnimationFrame(go);
+
+
   </code></pre>
 </body>
 
