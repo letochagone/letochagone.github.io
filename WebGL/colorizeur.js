@@ -164,8 +164,8 @@ function syntaxHighlight(elementId) {
 
     for (const dzdz of document.getElementsByClassName("lecode")) {
 const code =dzdz.parentElement;
-    code.style.backgroundColor = "black";
-    code.style.color = "white";
+    code.style.backgroundColor = "#282c34";
+    code.style.color = "#abb2bf";
     code.style.padding="2vw";
     code.style.whiteSpace="pre-wrap";
   }
