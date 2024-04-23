@@ -1,1 +1,188 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WebGL - No Data - Point Rain Repeat Less</title>
 
+
+    <style>
+#c {
+  width: 400px;
+  height: 400px;
+  image-rendering: pixelated;
+}
+</style>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+
+
+<script>
+'use strict';
+    const canvas = document.querySelector("#c");
+    canvas.width = 40;
+    canvas.height = 40;
+    const gl = canvas.getContext('webgl',{antialias:false});
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+
+const vs = `
+attribute vec2 a_points;
+
+
+uniform float time;
+
+float hash(float p) {
+  vec2 p2 = fract(vec2(p * 5.3983, p * 5.4427));
+  p2 += dot(p2.yx, p2.xy + vec2(21.5351, 14.3137));
+  return fract(p2.x * p2.y * 95.4337);
+}
+
+float y=0.0;
+void main() {
+   
+float seconde=floor(time/1000.0);
+
+//float ny=floor(5.0*time/1000.0);
+
+float g= mod(seconde,40.0);
+//time parcourt 1000 unités en 1 seconde
+//la valeur de time va de 1000 à 2000 en 1 seconde
+// time augmente de 1000 en 1 seconde
+// 2*time augment de 2000 en  1 seconde
+// 5*time augmente de 5000 en 1 seconde
+// 5*time/1000 augmente de 5 en 1 seconde: 1...1,4..1,8..2..2,8...3,7..4,6..5
+// floor(5*time/1000) : 1 2 3 4 5 : en 1 seconde
+//
+// time : ....1000..1546..1777....<1 seconde>..1988...2000.....<1 seconde>....4000....
+// time/1000 : 1..1.456...<1 seconde>....2.....<1 seconde>....3...
+// floor(time/1000) : 1 <1 sec> 2 <1 sec> 3
+float x= -1.0 +  (2.0*g+1.0)/40.0;
+//float y=0.0;
+   gl_Position = vec4(
+      x ,
+     0.0, 0.0, 1.0);
+
+float zeroToUn = hash(time);
+float zeroTo40 = zeroToUn * 40.0;
+float zeroTo40Int = floor(zeroTo40);
+float aleaX = -1.0+  (2.0*zeroTo40Int+1.0)/40.0;
+
+zeroToUn = hash(time+2.0);
+zeroTo40 = zeroToUn * 40.0;
+zeroTo40Int = floor(zeroTo40);
+float aleaY = -1.0+  (2.0*zeroTo40Int+1.0)/40.0;
+
+//gl_Position = vec4( aleaX ,aleaY, 0.0, 1.0);
+gl_PointSize = 1.0;
+}
+`;
+
+const fs = `
+precision mediump float;
+
+void main() {
+  gl_FragColor = vec4(0, 0, 1, 1);
+}
+`;
+
+// setup GLSL program
+    let program = gl.createProgram();
+    const vertexShader2 = gl.createShader(gl.VERTEX_SHADER);
+    const fragmentShader2 = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(vertexShader2, vs);
+    gl.shaderSource(fragmentShader2, fs);
+    gl.compileShader(vertexShader2);
+    gl.compileShader(fragmentShader2);
+    gl.attachShader(program, vertexShader2);
+    gl.attachShader(program, fragmentShader2);
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+
+
+const vertexIdLoc = gl.getAttribLocation(program, 'vertexId');
+const numVertsLoc = gl.getUniformLocation(program, 'numVerts');
+const timeLoc = gl.getUniformLocation(program, 'time');
+
+// Make a buffer with just a count in it.
+
+const numVerts = 5;
+const vertexIds = new Float32Array(numVerts);
+vertexIds.forEach((v, i) => {
+  vertexIds[i] = i;
+});
+
+const idBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, idBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, vertexIds, gl.STATIC_DRAW);
+
+
+let nombreImage=0;
+let starttime;
+
+
+function render(time) {
+  // The first time we're running rAF, we need to set the anchor point as to which we're going to calculate our duration
+    if (!starttime) {
+    starttime = time;
+  }
+
+  // How long have we been animating in total?
+  const runtime = time - starttime;
+
+
+  gl.useProgram(program);
+
+
+/*
+  {
+    gl.enableVertexAttribArray(vertexIdLoc);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, idBuffer);
+
+    const size = 1;          // 1 components per iteration
+    const type = gl.FLOAT;   // the data is 32bit floats
+    const normalize = false; // don't normalize the data
+    const stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+    const offset = 0;        // start at the beginning of the buffer
+    gl.vertexAttribPointer(
+        vertexIdLoc, size, type, normalize, stride, offset);
+  }
+*/
+
+  gl.uniform1f(numVertsLoc, numVerts);
+  gl.uniform1f(timeLoc, time);
+
+//gl.clearColor(0,1,0,1);
+//gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.drawArrays(gl.POINTS, 0, 1);
+
+
+
+requestAnimationFrame(render);
+
+if (nombreImage<13) {
+    nombreImage++;
+    setTimeout(
+        _ => {
+                 // requestAnimationFrame(render);
+        },
+    500)
+}
+
+
+}
+requestAnimationFrame(render);
+
+
+
+
+
+</script>
+
+  </body>
+</html>
