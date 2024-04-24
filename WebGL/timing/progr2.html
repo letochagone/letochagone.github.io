@@ -3,21 +3,37 @@
 
 
 	<body>
-		<!--
-			on fixe la taille du drawingBuffer
-		-->
-		<canvas id="glcanvas"></canvas>
 
+
+<p>Générer une valeur aléatoire en WebGL</p>
+
+<p>
+	pour lancer une animation en WebGL, on utilise la fonction requestAnimationFrame.
+	Cette fonction admet un argument , une fonction, que l'on appelle : callback.
+
+</p>
+<p>requestAnimationFrame(callback)</p>
+
+<p>
+	<
+</p>
 		<div id="console"></div>
 	</body>
+
+
+
+	<script type="module">
+    "use strict";
+    import {syntaxHighlightAll} from '../colorizeur.js'
+    syntaxHighlightAll("fifou");
+</script>
 
 	<script>
 		
 
 
  
-
-			const canvas = document.querySelector('#glcanvas');
+			const canvas= document.createElement("canvas");
 
 			canvas.width=1;
 			canvas.height=1;
