@@ -1,0 +1,440 @@
+<!doctype html>
+<html>
+<style>
+body {
+  margin: 0;
+  background-color: white;
+}
+canvas {
+  display: block;  /* prevents scrollbar */
+
+}
+</style>
+
+<!--
+	https://www.shadertoy.com/view/td2Gzc
+-->
+<body>
+	<canvas id="canvas"></canvas>
+
+	<script>
+		"use strict";
+
+
+function main() {
+
+
+
+
+let vertexBuffer=`
+	attribute vec4 a_position;
+	void main() {
+		gl_Position = a_position;
+		gl_PointSize = 1.0;
+	}
+`;
+let fragmentBufferA = `
+	#extension GL_EXT_shader_texture_lod : enable
+
+	precision highp float;
+
+	uniform vec2 iResolution;
+	uniform vec2 iMouse;
+	uniform float iTime;
+
+//---insert shadertoy code here--
+
+	// play values:
+	#define GridX 180.          // any value between 20 to 300 is fine
+	#define Bouncefac 1.0     // try 0.5 for nonelastic collisions
+	#define Gravity -0.0000     // try -0.0003
+
+	// fixed values
+	#define GridY floor(GridX*9./16.)
+	#define Radius 1.0 // minimum value would be sqrt(1*1 + 1*1)/2.0 + max_velocity * 2.  so 1.0 is a safe value
+	#define getColorSize(grid) texture2DLodEXT(iChannel0,(grid*vec2(1.,2.0)+vec2(5.1,11.1))/iResolution.xy,0.)
+	#define getPos(grid) texture2DLodEXT(iChannel0,(grid*vec2(1.,2.0)+vec2(5.1,10.1))/iResolution.xy,0.).xy
+	#define getVel(grid) texture2DLodEXT(iChannel0,(grid*vec2(1.,2.0)+vec2(5.1,10.1))/iResolution.xy,0.).zw
+
+	uniform sampler2D iChannel0;
+
+
+	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+	    vec2 grid = floor(fragCoord.xy/vec2(1.0,2.0)-vec2(5.,5.));
+	   	float datai = floor(fract(fragCoord.y/2.0)*2.0);
+	    if (grid.x>=float(GridX) || grid.y>=float(GridY) || grid.x<0. || grid.y<0.) {
+	        fragColor = vec4(0.,0.,0.,0.);
+	        return;
+	    }
+    
+	    vec2 newpos = vec2(0.,0.);
+	    vec2 newvel = vec2(0.,0.);
+	    vec4 newcolorsize = vec4(0.0,0.0,0.0,0.);
+	    
+	    
+	    if (iTime<2.0) // init
+	    {
+	        if (mod(grid.x,2.0)==1. && mod(grid.y,3.0)==1.)
+	        {
+	            newpos  = vec2(sin(grid.y)*0.5+0.5,sin(grid.x)*0.7+0.5)+grid; // middle of the grid
+	            newvel = vec2(sin(grid.y),cos(grid.x*1.2))*0.3;
+	            
+	            
+	            float diskrad = GridX*0.24;
+	            if (length(grid-vec2(diskrad,diskrad*0.5))<diskrad) 
+	            {
+	                newcolorsize = vec4(0.1,0.8,1.0,1.0);
+	                newvel = vec2(0.,0.); // cold gas
+	            }
+	            if (length(grid-vec2(GridX-diskrad,diskrad))<diskrad)
+	            {
+	                newcolorsize = vec4(1.0,0.9,0.2,1.0);
+	            }
+	            
+	            if (newcolorsize.a==0.0) newpos = vec2(0.,0.);
+	        }
+	    }
+    	else {
+	        // check surrounding grid for particles that move to this one
+	        for(int x=0;x<9;x++)  { // for some reason nested loops compiles wrong
+	        	vec2 grid2 = grid +
+	            	vec2(
+	                	float(
+	                		mod(float(x),float(3))-1.0
+	                	),
+	                	float(x/3-1)
+	                );
+	            vec2 pos = getPos(grid2)+getVel(grid2);
+	            vec2 vel = getVel(grid2);
+	            vec4 colorsize = getColorSize(grid2);
+
+	            if ( floor(pos)==grid) {
+	                newpos += pos*colorsize.a;
+	                newvel += vel*colorsize.a;
+	                newcolorsize.xyz += colorsize.xyz*colorsize.a;
+	                newcolorsize.a += colorsize.a;
+	            }
+        	}
+        	if (newcolorsize.a>0.) // in case multiple particles hit occopy the same grid, combine their mass and average their data
+        	{
+            	newpos/=newcolorsize.a;
+            	newvel/=newcolorsize.a;
+            	newcolorsize.xyz/=newcolorsize.a;
+        	}
+    
+	        // bouncing walls
+	        if (newpos.x<Radius) newvel.x = abs(newvel.x);        
+	        if (newpos.x>float(GridX)-Radius) newvel.x = -(newpos.x-float(GridX)+Radius); 
+	        if (newpos.y<Radius) newvel.y = abs(newvel.y);        
+	        if (newpos.y>float(GridY)-Radius) newvel.y = -abs(newvel.y); 
+    
+	        // bouncing other molecules
+	        vec2 orignewvel = newvel;
+	        for(int y=-3;y<=3;y++)
+	            for(int x=-3;x<=3;x++)
+	            {
+	                vec2 grid2 = grid+vec2(float(x),float(y));
+	                vec2 pos = getPos(grid2)+getVel(grid2);
+	                if (pos!=newpos && getColorSize(grid2).a>0.)
+	                {
+	                    if (length(pos-newpos)<Radius*2.)
+	                    {
+	                        vec2 normal = normalize(pos-newpos);
+	                        vec2 veldif = orignewvel - getVel(grid2);
+	                        newvel -= normal * max(dot(normal,veldif)*Bouncefac,0.);
+	                    }
+	                }
+	            }
+
+			newvel.y -= Gravity;  // gracity setting in Common:
+	        float maxvel = 1.0; // make sure they don't jump over grids
+	        if (length(newvel)>maxvel) newvel *= maxvel/length(newvel); 
+    	}
+    
+    	fragColor = (datai==0.)?vec4(newpos,newvel):newcolorsize;
+	}
+//fin code shadertoy
+
+	void main() {
+		mainImage(gl_FragColor, gl_FragCoord.xy);
+		//dans la déclaration de mainImage le 1er paramètre est "out, donc gl_FragColor sera alimenté
+	}
+`;
+
+let fragmentImage = `
+	#extension GL_EXT_shader_texture_lod : enable
+
+	precision highp float;
+
+	uniform vec2 iResolution;
+	uniform vec2 iMouse;
+	uniform float iTime;
+
+	//---insert shadertoy code here--
+
+	// play values:
+	#define GridX 180.          // any value between 20 to 300 is fine
+	#define Bouncefac 1.0     // try 0.5 for nonelastic collisions
+	#define Gravity -0.0000     // try -0.0003
+
+	// fixed values
+	#define GridY floor(GridX*9./16.)
+	#define Radius 1.0 // minimum value would be sqrt(1*1 + 1*1)/2.0 + max_velocity * 2.  so 1.0 is a safe value
+	#define getColorSize(grid) texture2DLodEXT(iChannel0,(grid*vec2(1.,2.0)+vec2(5.1,11.1))/iResolution.xy,0.)
+	#define getPos(grid) texture2DLodEXT(iChannel0,(grid*vec2(1.,2.0)+vec2(5.1,10.1))/iResolution.xy,0.).xy
+	#define getVel(grid) texture2DLodEXT(iChannel0,(grid*vec2(1.,2.0)+vec2(5.1,10.1))/iResolution.xy,0.).zw
+
+	uniform sampler2D iChannel0;
+	/*
+
+	Every particle is stored in the grid by the integer part of it's coordinates.
+	Colors and masses are stored in every odd line of the off screen surfaces
+	A grid can't be shared by more than one particle. In that rare case their 
+	mass get's combined and displayed as a bug. However it's possible to implement a 
+	mechanism that splits them into multiple particles again.
+
+	Play with gravity, grid size and bounciness.
+
+	Energy loss also occours when a particle tries to go faster than the speed limit,
+	which is one grid/frame, and also when more than 2 particles collide in the same time, 
+	or with the wall.
+	Buffer B can measure and display the total kinetic energy of the particles.
+
+	*/
+
+	void mainImage( out vec4 fragColor, in vec2 fragCoord )
+	{
+	    vec2 uv = fragCoord/iResolution.xy;
+	    vec2 pixel = uv*vec2(float(GridX),float(GridY));
+	    vec2 grid = floor(uv*vec2(float(GridX),float(GridY)));
+	    float pixelsize = float(GridX)/iResolution.x;
+	    vec3 col = vec3(0.0,0.,0.3);
+
+	    float minrad = Radius;
+	    for(int y=-1;y<=1;y++) // check surrounding grids for particle
+	        for(int x=-1;x<=1;x++)
+	        {
+	            vec2 grid2 = grid + vec2(float(x),float(y));
+	            vec2 pos = getPos(grid2);
+	            float d = length(pixel-pos);
+	            if (d<minrad && pos.x!=0.0)
+	            {
+	                float aa = min((minrad-d)/pixelsize,1.);
+	                minrad = d;
+	                vec3 moleculecolor = getColorSize(grid2).xyz;                   
+	                col = mix(col,moleculecolor,aa);
+	            }
+	        }
+	    fragColor = vec4(col,1.0); 
+	}
+
+	void main() {
+		mainImage(gl_FragColor, gl_FragCoord.xy);
+		//dans la déclaration de mainImage le 1er paramètre est "out, donc gl_FragColor sera alimenté
+	}
+`;
+
+let canvas = document.querySelector("#canvas");
+canvas.width=1280;
+canvas.height=720;
+let gl = canvas.getContext("webgl");
+
+// check we an use floating point textures
+const ext1 = gl.getExtension('OES_texture_float');
+if (!ext1) {
+  alert('Need OES_texture_float');
+  return;
+}
+// check we can render to floating point textures
+const ext2 = gl.getExtension('WEBGL_color_buffer_float');
+if (!ext2) {
+  alert('Need WEBGL_color_buffer_float');
+  return;
+}
+// check we can use textures in a vertex shader
+if (gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) < 1) {
+  alert('Can not use textures in vertex shaders');
+  return;
+}
+
+gl.getExtension("EXT_shader_texture_lod");
+	
+
+let prog_bufferA   = gl.createProgram();
+{
+const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(vertexShader, vertexBuffer);
+gl.shaderSource(fragmentShader, fragmentBufferA);
+gl.compileShader(vertexShader);
+gl.compileShader(fragmentShader);
+gl.attachShader(prog_bufferA, vertexShader);
+gl.attachShader(prog_bufferA, fragmentShader);
+gl.linkProgram(prog_bufferA);
+}
+
+let prog_Image   = gl.createProgram();
+{
+const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(vertexShader, vertexBuffer);
+gl.shaderSource(fragmentShader, fragmentImage);
+gl.compileShader(vertexShader);
+gl.compileShader(fragmentShader);
+gl.attachShader(prog_Image, vertexShader);
+gl.attachShader(prog_Image, fragmentShader);
+gl.linkProgram(prog_Image);
+}
+
+
+
+//LE BUFFER des "a_position"
+const positionBuffer = gl.createBuffer();
+// Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+// fill it with a 2 triangles that cover clipspace
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+-1, -1,  // first triangle
+ 1, -1,
+-1,  1,
+-1,  1,  // second triangle
+ 1, -1,
+ 1,  1,
+]),
+gl.STATIC_DRAW);
+
+
+
+
+let iChannel0_Texture = gl.createTexture () ;
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture  ( gl.TEXTURE_2D, iChannel0_Texture ) ;
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+// NEAREST OR LINEAR ????
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, 1280, 720, 0, gl.RGBA,
+                       gl.FLOAT, null);
+
+
+let new_iChannel0_Texture = gl.createTexture () ;
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture  ( gl.TEXTURE_2D, new_iChannel0_Texture ) ;
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+// NEAREST OR LINEAR ????
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, 1280, 720, 0, gl.RGBA,
+                       gl.FLOAT, null);
+
+
+
+
+
+let starttime;
+
+let firstLoop= true;
+function render(time) {
+	time *= 0.001;  // convert to seconds
+
+	if (!starttime) { starttime = time; }
+	const runtime = time - starttime;
+
+	gl.useProgram(prog_bufferA);
+	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+	{
+		const resolutionLocation = gl.getUniformLocation(prog_bufferA, "iResolution");
+		const timeLocation = gl.getUniformLocation(prog_bufferA, "iTime");
+		gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+		gl.uniform1f(timeLocation, runtime);
+	}
+	{
+		const positionAttributeLocation = gl.getAttribLocation(prog_bufferA, "a_position");
+		gl.enableVertexAttribArray(positionAttributeLocation);
+		gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+		gl.vertexAttribPointer( positionAttributeLocation,
+			2,          // 2 components per iteration
+			gl.FLOAT,   // the data is 32bit floats
+			false,      // don't normalize the data
+			0,          // 0 = move forward size * sizeof(type) each iteration to get the next position
+			0          // start at the beginning of the buffer
+		);		
+	}
+
+	const bufferA= gl.createFramebuffer();
+	gl.bindFramebuffer(gl.FRAMEBUFFER, bufferA);
+	gl.framebufferTexture2D(
+		gl.FRAMEBUFFER,
+		gl.COLOR_ATTACHMENT0,
+		gl.TEXTURE_2D,
+		firstLoop ? new_iChannel0_Texture:iChannel0_Texture,
+		0
+	);
+
+	{
+		gl.activeTexture(gl.TEXTURE1);
+		gl.bindTexture( gl.TEXTURE_2D, firstLoop ? iChannel0_Texture:new_iChannel0_Texture );
+		const iChannel0_TextureLocation = gl.getUniformLocation(prog_bufferA, 'iChannel0');
+		gl.uniform1i(iChannel0_TextureLocation,1);
+	}
+
+	gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+
+
+
+	//maintenant la texture new_iChannel0_Texture contient le résultat du programme prog_bufferA
+	//on va utiliser cette texture dans le programme prog_Image
+	gl.useProgram(prog_Image);
+	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+	{
+		const resolutionLocation = gl.getUniformLocation(prog_Image, "iResolution");
+		const timeLocation = gl.getUniformLocation(prog_Image, "iTime");
+		gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+		gl.uniform1f(timeLocation, runtime);
+	}
+	{
+		const positionAttributeLocation = gl.getAttribLocation(prog_Image, "a_position");
+		gl.enableVertexAttribArray(positionAttributeLocation);
+		gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+		gl.vertexAttribPointer( positionAttributeLocation,
+			2,          // 2 components per iteration
+			gl.FLOAT,   // the data is 32bit floats
+			false,      // don't normalize the data
+			0,          // 0 = move forward size * sizeof(type) each iteration to get the next position
+			0          // start at the beginning of the buffer
+		);
+	}
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+	{
+		gl.activeTexture(gl.TEXTURE1);
+		gl.bindTexture( gl.TEXTURE_2D, firstLoop ? new_iChannel0_Texture:iChannel0_Texture );
+		const iChannel0_TextureLocation = gl.getUniformLocation(prog_Image, 'iChannel0');
+		gl.uniform1i(iChannel0_TextureLocation,1);
+	}
+	
+	gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+
+
+
+	firstLoop = !firstLoop;
+
+   requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+
+}
+
+main();
+		
+	</script>
+
+</body>
+
+
+</html>
