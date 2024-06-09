@@ -1,17 +1,28 @@
 <!doctype html>
 <html>
+<style>
+	#log {
+		font-size: xx-small;
+		white-space: nowrap;
+	}
+	#canvas {
+				background: black;
+
+	}
+</style>
 
 <body>
 	<canvas id="canvas"></canvas>
-
+<div id="log"></div>
 	<script>
 		"use strict";
 
 		let vertex=`
 			attribute vec2 a_position;
+
 			void main() {
+
 				gl_Position = vec4(a_position,0.0,1.0);
-				gl_PointSize = 1.0;
 			}
 		`;
 		let fragment = `
@@ -21,49 +32,48 @@
   				precision mediump float;
 			#endif
 
+
 			void main() {
 
-				vec2 grid = floor(gl_FragCoord.xy/vec2(1.0,2.0)-vec2(5.,5.));
-				//               1    2    3   4   5    6   7   8   ....W
-			    // grid.x =     -5   -4   -3  -2  -1    0  +1  +2   ....W-6  
-			    // grid.y =     -5   -5   -5  -5  -5   -5   5   5   ....5
-
-			    // grid.x =     -5   -4   -3  -2  -1    0  +1  +2   ....W-6  
-			    // grid.y =     -5   -5   -5  -5  -5   -5   5   5   ....5
-
-			    // grid.x =     -5   -4   -3  -2  -1    0  +1  +2   ....W-6  
-			    // grid.y =     -5   -5   -5  -5  -5   -5   5   5   ....5
-
-			    // grid.x =     -5   -4   -3  -2  -1    0  +1  +2   ....W-6  
-			    // grid.y =     -4   -4   -4  -4  -4   -4   4   4   ....4
 
 
 
-			   	float datai = floor(fract(gl_FragCoord.y/2.0)*2.0);
-			   	// 0 0 0 ...0 (gl.canvas.wdith fois)
-			   	// 1 1 1 ...1 (gl.canvas.wdith fois)
-			   	// 0 0 0 ...0 (gl.canvas.width fois)
-			   	// 1 1 1 ...1 (gl.canvas.width fois)
-			   	// ...
-			    // ...
-			   	// gl.canvas.height lignes
+    	gl_FragColor = vec4(gl_FragCoord.xy,999.0,999.0);
 
-				float nb= (gl_FragCoord.x-0.5)+1.0;
 
-				float res2=mod(nb,3.0);
 
-				gl_FragColor=vec4(gl_FragCoord.xy,666.0,666.0);
 
 			}
 		`;
+
+
+
+		(function () {
+    if (!console) {
+        console = {};
+    }
+    var old = console.log;
+    var logger = document.getElementById('log');
+    console.log = function (message) {
+        if (typeof message == 'object') {
+            logger.innerHTML += (JSON && JSON.stringify ? JSON.stringify(message) : String(message)) + '<br />';
+        } else {
+            logger.innerHTML += message + '<br />';
+        }
+    }
+})();
+
+
 		let canvas = document.querySelector("#canvas");
 		let gl = canvas.getContext("webgl");
 		gl.getExtension('OES_texture_float');
 
-		gl.canvas.width=4;
-		gl.canvas.height=4;
 
-	
+
+		gl.canvas.width=51;
+		gl.canvas.height=51;
+
+
 		let program   = gl.createProgram();
 		const vertexShader = gl.createShader(gl.VERTEX_SHADER);
 		const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -83,6 +93,8 @@
 		// Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
 		gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 		// fill it with a 2 triangles that cover clipspace
+
+		// draw triangles
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 			-1, -1,  // first triangle
 			 1, -1,
@@ -92,7 +104,31 @@
 			 1,  1,
 		]),
 		gl.STATIC_DRAW);
+
+        // draw points
+        /*
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+			-1.0+1.0/9.0,  0.0,
+			-1.0+3.0/9.0,  0.0,
+			-1.0+5.0/9.0,  0.0,
+			-1.0+7.0/9.0,  0.0,
+			-1.0+9.0/9.0,  0.0,
+			-1.0+11.0/9.0, 0.0,
+			-1.0+13.0/9.0, 0.0,
+			-1.0+15.0/9.0, 0.0,
+			-1.0+17.0/9.0, 0.0,
+		]),
+		gl.STATIC_DRAW);
+		*/
  
+
+
+		const bufferDesEntiers = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, bufferDesEntiers);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+			0,1,2,3,4,5,6,7,8
+		]),
+		gl.STATIC_DRAW);
 
 		let targetTexture = gl.createTexture () ;
 		gl.bindTexture  ( gl.TEXTURE_2D, targetTexture ) ;
@@ -109,14 +145,14 @@
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, 0);
 
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-		gl.clearColor(0, 0, 0, 1);
+		gl.clearColor(1, 1, 0, 1);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
 		{
-			const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-			gl.enableVertexAttribArray(positionAttributeLocation);
+			const attribLoc = gl.getAttribLocation(program, "a_position");
+			gl.enableVertexAttribArray(attribLoc);
 			gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-			gl.vertexAttribPointer( positionAttributeLocation,
+			gl.vertexAttribPointer( attribLoc,
 				2,          // 2 components per iteration
 				gl.FLOAT,   // the data is 32bit floats
 				false,      // don't normalize the data
@@ -125,18 +161,57 @@
 			);
 		}
 
-		gl.drawArrays(gl.TRIANGLES, 0, 6);
 
+
+		if (null) {
+			const attribLoc = gl.getAttribLocation(program, "entier");
+			gl.enableVertexAttribArray(attribLoc);
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferDesEntiers);
+			gl.vertexAttribPointer( attribLoc,
+				1,          // 2 components per iteration
+				gl.FLOAT,   // the data is 32bit floats
+				false,      // don't normalize the data
+				0,          // 0 = move forward size * sizeof(type) each iteration to get the next position
+				0          // start at the beginning of the buffer
+			);
+		}
+
+
+
+		gl.drawArrays(gl.TRIANGLES, 0, 6);
+		//gl.drawArrays(gl.POINTS, 0, 9);
+
+
+
+		let fN=function(number) { 
+			return   new Intl.NumberFormat('nu',{ minimumIntegerDigits: 2 ,minimumFractionDigits:2}).format(number)
+		}
 		var data = new Float32Array(4 * gl.canvas.width * gl.canvas.height);
 		gl.readPixels(0, 0, gl.canvas.width, gl.canvas.height, gl.RGBA, gl.FLOAT, data);
-
+		//data = rgba             rgba           rgba rgba rgba rgba...... rgba
+		//       d=0              d=4
+		//       data[d]==r       data[d]  ==r
+		//       data[d+1]==g     data[d+1]==g
+        let d=0;
 		for ( let j=0 ; j < gl.canvas.height ; j++ ) {
 			let ligne="";
 			for ( let i=0 ; i < gl.canvas.width ; i++) {
-				ligne=ligne+"("+data[i*4 +j*gl.canvas.width*4 ]+" , "+data[i*4+1+ j*gl.canvas.width*4]+ ")";
+				
+				//ligne = data[d]  ;
+				ligne = ligne + fN(data[d]) + " - " + fN(data[d+1]) + " | " ;
+				//ligne = ligne + data[d] + " , " + data[d+1] + " , "  + data[d+2] + " || "     ;
+				//ligne =   ligne + data[d] + " , " + data[d+1] + " , " + data[d+2] + " , " + data[d+3] + " || " ;
+				
+
+				d=d+4;
+
+
 			}
+			//  new Intl.NumberFormat('nu',{ minimumIntegerDigits: 3 ,minimumFractionDigits:3}).format(number)
 			console.log(ligne);
 		}
+
+
 	</script>
 </body>
 </html>
