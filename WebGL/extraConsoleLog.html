@@ -184,7 +184,8 @@
 
 
 		let fN=function(number) { 
-			return   new Intl.NumberFormat('nu',{ minimumIntegerDigits: 2 ,minimumFractionDigits:2}).format(number)
+			return   new Intl.NumberFormat('nu',
+					{minimumSignificantDigits:4}).format(number)
 		}
 		var data = new Float32Array(4 * gl.canvas.width * gl.canvas.height);
 		gl.readPixels(0, 0, gl.canvas.width, gl.canvas.height, gl.RGBA, gl.FLOAT, data);
