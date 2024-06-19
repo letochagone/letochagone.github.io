@@ -1,42 +1,102 @@
-
 <!doctype html>
-
-<html>
-
-<head>
-
-
-</head>
-
+<html><head></head>
 <body>
-  <canvas id="canvas"></canvas>
+
+  <h1>Lire une texture et écrire dans une autre</h1>
+  <p>
+    le but de cette partie est d'expliquer le concept de "binding".
+  </p>
+  <p>
+    Pour ce faire on va remplir une texture de nombre entiers, puis la copier dans une autre.
+  </p>
 
 
-  <script type="module">
-    "use strict";
-    
-    import {syntaxHighlightAll} from '../../colorizeur.js';
-    syntaxHighlightAll("lecode");
+<pre><code class="lecode">
+
+</code></pre>
 
 
-     'use strict';
+  <h2>initialisation :</h2>
+  <pre><code class="lecode">
+    let lx=4;
+    let ly=2;
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+    canvas.width = lx;
+    canvas.height = ly;
+    const gl = canvas.getContext('webgl');
+  </code></pre>
+<p>ajout d'une extension pour stocker dans les textures les valeurs des couleurs (R,G,B et A) au format "32bit float formats". C'est à dire non restreintes à l'intervalle [0,1].
+</p> 
+    <pre><code class="lecode">
+    gl.getExtension('OES_texture_float');
+  </code></pre>
 
-let lx=4;
-let ly=2;
 
-const canvas = document.querySelector('canvas');
-canvas.width = lx;
-canvas.height=ly;
-const gl = canvas.getContext('webgl');
+  <h3>le shader de vertex et le shader de fragment</h3>
 
-const vsGLSL = `
+  
+
+
+<pre><code class="lecode">
+let vertex = `
   attribute vec2 vertexPosition;
   void main() {
     gl_Position = vec4(vertexPosition, 1, 1);
   }
 `;
 
-const fsGLSL = `
+let fragment = `
+ 
+ #ifdef GL_FRAGMENT_PRECISION_HIGH
+  precision highp float;
+#else
+  precision mediump float;
+#endif
+
+  uniform sampler2D texture;
+  
+  void main() {
+
+    vec4 data = texture2D(
+        texture ,
+        gl_FragCoord.xy  / vec2(${lx},${ly})
+        );
+
+        gl_FragColor=data;
+
+  }
+`;
+</code></pre>
+
+
+
+  <div id="log"></div>
+
+  <script type="module">
+    "use strict";
+    
+    import {syntaxHighlightAll} from '../../colorizeur.js';
+    syntaxHighlightAll("lecode");
+    
+    let lx=4;
+    let ly=2;
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+    canvas.width = lx;
+    canvas.height=ly;
+    const gl = canvas.getContext('webgl');
+    gl.getExtension('OES_texture_float');
+
+
+let vertex = `
+  attribute vec2 vertexPosition;
+  void main() {
+    gl_Position = vec4(vertexPosition, 1, 1);
+  }
+`;
+
+let fragment = `
  
  #ifdef GL_FRAGMENT_PRECISION_HIGH
   precision highp float;
@@ -58,14 +118,14 @@ const fsGLSL = `
   }
 `;
 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-gl.shaderSource(vertexShader, vsGLSL);
+gl.shaderSource(vertexShader, vertex);
 gl.compileShader(vertexShader);
 if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
   throw new Error(gl.getShaderInfoLog(vertexShader))
 };
 
 const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-gl.shaderSource(fragmentShader, fsGLSL);
+gl.shaderSource(fragmentShader, fragment);
 gl.compileShader(fragmentShader);
 if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
   throw new Error(gl.getShaderInfoLog(fragmentShader))
@@ -120,7 +180,7 @@ gl.vertexAttribPointer(vertexPositionAttributeLocation, 2, gl.FLOAT, false, 0, 0
 let targetTexture2 = gl.createTexture();
 //gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, targetTexture2);
-gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,lx,ly,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,lx,ly,0,gl.RGBA,gl.FLOAT,null);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -147,16 +207,99 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-let fuck= new Uint8Array(
+let fuck= new Float32Array(
   [ 10, 10, 10, 255,  20, 20, 20, 255,  30, 30, 30, 255,     40, 40, 40, 255, 
     50, 50, 50, 255,  60, 60, 60, 255,  70, 70, 70, 255,     80, 80, 80, 255 
     ]
   );
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, lx, ly, 0, gl.RGBA, gl.UNSIGNED_BYTE, fuck);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, lx, ly, 0, gl.RGBA, gl.FLOAT, fuck);
 
 
 
 gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+
+
+
+
+    (function () {
+    if (!console) {
+        console = {};
+    }
+    var old = console.log;
+    var logger = document.getElementById('log');
+    console.log = function (message) {
+        if (typeof message == 'object') {
+            logger.innerHTML += (JSON && JSON.stringify ? JSON.stringify(message) : String(message)) + '<br />';
+        } else {
+            logger.innerHTML += message + '<br />';
+        }
+    }
+})();
+
+
+
+
+
+       {
+
+              let fN=function(number) { 
+      return   new Intl.NumberFormat('nu',
+        {
+          //minimumIntegerDigits: 3 ,
+          //minimumFractionDigits:1,
+          minimumSignificantDigits:3,
+          //maximumSignificantDigits:4,
+
+          signDisplay:"always",
+          currencySign:"accounting"
+        }).format(number)
+    }
+      var data = new Float32Array(4 * gl.canvas.width * gl.canvas.height);
+      gl.readPixels(0, 0, gl.canvas.width, gl.canvas.height, gl.RGBA, gl.FLOAT, data);
+      //data = rgba             rgba           rgba rgba rgba rgba...... rgba
+      //       d=0              d=4
+      //       data[d]==r       data[d]  ==r
+      //       data[d+1]==g     data[d+1]==g
+          let d=0;
+      for ( let j=0 ; j < gl.canvas.height ; j++ ) {
+        let ligne="";
+        for ( let i=0 ; i < gl.canvas.width ; i++) {
+          
+          //ligne = data[d]  ;
+          let resR=fN(data[d]);
+          if (data[d]==0.) resR=".....";
+
+          let resG=fN(data[d+1]);
+          if (data[d+1]==0.) resG=".....";
+
+            let resB=fN(data[d+2]);
+          if (data[d+2]==0.) resB=".....";
+
+            let resA=fN(data[d+3]);
+          if (data[d+3]==0.) resA=".....";
+
+          ligne = ligne + resR + "   " + resG + "|" ;
+          //ligne = ligne + resR + " " + resG + " " + resB +  " " + resA + "|" ;
+
+                    //ligne = ligne + data[d] + " , " + data[d+1] + " , "  + data[d+2] + " || "     ;
+          //ligne =   ligne + data[d] + " , " + data[d+1] + " , " + data[d+2] + " , " + data[d+3] + " || " ;
+          
+
+          d=d+4;
+
+
+        }
+        console.log(ligne);
+          }
+        }
+
+
+
+
+
+
+
   
   </script>
 
