@@ -107,7 +107,8 @@ function syntaxHighlight(elementId) {
 
 
   {
-    let reg = /\b(uniform|sampler2D)(?=[^\w])/g ;
+    let reg = /\b(const|uniform|attribute|uniform|varying)(?=[^\w])/g ;
+    
     /*
      \b = limite de mots
      f(?=[^\w]) = tous les f qui sont suivis d'autre chose qu'un caractere d'un mot
@@ -124,6 +125,17 @@ function syntaxHighlight(elementId) {
     */
     parsed = parsed.replace(reg,'<span class="glsl1">$1</span>');
   }
+
+  {
+    let reg = /\b(vec2|vec3|vec4|bool|int|float|bvec2|bvec3|bvec4|ivec2|ivec3|ivec4|mat2|mat3|mat4|sampler2D|samplerCube)(?=[^\w])/g ;
+
+    parsed = parsed.replace(reg,'<span class="glsl2">$1</span>');
+  }
+
+
+
+
+
 
 
 
@@ -180,9 +192,12 @@ const code =dzdz.parentElement;
 
   const AllTest1 = document.getElementsByClassName('glsl1');
   for (const special of AllTest1) {
-    special.style.color = '#ff0000';
+    special.style.color = '#569cd6';
   }
-
+  const AllTest2 = document.getElementsByClassName('glsl2');
+  for (const special of AllTest2) {
+    special.style.color = '#4ec9b0';
+  }
 
 
   const AllglWords = document.getElementsByClassName('glWord');
