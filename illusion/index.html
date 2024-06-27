@@ -8,19 +8,17 @@
   height: 721px;
   position: absolute;
   _background: red;
-  xtop: 10px;
-  xleft: 10px;
+  top:  0px;
+  left: 0px;
 }
 
 #dogPic {
   background-image: url("./b.png");
-  top: 0px;
-  left: 0px;
+
 }
 #catPic {
   background-image: url("./smallA.png");
-  top: 50px;
-  left: 50px;
+ 
   background-repeat: no-repeat;
 }
 	</style>
@@ -36,14 +34,27 @@
 var cat = document.getElementById("catPic");
 var moving = false;
 
+var isTouch = 'ontouchstart' in document.documentElement;
+
+   if(isTouch) {
+      //cat.addEventListener('touchmove', scratchMove);
+      cat.addEventListener("touchmove", initialClick, false);
+
+     // document.addEventListener('touchend', scratchEnd);
+   } else {
+      //cat.addEventListener('mouseover', scratchMove);
+      cat.addEventListener("mouseover", initialClick, false);
+
+     // document.addEventListener('mouseup', scratchEnd);
+   }
 //dog.addEventListener("mousedown", initialClick, false);
-cat.addEventListener("mousedown", initialClick, false);
+//cat.addEventListener("mouseover", initialClick, false);
 
 
 function move(e){
 
-  var newX = e.clientX - 50;
-  var newY = e.clientY - 50;
+  var newX = e.clientX -300 ;
+  var newY = e.clientY -300;
 
   image.style.left = newX + "px";
   image.style.top = newY + "px";
