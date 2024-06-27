@@ -1,0 +1,72 @@
+<!doctype html>
+
+<html>
+<head>
+	<style>
+		#dogPic, #catPic {
+  width: 948px;
+  height: 721px;
+  position: absolute;
+  _background: red;
+  xtop: 10px;
+  xleft: 10px;
+}
+
+#dogPic {
+  background-image: url("./b.png");
+  top: 0px;
+  left: 0px;
+}
+#catPic {
+  background-image: url("./smallA.png");
+  top: 50px;
+  left: 50px;
+  background-repeat: no-repeat;
+}
+	</style>
+</head>
+<body>
+
+
+<div id="dogPic"></div>
+<div id="catPic"></div>
+
+<script>
+	//var dog = document.getElementById("dogPic");
+var cat = document.getElementById("catPic");
+var moving = false;
+
+//dog.addEventListener("mousedown", initialClick, false);
+cat.addEventListener("mousedown", initialClick, false);
+
+
+function move(e){
+
+  var newX = e.clientX - 50;
+  var newY = e.clientY - 50;
+
+  image.style.left = newX + "px";
+  image.style.top = newY + "px";
+
+  
+}
+
+function initialClick(e) {
+
+  if(moving){
+    document.removeEventListener("mousemove", move);
+    moving = !moving;
+    return;
+  }
+  
+  moving = !moving;
+  image = this;
+
+  document.addEventListener("mousemove", move, false);
+
+}
+</script>
+
+
+</body>
+</html>
