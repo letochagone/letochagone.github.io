@@ -2,8 +2,9 @@
 
 <html>
 <head>
-<style>
-	body {
+	<style>
+
+body {
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -17,7 +18,8 @@
 }
 
 #damier {
-  background-image: url("./b.png");
+  _background-image: url("./b.png");
+  background-image: url("./checkerShadowIllusion.svg");
 
 }
 #bidule {
@@ -46,6 +48,11 @@ if (pointEventSupported) {
     
     // if Pointer Events are supported, only listen to pointer events
     bidule.addEventListener("pointerdown", function(e) {
+    	console.log(e.clientX);
+    	bidule.style.left=-400+e.clientX+"px";
+    });
+
+        damier.addEventListener("pointerdown", function(e) {
     	console.log(e.clientX);
     	bidule.style.left=-400+e.clientX+"px";
     });
