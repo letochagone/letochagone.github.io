@@ -11,6 +11,7 @@
     <style>
       img {
         width:100%;
+
       }
 
       #bidule {
@@ -18,7 +19,6 @@
         left: 0px;
         top: 0px;
       }
-      
     </style>
   </head>
 
@@ -33,7 +33,22 @@
 -->
     <img src="checkerShadowIllusion.svg">
 
-  <img id="bidule" src="bidule.png">
+  <img  id="bidule" src="bidule.png">
+
+  <script>
+    let bidule = document.getElementById("bidule");
+
+
+
+    bidule.addEventListener("pointerdown", function(e) {
+      bidule.style.top =  -200 + e.clientY + "px";
+      bidule.style.left = -400 + e.clientX + "px";
+
+
+    });
+
+   
+  </script>
 
   </body>
 </html>
