@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<style>
+  .slider {
+  _border-radius: 5px;
+  background: #E0E0E0;
+  background: linear-gradient(left top, #E0E0E0, #EEEEEE);
+  width: 310px;
+  height: 310px;
+  _margin: 5px;
+
+    position: absolute;
+    left: 155px;
+    top:155px;
+}
+
+.thumb {
+  touch-action: none;
+  width: 50px;
+  height: 55px;
+  _border-radius: 3px;
+  position: relative;
+  _left: 10px;
+  _top: -5px;
+  background: blue;
+  cursor: pointer;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+</style>
+
+<h1>zefzfz</h1>
+<br>
+<div id="slider" class="slider">
+  <div id="r" class="thumb"></div>
+</div>
+<br>
+<h1>ZEzfzef</h1>
+<p style="border:1px solid gray" onmousemove="this.textContent = new Date()">Mouse over here to see the date</p>
+
+<script>
+
+  /*
+  on récupère un élément html : thumb
+  on lui assigne l'évènemnt onpointerdown et la fonction :
+    f(event) {
+      shiftX = event.clientX - thumb.getBoundingClientRect().left
+    }
+
+
+
+  */
+  //let thumb = slider.querySelector('.thumb');
+  let thumb = document.getElementById("r");
+  console.log(thumb);
+  let shiftX;
+  let shiftY;
+
+  function onThumbDown(event) {
+    event.preventDefault(); // prevent selection start (browser action)
+    console.log("event.clientX=",event.clientX);
+    console.log("thumb.getBoundingClientRect()=",thumb.getBoundingClientRect());
+
+    shiftX = event.clientX - thumb.getBoundingClientRect().left;
+    shiftY = event.clientY - thumb.getBoundingClientRect().top;
+
+
+    thumb.setPointerCapture(event.pointerId);
+
+    thumb.onpointermove = onThumbMove;
+
+    thumb.onpointerup = event => {
+      // dragging finished, no need to track pointer any more
+      // ...any other "drag end" logic here...
+      thumb.onpointermove = null;
+      thumb.onpointerup = null;
+    }
+  };
+
+  function onThumbMove(event) {
+    let newLeft = event.clientX - shiftX - slider.getBoundingClientRect().left;
+    let newTop = event.clientY - shiftY - slider.getBoundingClientRect().top;
+
+    // if the pointer is out of slider => adjust left to be within the boundaries
+    if (newLeft < 0) {
+      newLeft = 0;
+    }
+
+    if (newTop < 0) {
+      newTop = 0;
+    }
+    let rightEdge = slider.offsetWidth - thumb.offsetWidth;
+    if (newLeft > rightEdge) {
+      newLeft = rightEdge;
+    }
+
+    thumb.style.left = newLeft + 'px';
+    thumb.style.top = newTop + 'px';
+
+  };
+
+  thumb.onpointerdown = onThumbDown;
+
+  thumb.ondragstart = () => false;
+
+</script>
