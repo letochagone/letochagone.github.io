@@ -9,35 +9,23 @@
     <style>
 
 
-
       img {
         width:100%;
-      }
-
-
-
-      .thumb {
-        touch-action: none;
-        position: relative;
-        top:0px;
-        left:0px;
-        background-image: url("imagetest.svg");
-        cursor: pointer;
       }
 
       * {
       margin: 0;
       padding: 0;
-        overflow:hidden;
+      overflow: hidden;
       }
 
-#bidule {
-  cursor:pointer;
-  position: absolute;
-  top:0px;
-  left:0px;
+      #bidule {
 
-}
+        cursor:pointer;
+        position: absolute;
+        top:50%;
+        left:0px;
+      }
 
     </style>
 
@@ -119,6 +107,9 @@ y: 155
 
       let slider = document.getElementById("damier");
       let thumb = document.getElementById("bidule");
+      //thumb=document.body;
+      //thumb=document.querySelector("html");
+      console.log(thumb);
       let shiftX;
       let shiftY;
 
@@ -129,6 +120,8 @@ y: 155
         shiftX = event.clientX - thumb.getBoundingClientRect().left;
         shiftY = event.clientY - thumb.getBoundingClientRect().top;
 
+thumb.src="biduleMoving.svg";
+
 
         //cette ligne rend la capture du point 
         // retarget all pointer events (until pointerup) to thumb
@@ -137,6 +130,8 @@ y: 155
         thumb.onpointermove = onThumbMove;
 
         thumb.onpointerup = event => {
+          thumb.src="bidule.svg";
+
           // dragging finished, no need to track pointer any more
           // ...any other "drag end" logic here...
           thumb.onpointermove = null;
@@ -150,6 +145,8 @@ y: 155
         let newLeft = event.clientX - shiftX - slider.getBoundingClientRect().left;
         let newTop = event.clientY - shiftY - slider.getBoundingClientRect().top;
 
+
+        
 
         // if the pointer is out of slider => adjust left to be within the boundarie;
         if (newLeft < 0) {
@@ -175,8 +172,8 @@ y: 155
 
       };
 
-      //thumb.onpointerdown = onThumbDown;
-      document.onpointerdown = onThumbDown;
+      thumb.onpointerdown = onThumbDown;
+      //document.onpointerdown = onThumbDown;
 
 
       thumb.ondragstart = () => false;
