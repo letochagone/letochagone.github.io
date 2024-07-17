@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta
+      name="viewport" 
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <style>
+html {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+      img {
+        width:100%;
+      }
+
+      * {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      }
+
+      #bidule {
+
+        cursor:pointer;
+        position: absolute;
+        top:50%;
+        left:0px;
+      }
+
+    </style>
+
+
+  </head>
+
+<body oncontextmenu="return false;">
+        <img id="damier" src="checkerShadowIllusion.svg">
+        <img id="bidule" src="bidule2.svg">
+
+
+
+    <script>
+
+
+      /*
+      on récupère un élément html : thumb
+      on lui assigne l'évènemnt onpointerdown et la fonction associée :
+        f(event) {
+          shiftX = event.clientX - thumb.getBoundingClientRect().left
+        }
+bottom: 210
+height: 55
+left: 155
+right: 205
+top: 155
+width: 50
+x: 155
+y: 155
+------------------------------------------------------
+
+        ---------------------------------------
+        |                 ^          ^        |
+        |                 |          |        |
+        |                 | top      |        |
+        |                 |          |bottom  |
+        |                 v          |        |
+        |         -------------      |        |
+        |         |           |      |        |
+        |         |    ●      |      |        |
+------left------->|    |      |      v        |   
+        |         -----|-------               |
+        |  right       |                      |
+-----------------------|------>               |
+        |              |                      | 
+        |              |                      |
+        ---------------|------------------------
+                       |
+0------------------ clientX
+
+
+------------------------------------------------------
+
+        -----------------------------------------------
+        |                 ^                ^          |
+        |                 |                |          |
+        |                 | top            |          |
+        |                 |                |bottom    |
+        |                 v                |          |
+        |         ----------------------   |          |
+        |         |                    |   |          |
+        |         |<-- shiftX ---> ●   |   |          |
+------left------->|                |   |   |          |   
+        |         -----------------|----   v          |
+        |  right                   |                  |
+-----------------------------------|---->             |
+        |                          |                  | 
+        |                          |                  |
+        ---------------------------|-------------------
+                                   |
+0------------------------------ clientX
+
+-------155
+--------------------------------------------------155+310=465
+
+
+      */
+
+      let slider = document.getElementById("damier");
+      let thumb = document.getElementById("bidule");
+      //thumb=document.body;
+      //thumb=document.querySelector("html");
+      console.log(thumb);
+      let shiftX;
+      let shiftY;
+
+      function onThumbDown(event) {
+        
+        event.preventDefault(); // prevent selection start (browser action)
+
+        shiftX = event.clientX - thumb.getBoundingClientRect().left;
+        shiftY = event.clientY - thumb.getBoundingClientRect().top;
+
+thumb.src="bidule2.svg";
+
+
+        //cette ligne rend la capture du point 
+        // retarget all pointer events (until pointerup) to thumb
+        thumb.setPointerCapture(event.pointerId);
+
+        thumb.onpointermove = onThumbMove;
+
+        thumb.onpointerup = event => {
+          thumb.src="bidule2.svg";
+
+          // dragging finished, no need to track pointer any more
+          // ...any other "drag end" logic here...
+          thumb.onpointermove = null;
+          thumb.onpointerup = null;
+        }
+      };
+
+      function onThumbMove(event) {
+
+
+        let newLeft = event.clientX - shiftX - slider.getBoundingClientRect().left;
+        let newTop = event.clientY - shiftY - slider.getBoundingClientRect().top;
+
+
+        
+
+        // if the pointer is out of slider => adjust left to be within the boundarie;
+        if (newLeft < 0) {
+         // newLeft = 0;
+        }
+        let rightEdge = slider.offsetWidth - thumb.offsetWidth;
+        if (newLeft > rightEdge) {
+         //newLeft = rightEdge;
+        }
+        if (newTop < 0) {
+         //newTop = 0;
+        }
+   
+        let topEdge = slider.offsetHeight - thumb.offsetHeight;
+        if (newTop > topEdge) {
+         //newTop = topEdge;
+        }
+
+
+        
+        thumb.style.left = newLeft + 'px';
+        thumb.style.top = newTop + 'px';
+
+      };
+
+      thumb.onpointerdown = onThumbDown;
+      //document.onpointerdown = onThumbDown;
+
+
+      thumb.ondragstart = () => false;
+
+    
+    </script>
+ 
+  </body>
