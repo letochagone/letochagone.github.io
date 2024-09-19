@@ -1,1 +1,146 @@
+<!doctype html>
+<html>
+
+  <head>
+
+  	<style>
+      canvas {
+        width:400px;
+        height: 200px;
+        background-color:green;
+        image-rendering: pixelated;
+      }
+  	</style>
+
+
+  </head>
+
+  <body>
+
+    <canvas id="canvas"></canvas>
+<p>le but est de comprendre gl_FragCoord. pour se faire voici le programme le plus simple possible.
+Maintenant le plus compliqué va être d'afficher le résultat à l'écran, sans passer par le console.log</p>
+    <script>
+      "use strict";
+
+
+let canvas = document.getElementById("canvas");
+let gl = canvas.getContext("webgl");
+if (!gl.getExtension('OES_texture_float')) {
+    throw 'Float textures not supported';
+  }
+
+let w=5;
+let h=5;
+
+let vertex = `
+      attribute vec2 a_position;
+
+
+      void main() {
+
+        gl_Position=vec4(a_position,0.0,1.0);
+      }
+    `;
+
+let fragment = `
+      precision highp float;
+      void main() {
+      gl_FragColor = gl_FragCoord;
+        
+      }
+    `;
+
+let shader = gl.createProgram();
+const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(vertexShader, vertex);
+gl.shaderSource(fragmentShader, fragment);
+gl.compileShader(vertexShader);
+gl.compileShader(fragmentShader);
+gl.attachShader(shader, vertexShader);
+gl.attachShader(shader, fragmentShader);
+gl.linkProgram(shader);
+
+
+
+
+
+  let positionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1, -1, //A
+    1, -1,  //B
+    -1, 1,  //C
+    -1,1,   //D
+    1,1,    //E
+    1,-1    //F
+    /*
+       C D     E 
+
+       A       B F
+    */
+
+  ]), gl.STATIC_DRAW);
+
+
+
+  let positionLocation = gl.getAttribLocation(shader, "a_position");
+    gl.enableVertexAttribArray(positionLocation);
+     let size = 2;
+  let type = gl.FLOAT;
+  let normalize = false;
+  let stride = 0;
+  let offset = 0;
+  gl.vertexAttribPointer(positionLocation, size, type, normalize, stride, offset);
+
+
+  
+
+{
+
+  const size = 4 * w*h;
+  const textureData = new Float32Array(size);
+let textureFb = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, textureFb);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.FLOAT,textureData);
+const fb = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textureFb,0);
+}
+
+
+
+
+
+  gl.viewport(0, 0, w,h);
+
+
+  gl.useProgram(shader);
+
+
+ 
+
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+  
+
+
+
+  let bottomLeftX=0;
+  let bottomLeftY=0;
+  let pixels = new Float32Array(w * h * 4);
+  gl.readPixels(bottomLeftX, bottomLeftY, w, h, gl.RGBA, gl.FLOAT, pixels);
+  console.log(pixels);
+
+  
+
+
+</script>
+  </body>
+</html>
 
