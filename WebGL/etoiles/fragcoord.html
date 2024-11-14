@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>gl_FragCoord</title>
+    <style>
+  
+   
+
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+
+     <script>
+
+      let texWidth=4;
+      let texHeight=2;
+
+      let canvas= document.getElementById("canvas");
+      canvas.width=5;
+      canvas.height=5;
+      let gl=canvas.getContext("webgl");
+  const ext= gl.getExtension('OES_texture_float');
+
+
+
+      let shader = gl.createProgram();
+
+  let vertex=`
+  attribute vec2 vertexPosition;
+  varying vec2 coord;
+  void main() {
+    coord = (vertexPosition + 1.0) / 2.0;
+    gl_Position = vec4(vertexPosition, 1, 1);
+  }`;
+
+  let fragment=`
+  precision mediump float;
+  uniform sampler2D texture;
+  varying vec2 coord;
+  void main() {
+    gl_FragColor = texture2D(texture, coord);
+    gl_FragColor = floor(gl_FragCoord)/vec4(255.0,255.0,1.0,1.0);
+
+  }`;
+
+
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(vertexShader, vertex);
+  gl.shaderSource(fragmentShader, fragment);
+  gl.compileShader(vertexShader);
+  gl.compileShader(fragmentShader);
+  gl.attachShader(shader, vertexShader);
+  gl.attachShader(shader, fragmentShader);
+  gl.linkProgram(shader);
+
+  gl.useProgram(shader);
+  gl.viewport(0, 0, texWidth, texHeight);
+
+  let buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(
+    [-1,-1,   -1,1,   1,-1,   1,-1,  -1,1,   1,1]),
+    gl.STATIC_DRAW);
+  let aVertexPosition = gl.getAttribLocation(shader,"vertexPosition");
+  gl.enableVertexAttribArray(aVertexPosition);
+  gl.vertexAttribPointer(aVertexPosition, 2, gl.FLOAT, gl.FALSE, 0, 0);
+
+
+
+  let frameBuffer = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+  let textureTemp= gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, textureTemp);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texWidth, texHeight, 0, gl.RGBA, gl.FLOAT, null);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textureTemp, 0);
+
+
+
+  let inputTexture= gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, inputTexture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texWidth, texHeight, 0, gl.RGBA, gl.FLOAT, null);
+
+  let textureLoc = gl.getUniformLocation(shader,"texture");
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, inputTexture);
+  gl.uniform1i(textureLoc, 0);
+
+
+let drawToTexture = false;
+if (!drawToTexture)   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+
+ if (drawToTexture) {
+    let pixels = new Float32Array(texWidth*texHeight*4);
+    gl.readPixels(0,0,texWidth,texHeight,gl.RGBA,gl.FLOAT,pixels);
+    console.log("console log");
+    console.log(pixels);
+    //log(pixels);
+} else {
+      let pixels = new Uint8Array(texWidth*texHeight*4);
+    gl.readPixels(0,0,texWidth,texHeight,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+    console.log("console log");
+    console.log(pixels);
+}
+
+
+
+ function log(...args) {
+  const elem = document.createElement("pre");
+  const elem2 = document.createElement("pre");
+
+  //elem.textContent = [...args].join(' ');
+
+  let lx=texWidth;
+  let ly=texHeight;
+
+  let pixels = new Float32Array(lx*ly*4);
+  gl.readPixels(0,0,lx,ly,gl.RGBA,gl.FLOAT,pixels);
+  //console.log(pixels);
+
+  let array = Array.from(pixels);
+  let narray=array.map(x=>x.toPrecision(3)) ;
+  console.log(narray);
+
+let i=1;
+let a=narray.slice(i-1,i+3);
+i=i+4;
+let b=narray.slice(i-1,i+3);
+i=i+4;
+let c=narray.slice(i-1,i+3);
+i=i+4;
+let d=narray.slice(i-1,i+3);
+i=i+4;
+elem.textContent = [...a].join(' ') + " ** "+ [...b].join(' ') + " ** "+ [...c].join(' ') + " ** "+ [...d].join(' ')   ;
+
+let e=narray.slice(i-1,i+3);
+i=i+4;
+let f=narray.slice(i-1,i+3);
+i=i+4;
+let g=narray.slice(i-1,i+3);
+i=i+4;
+let h=narray.slice(i-1,i+3);
+i=i+4;
+elem2.textContent = [...e].join(' ') + " ** "+ [...f].join(' ') + " ** "+ [...g].join(' ') + " ** "+ [...h].join(' ')   ;
+  document.body.appendChild(elem);
+    document.body.appendChild(elem2);
+
+}
+
+
+/*
+résultat:
+la texture fait 4x2
+voici les valeurs de gl_FragCoord
+
+readpixel commence par le bas
+
+0.500 0.50 1.00 1.00 ** 1.50 0.50 1.00 1.00 ** 2.50 0.50 1.00 1.00 ** 3.50 0.50 1.00 1.00
+0.500 1.50 1.00 1.00 ** 1.50 1.50 1.00 1.00 ** 2.50 1.50 1.00 1.00 ** 3.50 1.50 1.00 1.00
+*/
+     </script> 
+  </body>
+</html>
