@@ -8,30 +8,21 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>WebGL GPU Particles</title>
     <style>
-      html, body {
       
-        _overflow: hidden;
-        height: 100%;
+      body {
         margin:0;
       }
-   
-
+      
       #canvas {
         background-color: black;
         color:white;
-        _height: 100%;
-        _width: 100%;
-        _left:0;
-        _top:0;
-
+        width: 100vw;
+        height: 100vh;
       }
-    </style>
-  </head>
-  <body>
-    <canvas id="canvas"></canvas>
 
-     <script type="module" src="./index.js">
- 
-     </script> 
-  </body>
+    </style>
+
+  </head>
+  <body><canvas id="canvas"></canvas><script type="module" src="./index.js"></script></body>
+
 </html>

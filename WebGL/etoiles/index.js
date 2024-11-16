@@ -1,5 +1,7 @@
 
-
+/*
+https://jsgist.org/?src=dd9bea6a850447dde59dc50eeb402c1c
+*/
 let debug=false;
 let dedede = 256;
 if (debug) dedede=2;
@@ -43,6 +45,22 @@ function touch(event) {
    // console.log(millis);
 
 }
+
+function resize() {
+  width = gl.canvas.clientWidth;
+  height = gl.canvas.clientHeight;
+  gl.canvas.width = width;
+  gl.canvas.height = height;
+
+  let scale = window.devicePixelRatio || 1;
+  width = window.innerWidth;
+  height = window.innerHeight;
+  gl.canvas.width = width * scale;
+  gl.canvas.height = height * scale;
+  gl.canvas.style.width = width + 'px';
+  gl.canvas.style.height = height + 'px';
+};
+
 
 const random = (min, max) => {
   if (typeof min !== 'number') min = 1;
@@ -239,9 +257,12 @@ if (false) {
 }
 
 //container = document.getElementById('container');
-canvas.addEventListener('touchmove', touch);
-canvas.addEventListener('mousemove', touch);
-//window.addEventListener('resize', resize);
+//canvas.addEventListener('touchmove', touch);
+//canvas.addEventListener('mousemove', touch);
+window.addEventListener('resize', resize);
+
+document.onpointermove = touch;
+
 //container.appendChild(gl.canvas);
 
 let physicsOutputTexture = gl.createTexture();
@@ -445,9 +466,18 @@ renderProgram.particleTexture = gl.getUniformLocation(renderProgram, 'particleTe
 renderProgram.physicsData =     gl.getUniformLocation(renderProgram, 'physicsData');
 renderProgram.bounds =          gl.getUniformLocation(renderProgram, 'bounds');
 
+resize();
+
 
 //remettre
 if (!debug) update();
+
+
+
+
+//////////////////////////////////////////////////
+/////////////////////////////////////////////////
+////////////////////////////////////////////////
 
 function update(maMillis) {
   if (!debug) {myReq=requestAnimationFrame(update);}
