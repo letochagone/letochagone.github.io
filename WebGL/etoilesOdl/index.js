@@ -351,8 +351,10 @@ function emitParticles(x,y)  {
 
   //container = document.getElementById('container');
   millis = 0;
-  canvas.addEventListener('touchmove', touch);
-  canvas.addEventListener('mousemove', touch);
+  //canvas.addEventListener('touchmove', touch);
+  //canvas.addEventListener('mousemove', touch);
+  document.onpointermove = touch;
+
   //window.addEventListener('resize', resize);
   //container.appendChild(gl.canvas);
 
