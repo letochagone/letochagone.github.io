@@ -323,7 +323,7 @@ const loaded = () => {
 };
 const image = new Image();
 image.src=  './textures/particle.png';
-image.addEventListener("load", loaded); 
+//image.addEventListener("load", loaded); 
 
 let particleTexture = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, particleTexture);
