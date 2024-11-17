@@ -378,14 +378,14 @@ function emitParticles(x,y)  {
       gl.generateMipmap(gl.TEXTURE_2D);
   };
   const image = new Image();
-  image.src=  './textures/particle.png';
+  image.src=  'particle.png';
   image.addEventListener("load", loaded); 
 
   particleTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, particleTexture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
   physicsProgram = createProgram(physicsVS, physicsFS);
