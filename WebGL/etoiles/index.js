@@ -82,6 +82,7 @@ function _emitParticles(x,y,t)  {
     let alea1 = random(0,1) ;
     let alea2 = random(-1, 1);
     let alea3 = random(-1, 1);
+    
 
     //alea1=0.7;
     //alea2=-0.6;
@@ -118,90 +119,13 @@ function _emitParticles(x,y,t)  {
 
 function emitParticles(x,y) {
 
-  let vertex=`
-  attribute vec2 vertexPosition;
-  varying vec2 coord;
-  void main() {
-    coord = (vertexPosition + 1.0) / 2.0;
-    gl_Position = vec4(vertexPosition, 1, 1);
-  }`;
-
-  let fragment=`
-  precision mediump float;
-  uniform sampler2D texture;
-  varying vec2 coord;
-
-  uniform float x;
-  uniform float y;
-  uniform float ygrec;
-
-  float rand(vec2 co){
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-  }
-  //https://stackoverflow.com/questions/68991114/glsl-pseudo-random-in-range
-
-  highp float rand2(vec2 co, float a, float b) {
-    return mix( a , b , rand(co));
-    // a + (b-a) * x or mix(a, b, x)
-  }
-  void main() {
-    vec4 color;
-
-    int slot = int(mod(gl_FragCoord.x, 2.0)); // 0 1 0 1 0 1 ...
-    int sloty = int(mod(gl_FragCoord.y, 2.0)); // 0 1 0 1 0 1 ...
-
-    float whichLine= floor(gl_FragCoord.y);
-
-    float colonneVitesseCourante = floor(floor(gl_FragCoord.x)/2.0);
-    //float ancienneValeurZcolonneVitesse =  texture2D(texture, coord).z;
-
-    // gl_FragCoord.x          0.5 1.5 2.5 3.5 4.5 ....
-    // floor(gl_FragCoord.x)   0   1   2   3   4 
-    // floor(gl_FragCoord.x)/2 0   0.5 1   1.5 2
-    // floor(...)              0   0   1   1
-
-    gl_FragColor = texture2D(texture, coord);
-
-    //if ((slot==1) && (ygrec==1.0)) {gl_FragColor=vec4(1);} //else gl_FragColor = texture2D(texture, coord);
-
-    float alea1= rand(vec2(x+5.0,y-5.0)) ; //random 0..1;
-    float alea2 = rand2(vec2(y,x),-1.0,+1.0); //random -1..+1;
-    float alea3 = rand2(vec2(x*2.0,y*2.0), -1.0, +1.0); //random -1..+1;
-
-    alea1 = rand(gl_FragCoord.xy);
-    alea2 = rand2(coord*vec2(65.90,-765.9),-1.0,+1.0);
-    alea3 = rand2(coord*vec2(265.90,765.9),-1.0,+1.0);
-
-    //alea3 = rand2(  gl_FragCoord.yx * cos(gl_FragCoord.y*654.6)     ,-1.0,+1.0);
-    //alea1=0.7;
-    //alea2=-0.6;
-    //alea3=+0.5;
-
-    vec4 position_slot  = vec4( x     , y     , alea1 ,0.0);
-    vec4 vitesse_slot   = vec4( alea2 , alea3 , colonneVitesseCourante   ,0.0);
-
-    if ((slot==1) && (whichLine==ygrec)) {gl_FragColor=vitesse_slot;}
-    if ((slot==0) && (whichLine==ygrec)) {gl_FragColor=position_slot;}
-
   
-  }`;
 
-  let shader = gl.createProgram();
-  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-  gl.shaderSource(vertexShader, vertex);
-  gl.shaderSource(fragmentShader, fragment);
-  gl.compileShader(vertexShader);
-  gl.compileShader(fragmentShader);
-  gl.attachShader(shader, vertexShader);
-  gl.attachShader(shader, fragmentShader);
-  gl.linkProgram(shader);
-
-  gl.useProgram(shader);
+  gl.useProgram(emitProgram);
   gl.viewport(0, 0, dedede*2, dedede);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, trianglesBuffer);
-  let aVertexPosition = gl.getAttribLocation(shader,"vertexPosition");
+  let aVertexPosition = gl.getAttribLocation(emitProgram,"vertexPosition");
   gl.enableVertexAttribArray(aVertexPosition);
   gl.vertexAttribPointer(aVertexPosition, 2, gl.FLOAT, gl.FALSE, 0, 0);
 
@@ -219,15 +143,15 @@ function emitParticles(x,y) {
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textureTemp, 0);
 
 
-  let textureLoc = gl.getUniformLocation(shader,"texture");
+  let textureLoc = gl.getUniformLocation(emitProgram,"texture");
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, physicsInputTexture);
   gl.uniform1i(textureLoc, 0);
 
-  let unifX = gl.getUniformLocation(shader,"x");
-  let unifY = gl.getUniformLocation(shader,"y");
+  let unifX = gl.getUniformLocation(emitProgram,"x");
+  let unifY = gl.getUniformLocation(emitProgram,"y");
 
-  let uYgrec = gl.getUniformLocation(shader,"ygrec");
+  let uYgrec = gl.getUniformLocation(emitProgram,"ygrec");
 
   gl.uniform1f(uYgrec,ygrec);
 
@@ -259,7 +183,7 @@ if (false) {
 //container = document.getElementById('container');
 //canvas.addEventListener('touchmove', touch);
 //canvas.addEventListener('mousemove', touch);
-window.addEventListener('resize', resize);
+//window.addEventListener('resize', resize);
 
 document.onpointermove = touch;
 
@@ -323,7 +247,7 @@ const loaded = () => {
 };
 const image = new Image();
 image.src=  './textures/particle.png';
-//image.addEventListener("load", loaded); 
+image.addEventListener("load", loaded); 
 
 let particleTexture = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, particleTexture);
@@ -333,9 +257,11 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 5, 5, 0, gl.RGBA, gl.UNSIGNED_BYTE,
   new Uint8Array(
-    [ 255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,
-      255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,
-      255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255,255, 0, 0, 255]
+    [ 255, 0, 0, 255,     255, 0, 0, 255,   255, 0, 0, 255,     255, 0, 0, 255,    255, 0, 0, 255,
+      255, 0, 0, 255,     255, 0, 0, 255,   255, 0, 0, 255,     255, 0, 0, 255,    255, 0, 0, 255,
+      255, 0, 0, 255,     255, 0, 0, 255,   255, 0, 0, 255,     255, 0, 0, 255,    255, 0, 0, 255,
+      255, 0, 0, 255,     255, 0, 0, 255,   255, 0, 0, 255,     255, 0, 0, 255,    255, 0, 0, 255,
+      255, 0, 0, 255,     255, 0, 0, 255,   255, 0, 0, 255,     255, 0, 0, 255,    255, 0, 0, 255]
   ));
 
 let renderVS=`
@@ -471,6 +397,91 @@ renderProgram.dataLocation =     gl.getAttribLocation(renderProgram, 'dataLocati
 renderProgram.particleTexture = gl.getUniformLocation(renderProgram, 'particleTexture');
 renderProgram.physicsData =     gl.getUniformLocation(renderProgram, 'physicsData');
 renderProgram.bounds =          gl.getUniformLocation(renderProgram, 'bounds');
+
+
+let emitVS=`
+  attribute vec2 vertexPosition;
+  varying vec2 coord;
+  void main() {
+    coord = (vertexPosition + 1.0) / 2.0;
+    gl_Position = vec4(vertexPosition, 1, 1);
+  }`;
+
+  let emitFS=`
+  precision mediump float;
+  uniform sampler2D texture;
+  varying vec2 coord;
+
+  uniform float x;
+  uniform float y;
+  uniform float ygrec;
+
+  float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+  }
+  //https://stackoverflow.com/questions/68991114/glsl-pseudo-random-in-range
+
+  highp float rand2(vec2 co, float a, float b) {
+    return mix( a , b , rand(co));
+    // a + (b-a) * x or mix(a, b, x)
+  }
+  void main() {
+    vec4 color;
+
+    int slot = int(mod(gl_FragCoord.x, 2.0)); // 0 1 0 1 0 1 ...
+    int sloty = int(mod(gl_FragCoord.y, 2.0)); // 0 1 0 1 0 1 ...
+
+    float whichLine= floor(gl_FragCoord.y);
+
+    float colonneVitesseCourante = floor(floor(gl_FragCoord.x)/2.0);
+    //float ancienneValeurZcolonneVitesse =  texture2D(texture, coord).z;
+
+    // gl_FragCoord.x          0.5 1.5 2.5 3.5 4.5 ....
+    // floor(gl_FragCoord.x)   0   1   2   3   4 
+    // floor(gl_FragCoord.x)/2 0   0.5 1   1.5 2
+    // floor(...)              0   0   1   1
+
+    gl_FragColor = texture2D(texture, coord);
+
+    //if ((slot==1) && (ygrec==1.0)) {gl_FragColor=vec4(1);} //else gl_FragColor = texture2D(texture, coord);
+
+    float alea1= rand(vec2(x+5.0,y-5.0)) ; //random 0..1;
+    float alea2 = rand2(vec2(y,x),-1.0,+1.0); //random -1..+1;
+    float alea3 = rand2(vec2(x*2.0,y*2.0), -1.0, +1.0); //random -1..+1;
+
+    alea1 = rand(gl_FragCoord.xy);
+    alea2 = rand2(coord*vec2(65.90,-765.9),-1.0,+1.0);
+    alea3 = rand2(coord*vec2(265.90,765.9),-1.0,+1.0);
+
+    //alea3 = rand2(  gl_FragCoord.yx * cos(gl_FragCoord.y*654.6)     ,-1.0,+1.0);
+    //alea1=0.7;
+    //alea2=-0.6;
+    //alea3=+0.5;
+
+    vec4 position_slot  = vec4( x     , y     , alea1 ,0.0);
+    vec4 vitesse_slot   = vec4( alea2 , alea3 , colonneVitesseCourante   ,0.0);
+
+    if ((slot==1) && (whichLine==ygrec)) {gl_FragColor=vitesse_slot;}
+    if ((slot==0) && (whichLine==ygrec)) {gl_FragColor=position_slot;}
+
+  
+  }`;
+
+  let emitProgram = gl.createProgram();
+  {
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(vertexShader, emitVS);
+    gl.shaderSource(fragmentShader, emitFS);
+    gl.compileShader(vertexShader);
+    gl.compileShader(fragmentShader);
+    gl.attachShader(emitProgram, vertexShader);
+    gl.attachShader(emitProgram, fragmentShader);  
+  }
+
+  gl.linkProgram(emitProgram);
+
+
 
 resize();
 
