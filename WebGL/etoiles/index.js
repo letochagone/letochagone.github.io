@@ -41,7 +41,7 @@ function touch(event) {
     const x = (event.clientX / width) * 2 - 1;
     const y = (event.clientY / height) * -2 + 1;
     //remettre
-    if (!debug) _emitParticles(x, y,millis);
+    if (!debug) emitParticles(x, y);
    // console.log(millis);
 
 }
@@ -74,7 +74,7 @@ const random = (min, max) => {
   */
 };
 
-function _emitParticles(x,y,t)  {
+function _emitParticles(x,y)  {
   gl.bindTexture(gl.TEXTURE_2D, physicsInputTexture);
   let force = 1.0;
   let data = [];
