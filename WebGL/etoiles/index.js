@@ -1,5 +1,5 @@
   const elem2 = document.createElement("pre");
-  elem2.textContent = 'L'  ;
+  elem2.textContent = 'M'  ;
   document.body.appendChild(elem2);
 
 /*
@@ -416,7 +416,7 @@ let emitVS=`
   }`;
 
   let emitFS=`
-  precision highp float;
+  //precision highp float;
   uniform sampler2D texture;
   varying vec2 coord;
 
