@@ -41,7 +41,7 @@ function touch(event) {
     const x = (event.clientX / width) * 2 - 1;
     const y = (event.clientY / height) * -2 + 1;
     //remettre
-    if (!debug) emitParticles(x, y);
+    if (!debug) _emitParticles(x, y);
    // console.log(millis);
 
 }
