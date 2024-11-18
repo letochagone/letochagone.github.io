@@ -1,5 +1,5 @@
   const elem2 = document.createElement("pre");
-  elem2.textContent = 'J'  ;
+  elem2.textContent = 'K'  ;
   document.body.appendChild(elem2);
 
 /*
@@ -188,7 +188,8 @@ if (false) {
 //canvas.addEventListener('mousemove', touch);
 //window.addEventListener('resize', resize);
 
-el.onpointermove = touch;
+document.onpointermove = touch;
+//canvas.ondragstart = (à)
 
 //container.appendChild(gl.canvas);
 
@@ -310,6 +311,8 @@ let renderVS=`
 `;
 
 let renderFS=`
+  precision highp float;
+
   uniform sampler2D particleTexture;
   void main() {
     gl_FragColor = texture2D(particleTexture, gl_PointCoord);
@@ -317,6 +320,8 @@ let renderFS=`
 `;
 
 let physicsVS=`
+  precision highp float;
+
   attribute vec2 vertexPosition;
   void main() {
     gl_Position = vec4(vertexPosition, 0, 1);
@@ -324,7 +329,7 @@ let physicsVS=`
 `;
 
 let physicsFS=`
-  precision mediump float;
+  precision highp float;
   uniform sampler2D physicsData;
   uniform vec2 bounds;
   const int POSITION_SLOT = 0;
@@ -411,7 +416,7 @@ let emitVS=`
   }`;
 
   let emitFS=`
-  precision mediump float;
+  precision highp float;
   uniform sampler2D texture;
   varying vec2 coord;
 
@@ -591,6 +596,8 @@ function update(maMillis) {
   gl.disable(gl.BLEND);
 
   [physicsOutputTexture,physicsInputTexture] = [physicsInputTexture,physicsOutputTexture];
+
+  //emitParticles(0,0);
 }
 
 if (debug) {
