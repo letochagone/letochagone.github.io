@@ -1,5 +1,5 @@
   const elem2 = document.createElement("pre");
-  elem2.textContent = 'H'  ;
+  elem2.textContent = 'I'  ;
   document.body.appendChild(elem2);
 
 /*
@@ -188,7 +188,7 @@ if (false) {
 //canvas.addEventListener('mousemove', touch);
 //window.addEventListener('resize', resize);
 
-document.onpointermove = touch;
+el.onpointermove = touch;
 
 //container.appendChild(gl.canvas);
 
