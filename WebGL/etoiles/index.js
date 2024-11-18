@@ -1,5 +1,5 @@
   const elem2 = document.createElement("pre");
-  elem2.textContent = 'K'  ;
+  elem2.textContent = 'L'  ;
   document.body.appendChild(elem2);
 
 /*
