@@ -1,6 +1,7 @@
   const elem2 = document.createElement("pre");
-  elem2.textContent = 'F'  ;
+  elem2.textContent = 'G'  ;
   document.body.appendChild(elem2);
+
 /*
 https://jsgist.org/?src=dd9bea6a850447dde59dc50eeb402c1c
 */
