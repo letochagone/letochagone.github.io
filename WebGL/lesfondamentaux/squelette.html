@@ -23,16 +23,124 @@
 
     <pre><code class="lecode">
 
-let demo = 45;
-      for (let j=0; j <43;j++) {
-          console.log(j);
-        }
+let canvas= document.getElementById('canvas');
+let gl = canvas.getContext("webgl");
 
-let vertex=`
-        uniform i;
-        void main() {
-        }
-        `;
+
+let lx=3;
+let ly=2;
+gl.canvas.width=1;
+gl.canvas.height=1;
+gl.viewport(0,0,lx,ly);
+let vertexShaderSource=`
+  attribute vec2 position;
+  varying vec2 vposition;
+  void main() {
+    gl_Position = vec4(position, 0, 1);
+    vposition= (position+1.0)/2.0;
+
+  }
+`;
+let fragmentShaderSource=`
+  precision mediump float;
+  varying vec2 vposition;
+  uniform sampler2D texture;
+  void main() {
+    gl_FragColor = texture2D(texture, vposition);
+  }
+`;
+let vertex = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vertex, vertexShaderSource);
+gl.compileShader(vertex);
+let fragment = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(fragment, fragmentShaderSource);
+gl.compileShader(fragment);
+const program = gl.createProgram();
+gl.attachShader(program,vertex);
+gl.attachShader(program,fragment);
+gl.linkProgram(program);
+gl.useProgram(program);
+
+
+const targetTexture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, targetTexture);    
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, lx, ly, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+// set the filtering so we don't need mips
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+const fb = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+// attach the texture as the first color attachment
+const attachmentPoint = gl.COLOR_ATTACHMENT0;
+gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, 0);
+// Attachment is different from binding. Objects are bound to the context; objects are attached to one another.
+
+const tex = gl.createTexture();
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D, tex);
+
+gl.texImage2D(gl.TEXTURE_2D,
+  0,gl.RGBA,
+  lx,                 // width
+  ly,                 // height
+  0,gl.RGBA,gl.UNSIGNED_BYTE,
+  new Uint8Array([ 
+          255, 0, 0, 255,   0, 255, 0, 255,    127,200,0,255,
+          0, 0, 255, 255,   255, 0, 255, 255,  60,60,0,255,
+        ])
+);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+let buffer= gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+gl.bufferData(gl.ARRAY_BUFFER,
+          new Float32Array([-1,-1,  -1,1,   1,-1,   1,1,  -1,1,  1,-1]),
+gl.STATIC_DRAW);
+
+let aposition = gl.getAttribLocation(program,"position");
+gl.enableVertexAttribArray(aposition);
+gl.vertexAttribPointer(aposition, 2, gl.FLOAT, false, 0, 0);
+gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+
+function log() {
+  const elem = document.createElement("pre");
+  const elem2 = document.createElement("pre");
+  
+  let pixels = new Uint8Array(lx*ly*4);
+  gl.readPixels(0,0,lx,ly,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+console.log(pixels);
+  let narray = Array.from(pixels);
+
+  let i=1;
+  let a=narray.slice(i-1,i+3);
+  i=i+4;
+  let b=narray.slice(i-1,i+3);
+  i=i+4;
+  let c=narray.slice(i-1,i+3);
+  i=i+4;
+
+  elem.textContent = [...a].join(' ') + " ** "+ [...b].join(' ') + " ** "+ [...c].join(' ') 
+  let e=narray.slice(i-1,i+3);
+  i=i+4;
+  let f=narray.slice(i-1,i+3);
+  i=i+4;
+  let g=narray.slice(i-1,i+3);
+  i=i+4;
+
+  elem2.textContent = [...e].join(' ') + " ** "+ [...f].join(' ') + " ** "+ [...g].join(' ')   ;
+  document.body.appendChild(elem);
+  document.body.appendChild(elem2);
+}
+
+log();
   </code></pre>
 </body>
 
