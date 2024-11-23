@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>extra console log</title>
+
+	<style>
+		#log {
+			white-space: nowrap;
+			font-family: monospace;
+		}
+
+		#canvas {
+			background: black;
+		}
+     </style>
+</head>
+<body>
+	<p>Le but est de faire une console log qui s'affiche sur la page, permettant ainsi de debugger sur un téléphone.
+	Car sur un téléphone, impossible d'afficher la console.</p>
+
+	<p>
+		On faire un programme WebGL qui rempli une texture de nombre. Et on va afficher ce contenu sur la page.
+	</p>
+
+	<canvas id="canvas"></canvas>
+
+	<div id="log"></div>
+
+	<script>
+		"use strict";
+
+		let vertex=`
+			attribute vec2 a_position;
+
+			void main() {
+
+				gl_Position = vec4(a_position,0.0,1.0);
+			}
+		`;
+		let fragment = `
+			#ifdef GL_FRAGMENT_PRECISION_HIGH
+  				precision highp float;
+			#else
+  				precision mediump float;
+			#endif
+
+			void main() {
+				gl_FragColor = vec4(gl_FragCoord.xy,1234.0,-56.78);
+			}
+		`;
+
+		(function () {
+			if (!console) {
+				console = {};
+			}
+			let old = console.log;
+			let logger = document.getElementById('log');
+			console.log = function (message) {
+				if (typeof message == 'object') {
+					logger.innerHTML += (JSON && JSON.stringify ? JSON.stringify(message) : String(message)) + '<br />';
+				} else {
+					logger.innerHTML += message + '<br />';
+				}
+			}
+		})();
+
+
+		let canvas = document.querySelector("#canvas");
+		let gl = canvas.getContext("webgl");
+		gl.getExtension('OES_texture_float');
+
+		gl.canvas.width=3;
+		gl.canvas.height=4;
+
+		let program   = gl.createProgram();
+		const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+		const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+		gl.shaderSource(vertexShader, vertex);
+		gl.shaderSource(fragmentShader, fragment);
+		gl.compileShader(vertexShader);
+		gl.compileShader(fragmentShader);
+		gl.attachShader(program, vertexShader);
+		gl.attachShader(program, fragmentShader);
+		gl.linkProgram(program);
+		gl.useProgram(program);
+
+		const positionBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+			-1, -1,  // first triangle
+			 1, -1,
+			-1,  1,
+			-1,  1,  // second triangle
+			 1, -1,
+			 1,  1,
+		]),
+		gl.STATIC_DRAW);
+
+
+		let targetTexture = gl.createTexture () ;
+		gl.bindTexture  ( gl.TEXTURE_2D, targetTexture ) ;
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA,gl.FLOAT, null);
+
+		const fb= gl.createFramebuffer();
+		gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+		const attachmentPoint = gl.COLOR_ATTACHMENT0;
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, 0);
+
+		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+		const attribLoc = gl.getAttribLocation(program, "a_position");
+		gl.enableVertexAttribArray(attribLoc);
+		gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+		gl.vertexAttribPointer( attribLoc,
+				2,          // 2 components per iteration
+				gl.FLOAT,   // the data is 32bit floats
+				false,      // don't normalize the data
+				0,          // 0 = move forward size * sizeof(type) each iteration to get the next position
+				0          // start at the beginning of the buffer
+		);
+
+		gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+		let fN=function(number) {
+			return Intl.NumberFormat("nu", { style: "decimal",  signDisplay: 'always', useGrouping:false, minimumIntegerDigits:3 , minimumFractionDigits:3 }).format(number).replace(",",".");
+		}
+		
+		let data = new Float32Array(4 * gl.canvas.width * gl.canvas.height);
+		gl.readPixels(0, 0, gl.canvas.width, gl.canvas.height, gl.RGBA, gl.FLOAT, data);
+		
+        let d=0;
+		for ( let j=0 ; j < gl.canvas.height ; j++ ) {
+			let ligne="";
+			for ( let i=0 ; i < gl.canvas.width ; i++) {
+				
+				//ligne = data[d]  ;
+				//ligne = ligne + fN(data[d]) + "   " + fN(data[d+1]) + " | " ;
+				//ligne = ligne + data[d] + " , " + data[d+1] + " , "  + data[d+2] + " || "     ;
+				ligne =   ligne + fN(data[d]) + "   " + fN(data[d+1]) + "   " + fN(data[d+2]) + "   " + fN(data[d+3]) + " || " ;
+				
+
+				d=d+4;
+
+
+			}
+			//  new Intl.NumberFormat('nu',{ minimumIntegerDigits: 3 ,minimumFractionDigits:3}).format(number)
+			console.log(ligne);
+		}
+
+
+	</script>
+
+
+
+
+
+
+</body>
+</html>
