@@ -70,6 +70,7 @@ precision mediump float;
 		let canvas = document.querySelector("#canvas");
 		let gl = canvas.getContext("webgl");
 		gl.getExtension('OES_texture_float');
+		gl.getExtension("WEBGL_color_buffer_float");
 
 		gl.canvas.width=3;
 		gl.canvas.height=4;
