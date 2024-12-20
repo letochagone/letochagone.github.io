@@ -1,1 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>WebGL GPU Particles</title>
+    <style>
+      #canvas {
+        background-color: black;
+        color:white;
+        position: relative;
+        top: 0px;
+        left:0px;
+      }
+
+
+
+      #log {
+        font-size: xx-small;
+        white-space: nowrap;
+        font-family: monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #test {
+        position: relative;
+        background-color: black;
+        height: 256px;
+      }
+      #image1 {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+      }
+      .image2 {
+        position: absolute;
+        left: 100px;
+        top: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <button id="emit">emit</button>
+
+    <button id="start">start</button>
+    <button id="stop">stop</button>
+    <div id="log"></div>
+    <script type="module" src="./index.js"></script>
+
+    <div id="test"><img id="image1" src="textures/particle.png"><img class="image2" src="textures/particle.png"><img class="image2" src="textures/particle.png"><img class="image2" src="textures/particle.png"><img class="image2" src="textures/particle.png"></div>
+  </body>
+
+</html>
 
