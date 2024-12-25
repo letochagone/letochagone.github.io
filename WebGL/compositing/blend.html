@@ -1,0 +1,284 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title></title>
+
+	<style type="text/css">
+    #fond {
+      position: relative;
+      background-color: rgb(100,150,200);
+      width: 800px;
+      height: 500px;
+    }
+		
+		canvas {
+			background-color: rgb(100,150,200);
+		}
+
+    #img2 {
+      position: relative;
+      left:-50px;
+    }
+	</style>
+</head>
+<body>
+<canvas id="destinationCanvas"></canvas>
+
+<p>le carré au centre est une image venant du logiciel Gimp. Elle est composée d'une seule couleur de valeur : (165/255,  40/255,  40/255,  183/255 )  = ( 0.65 ,  0.16 , 0.16 , 0.72 )</p>
+<img src="./cours_1.png">
+
+<p>
+  Elle est affichée sur l'élément canvas, de couleur rgb(100,150,200).
+</p>
+<br>
+<p>
+  La couleur résultante théorique est donnée par les formules : 
+</p>
+<p>(1) co = Cs * αs + Cb * αb * (1-αs)</p>
+<p>(2) αo = αs + (1-αs) * αb</p>
+<p> Cs et αs sont les valeurs (rgba) de  la couleur source, le carré central</p>
+<p> Cb et ab sont les valeurs (rgba) de  la couleur affichée en premier, le canvas.</p>
+<p>Cb = (100/255 , 150/255 , 200/255)</p>
+<p>αb = 1</p>
+<p>calculons la couleur résultante :</p>
+<p>co = Cs * αs + Cb * αb * (1-αs)</p>
+<p>co = (165/255, 40/255, 40/255) * (183/255) + (100/255, 150/255, 200/255) * 1 * (1-183/255)</p>
+<p>On divise chaque valeur par 255 pour avoir les valeurs 'réelles'</p>
+<p>co  = (0.575 , 0.278 , 0.33)</p>
+<p>On fait une capture écran de la page obtenue, on colle le résultat sous Gimp et on lit sa couleur :</p>
+<img src="./a2.png">
+<p>Valeur théorique et valeur lue, elles sont égales.</p>
+
+<h4>2e partie</h4>α
+<p>on affiche maintenant deux points. La position du 2e est décalée par rapport au premier.</p>
+<canvas id="canvas"></canvas>
+
+<p>Cette fois Cb et αb est la couleur du point sur le fond</p>
+<p>Cb  = (0.575 , 0.278 , 0.33) , αb = 1 </p> 
+<p>Cs et αs, de nouveau la couleur source</p>
+<p>Cs ( 0.65 ,  0.16 , 0.16 ), αs = 0.72 )</p>
+<p>Calcul théorique</p>
+<p>co  = Cs * αs + Cb * αb * (1-αs)</p>
+<p>co  = (0.65 , 0.16 , 0.16 ) * 0.72 + (0.575 , 0.278 , 0.33) * 1 * ( 1- 0.72 ) </p>
+<p>co = ( 0.63 , 0.19, 0.21)</p>
+
+
+<img src="./b2.png">
+
+<p>La valeur calculée correspond à la valeur affichée.</p>
+
+<p>J'essaye alors d'affichée ces deux images identiques avec deux éléments img. le 2e légèrement décalée de sorte qu'une partie soit affichée sur le 1er.
+  On fait une capture d'écran, on lit la valeur de la couleur, elle correspond au résultat calculé.
+</p>
+<div id="fond">
+<img id="img1" src="./textures/test.png"><img id="img2" src="./textures/test.png">
+</div>
+<img src="./cours_3.png">
+<script>
+	
+
+"use strict";
+
+let width = 800;
+let height= 500;
+let ygrec=0;
+let requestId;
+let millis=0;
+
+let showConsole=false;
+
+function loadImage(url, callback) {
+  let image = new Image();
+  image.src = url;
+  image.onload = callback;
+  return image;
+}
+function loadImages(urls, callback) {
+  let images = [];
+  let imagesToLoad = urls.length;
+  // Called each time an image finished loading.
+  let onImageLoad = function() {
+    --imagesToLoad;
+    // If all the images are loaded call the callback.
+    if (imagesToLoad == 0) {
+      callback(images);
+    }
+  };
+  for (let ii = 0; ii < imagesToLoad; ++ii) {
+    let image = loadImage(urls[ii], onImageLoad);
+    images.push(image);
+  }
+}
+
+function main() {
+  loadImages([
+    
+    "./textures/test.png",  //image        images[1]
+   
+  ], imagesChargees);         
+}
+
+main();
+
+function imagesChargees(images) {
+
+
+
+ 
+  const el = document.getElementById("canvas");
+  const gl = el.getContext('webgl',{premultipliedAlpha: true}) ;
+  gl.canvas.width = width;
+  gl.canvas.height = height ;
+  const extensions= {
+    ext1: gl.getExtension('OES_texture_float'),
+    ext2: gl.getExtension('WEBGL_color_buffer_float')
+  };
+
+ let renderVS=`
+    attribute vec2 a_position;
+
+   
+    void main() {
+
+
+
+   gl_Position = vec4( a_position, 0.0, 1.0 );
+
+       gl_PointSize=256.0;
+    }
+  `;
+
+  let renderFS=`
+    precision highp float;
+    
+    uniform sampler2D particleTexture;
+    
+    void main() {
+      vec4 color = texture2D(particleTexture, gl_PointCoord);
+      vec4 color2 = vec4(165.0/255.0,  40.0/255.0,  40./255. , 183./255.);
+
+      gl_FragColor= color ;
+      gl_FragColor.rgb *= gl_FragColor.a;
+
+
+     
+    }
+  `;
+
+  let renderProgram = gl.createProgram();
+  {
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(vertexShader, renderVS);
+    gl.shaderSource(fragmentShader, renderFS);
+    gl.compileShader(vertexShader);
+    gl.compileShader(fragmentShader);
+    gl.attachShader(renderProgram, vertexShader);
+    gl.attachShader(renderProgram, fragmentShader);
+  }
+  gl.linkProgram(renderProgram);
+
+  renderProgram.a_position =     gl.getAttribLocation(renderProgram, 'a_position');
+  renderProgram.particleTexture = gl.getUniformLocation(renderProgram, 'particleTexture');
+  renderProgram.physicsData =     gl.getUniformLocation(renderProgram, 'physicsData');
+  renderProgram.bounds =          gl.getUniformLocation(renderProgram, 'bounds');
+
+
+
+  let  pts = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,pts);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0, 0, 0.2, 0]),gl.STATIC_DRAW);
+  let a_position = gl.getAttribLocation(renderProgram,"a_position");
+  gl.enableVertexAttribArray(a_position);
+  gl.vertexAttribPointer(a_position,2,gl.FLOAT,false,0,0);
+
+  let trianglesBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, trianglesBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(
+    [-1,-1,   -1,1,   1,-1,   1,-1,  -1,1,   1,1]),
+  gl.STATIC_DRAW);
+
+  let coordsTexBuff = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, coordsTexBuff);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(
+    [0,0,  0,1,  1,0,  1,0,  0,1,  1,1]),
+  gl.STATIC_DRAW);
+
+  let particleTexture = gl.createTexture();
+  //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.bindTexture(gl.TEXTURE_2D, particleTexture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[0]);
+
+ 
+    ////////////////
+    /// RENDER ////
+    //////////////
+
+    gl.useProgram(renderProgram);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    //gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    //blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
+    //color(RGB) = (sourceColor * srcRGB) + (destinationColor * dstRGB)
+    //color(RGB) =  Cs*as       *  ONE           Cb*ab          (1-as)
+    //color(A) = (sourceAlpha * srcAlpha) + (destinationAlpha * dstAlpha)
+    //color(A) =     as             ONE          ab             (1-as)
+
+
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, particleTexture);
+    gl.uniform1i(renderProgram.particleTexture, 1);
+    
+  //  gl.clearColor(100/255,150/255,200/255,1);
+  //  gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.drawArrays(gl.POINTS, 0, 1);
+
+    //grab the context from your destination canvas
+    let destinationCanvas = document.getElementById("destinationCanvas");
+    destinationCanvas.width=width;
+    destinationCanvas.height=height;
+    let destCtx = destinationCanvas.getContext('2d');
+    //call its drawImage() function passing it the source canvas directly
+    destCtx.drawImage(el, 0, 0);
+
+    gl.clearColor(100/255,150/255,200/255,1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.POINTS, 0, 2);
+
+    gl.disable(gl.BLEND);
+
+/*
+0.627 0.192 0.208
+
+calcul
+Cb = 0.573  0.278 0.333  ab =1
+Cs = 165.0/255.0,  40.0/255.0,  40./255.  as= 183./255.
+
+
+co = Cs as + Cb ab (1-as)
+=[165/255,40/255,40/255][0]*183/255+[0.573,0.278,0.333][0]*(1-183/255)
+= 0.626 0.19  0.206
+
+youuuuupi
+*/
+
+
+
+}
+</script>
+
+
+</body>
+</html>
