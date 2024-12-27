@@ -25,7 +25,7 @@
 	</style>
 </head>
 <body>
-<canvas id="destinationCanvas"></canvas>
+<canvas id="destinationCanvasUnPoint"></canvas>
 
 <p>le carré au centre est une image venant du logiciel Gimp. Elle est composée d'une seule couleur de valeur : (165/255,  40/255,  40/255,  183/255 )  = ( 0.65 ,  0.16 , 0.16 , 0.72 )</p>
 <img src="./cours_1.png">
@@ -52,9 +52,9 @@
 <img src="./a2.png">
 <p>Valeur théorique et valeur lue, elles sont égales.</p>
 
-<h4>2e partie</h4>α
+<h4>2e partie</h4>
 <p>on affiche maintenant deux points. La position du 2e est décalée par rapport au premier.</p>
-<canvas id="canvas"></canvas>
+<canvas id="destinationCanvasDeuxPoints"></canvas>
 
 <p>Cette fois Cb et αb est la couleur du point sur le fond</p>
 <p>Cb  = (0.575 , 0.278 , 0.33) , αb = 1 </p> 
@@ -77,6 +77,18 @@
 <img id="img1" src="./test.png"><img id="img2" src="./test.png">
 </div>
 <img src="./cours_3.png">
+
+
+<br>
+<p>maintenant avec une image d'étoile</p>
+<canvas id="destinationCanvasEtoile"></canvas>
+
+<p>Maintenant deux éléments 'img' ayant pour source le fichier etoile.png. Les deux éléments se chevauchent et le second applique la propriété mix-blend-mode: hard-light.</p>
+<div style="position:relative ; width:800px ; height:500px; background-color: black;">
+<img src="./particle.png" style="position:absolute">
+<img src="./particle.png" style="position:absolute ; left:50px ; mix-blend-mode: hard-light;">
+</div>
+<p>à faire : établir cette propriété mix-blend-mode: hard-light, en WebGL</p>
 <script>
 	
 
@@ -117,6 +129,7 @@ function main() {
   loadImages([
     
     "./test.png",  //image        images[1]
+    "./particle.png"
    
   ], imagesChargees);         
 }
@@ -125,10 +138,13 @@ main();
 
 function imagesChargees(images) {
 
+/*
+<canvas id="canvas"></canvas>
 
+*/
 
- 
-  const el = document.getElementById("canvas");
+ const el = document.createElement('canvas');
+ // const el = document.getElementById("canvas");
   const gl = el.getContext('webgl',{premultipliedAlpha: true}) ;
   gl.canvas.width = width;
   gl.canvas.height = height ;
@@ -190,7 +206,7 @@ function imagesChargees(images) {
 
   let  pts = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER,pts);
-  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0, 0, 0.2, 0]),gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0, 0, 0.1, 0]),gl.STATIC_DRAW);
   let a_position = gl.getAttribLocation(renderProgram,"a_position");
   gl.enableVertexAttribArray(a_position);
   gl.vertexAttribPointer(a_position,2,gl.FLOAT,false,0,0);
@@ -217,6 +233,17 @@ function imagesChargees(images) {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[0]);
 
  
+
+  let etoileTexture = gl.createTexture();
+  //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.bindTexture(gl.TEXTURE_2D, etoileTexture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[1]);
+
+
     ////////////////
     /// RENDER ////
     //////////////
@@ -246,16 +273,48 @@ function imagesChargees(images) {
     gl.drawArrays(gl.POINTS, 0, 1);
 
     //grab the context from your destination canvas
-    let destinationCanvas = document.getElementById("destinationCanvas");
-    destinationCanvas.width=width;
-    destinationCanvas.height=height;
-    let destCtx = destinationCanvas.getContext('2d');
-    //call its drawImage() function passing it the source canvas directly
-    destCtx.drawImage(el, 0, 0);
+    {
+      let destinationCanvas = document.getElementById("destinationCanvasUnPoint");
+      destinationCanvas.width=width;
+      destinationCanvas.height=height;
+      let destCtx = destinationCanvas.getContext('2d');
+      //call its drawImage() function passing it the source canvas directly
+      destCtx.drawImage(el, 0, 0);
+    }
 
     gl.clearColor(100/255,150/255,200/255,1);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.POINTS, 0, 2);
+
+
+   //grab the context from your destination canvas
+    {
+      let destinationCanvas = document.getElementById("destinationCanvasDeuxPoints");
+      destinationCanvas.width=width;
+      destinationCanvas.height=height;
+      let destCtx = destinationCanvas.getContext('2d');
+      //call its drawImage() function passing it the source canvas directly
+      destCtx.drawImage(el, 0, 0);
+    }
+
+
+    gl.bindTexture(gl.TEXTURE_2D, etoileTexture);
+        gl.clearColor(0,0,0,1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.POINTS, 0, 2);
+
+   //grab the context from your destination canvas
+    {
+      let destinationCanvas = document.getElementById("destinationCanvasEtoile");
+      destinationCanvas.width=width;
+      destinationCanvas.height=height;
+      let destCtx = destinationCanvas.getContext('2d');
+      //call its drawImage() function passing it the source canvas directly
+      destCtx.drawImage(el, 0, 0);
+    }
+
+
+
 
     gl.disable(gl.BLEND);
 
