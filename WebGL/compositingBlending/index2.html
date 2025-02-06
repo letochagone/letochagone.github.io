@@ -1,0 +1,204 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      canvas {
+        display: block;
+        background-color: rgba(150, 150, 255, 0.8);;
+        width:100px;
+        height:100px;
+        image-rendering: pixelated;
+      }
+      
+      #cb , #cs , #cs2 {
+        width: 100px;
+        height: 100px;
+      }
+      #cs2 { 
+        background-color: rgba(153, 102, 204, 0.6);
+      }
+      #cs {
+        background-color: rgba(102, 102, 102, 0.7);
+      }
+      #cb {
+        background-color: rgba(255,255,255,1);
+      }
+      
+      
+    </style>
+  </head>
+  <body>
+  
+  	<canvas></canvas>
+  	
+  	<div id="cb">
+  	  <div id="cs">
+  	    <div id="cs2"></div>
+  	  </div>
+  	</div>
+    <script>
+   
+
+let cs2=[51/255,127/255,204/255];
+let as0 = 0.6
+
+let cs=[204/255, 38/255, 127/255];
+let as=0.5;
+
+let cb=[76/255, 51/255, 178/255];
+let ab=0.3;
+
+
+const gl = document.querySelector("canvas").getContext("webgl", {
+  
+  premultipliedAlpha: false
+});
+gl.canvas.width=2;
+gl.canvas.height=2;
+const VERTEX_SHADER = `
+  attribute vec2 aPosition;
+  attribute vec4 aColor;
+  varying vec4 vColor;
+  
+  void main() {
+    vColor = aColor;
+    gl_Position= vec4(aPosition,0,1);
+    gl_PointSize=1.0;
+    
+  }
+`;
+const FRAGMENT_SHADER = `
+  precision mediump float;
+  varying vec4 vColor;
+  
+  void main() {  
+    gl_FragColor = vColor;  
+    //gl_FragColor.rgb *= vColor.a;
+  }
+`;
+const vshader = gl.createShader(gl.VERTEX_SHADER);
+const fshader = gl.createShader(gl.FRAGMENT_SHADER);
+const program = gl.createProgram();
+
+gl.shaderSource(vshader, VERTEX_SHADER);
+gl.shaderSource(fshader, FRAGMENT_SHADER);
+gl.compileShader(vshader);
+gl.compileShader(fshader);
+gl.attachShader(program, vshader);
+gl.attachShader(program, fshader);
+gl.linkProgram(program);
+gl.useProgram(program);
+
+gl.viewport(0,0,2,2);
+
+gl.clearColor(0.2,0,0,0.2);
+gl.clear(gl.COLOR_BUFFER_BIT);
+
+let aPosition = gl.getAttribLocation(program,"aPosition");
+let aColor = gl.getAttribLocation(program,"aColor");
+
+let positionBuffer= gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,positionBuffer);
+gl.bufferData(gl.ARRAY_BUFFER,
+  new Float32Array([
+  -0.5,-0.5,
+  -0.5,-0.5,
+  -0.5,-0.5]),
+  gl.STATIC_DRAW);
+gl.enableVertexAttribArray(aPosition);
+gl.vertexAttribPointer(aPosition,2,gl.FLOAT,false,0,0);
+
+let colorBuffer= gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,colorBuffer);
+gl.bufferData(gl.ARRAY_BUFFER,
+  new Float32Array([
+    //0.6, 0.4 , 0.8, 0.6,
+    0.6, 0.4 , 0.8, 0.6,
+    1,1,1,1,
+    1,1,1,1,
+    
+  ]),gl.STATIC_DRAW);
+gl.enableVertexAttribArray(aColor);
+gl.vertexAttribPointer(aColor,4,gl.FLOAT,false,0,0);
+
+if (false) {
+const texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, 
+  //null
+  new Uint8Array([
+  45,65,122,100,   22,122,55,77,
+  22,122,55,77,  22,122,55,77,
+  ])
+);
+
+const fb=gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
+gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture,0);
+}
+else
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+
+
+/*
+blendFuncSeparate(srcRGB, dstRGB , srcAlpha , dstAlpha)
+RGB=  sourceColor * srcRGB + destinationColor * dstRGB
+A  =  sourceAlpha * srcAlpha + destinationAlpha* dstAlpha
+
+RGB=  sourceColor * As + destinationColor * (1-As)
+A  =  sourceAlpha * 1 + destinationAlpha* (1-As)
+
+Cs <= (1-ab) * Cs + B * ab
+*/
+
+//gl.enable(gl.BLEND);
+gl.enable(gl.BLEND);
+
+gl.blendFuncSeparate(gl.ONE,gl.ONE,gl.ZERO,gl.ONE);
+/*
+gl.clearColor(        0.2,   0,   0,   0.2);
+gl.FragColor  =       0.6,   0.4  0.8, 0.6,
+canvas                0.67   0.67 1    1 
+blending:
+RGB = sourceColor + destinationColor 
+RGB = fragColor + clearColor 
+RGB = 0.6, 0.4 , 0.8, + 0.2,0,0,0. =   0.8 , 0.4  , 0.8
+A = sourceAlpha * gl.ZERO + destinationAlpha * gl.ONE = 0.2
+
+résutat du blending :
+RGB= 0.8 0.4 0.8   A = 0.2
+
+compositing avec le fond 0.67 0.67 1
+source :    0.8   0.4    0.8   0.2
+destination 0.67  0.67   1     1 
+co = 0.8*0.2 + 0.67 * 1* (1-0.2)  ,    0.4*0.2 + 0.67 * 1 * (1-0.2) ,  0.8 * 0.2 + 1 * 1 * (1-0.2)
+= mêmechoses que capture ecran
+
+capture ecran: 0.63 0.518 0.886
+gl.blendFuncSeparate(gl.ONE,gl.ZERO,gl.ZERO,gl.ONE);
+
+capture 0.67 0.67 1
+gl_FragCoolor = 0.6, 0.4 , 0.8, 0.0,
+
+// 0.4021, 0.2881, 0.43
+gl.clearColor(  0.2, 0,    0,   0.57);
+
+capture 0.67 0.67 1 
+canvas:  0.588, 0.588, 1.0, 0.8
+body :   1      1      1    1
+
+
+*/
+
+
+gl.drawArrays(gl.POINTS, 0, 1);
+
+let pixels = new Uint8Array(2*2*4);
+gl.readPixels(0,0,2,2,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+console.log(pixels);
+    </script>
+  </body>
+
+</html>
