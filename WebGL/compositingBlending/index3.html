@@ -1,20 +1,25 @@
 <!doctype html>
 <html>
   <head>
-	  <!--
-	  div  style: background-color
-	       img style: mix-blend-mode  src=...
-	  -->
+
     <style>
-      #canvasConcret , #canvasConcret2  , #canvasConcret3{
+      .canvasConcret {
         display: block;
-        background-color: rgba(155, 155, 155, 0.2);
         width:150px;
         height:150px;
         image-rendering: pixelated;
       }
       
-     
+      #canvasConcret1 , #canvasConcret2 , #canvasConcret3 {
+        background-color: rgba(155, 155, 155, 0.2);
+      }    
+  
+ 
+       #canvasConcret4 {
+        background-color: rgba(0, 0, 0, 1.0);
+      }   
+      
+             
       .canvas { 
         background-color: rgba(155, 155, 155, 0.2);
         width: 150px;
@@ -41,28 +46,86 @@ canvas     0.61  0.61  0.61 0.20
     
   </head>
   <body>
-	  
-	  <p>3 éléments superposés avec des couleurs</p>
   
-   	<div class="canvas">
+  	<p>3 éléments superposés avec des couleurs</p>
+  	<div class="canvas">
   	  <div class="clearcolor">
 		  <div class="fragcolor"></div>
   	  </div>
   	</div>
-
-	  <p>2 éléments superposés avec des couleurs</p>
-  
-   	<div class="canvas">
+  	
+  	
+  	
+  	
+  	<p>2 éléments superposés avec des couleurs</p>
+  	<div class="canvas">
 		  <div class="fragcolor"></div>
   	</div>
-
-  <p>clearcolor et fragcolor, mais le blending n'est pas activé</p>
-    <canvas id="canvasConcret"></canvas>
-    <p>on enlève le clearColor. ça ne change pas la couleur du point. Sans blending, cette couleur est composée avec celle du canvas</p>
-    <canvas id="canvasConcret2"></canvas>
+  	
+  	
+  	
+  	
+  	<p>canvasConcret1 : clearcolor et fragcolor, mais le blending n'est pas activé</p>
+  	<pre>capture écran = 0.86 0.56 0.81
+source : fragcolor = 0.80 0.20 0.698 0.50
+destination : canvas 0.608 0.608 0.608 0.20
+co = Cs*as+Cb*ab*(1-as)
+co = [0.80, 0.20, 0.698][i]*0.50  +  [0.608,0.608,0.608][i]*0.2*0.5;
+co=[0.461, 0.161, 0.41];
+ao = 0.50 + 0.20*(1-0.50);
+ao =0.6
+compositing avec le fond blanc
+co = [0.461, 0.161, 0.41][i] + [1,1,1][i]*1*(1-0.6); 
+co= 0.861 0.561 0.81
+Dans le calcul, on voit que le clearcolor - gl.clearColor(0.2,0.4,0.5,0.8) - n'est pas pris en compte. C'est 
+parce que le blending n'est pas activé.
+  	</pre>
+    <canvas id="canvasConcret1" class="canvasConcret"></canvas>
     
-    <p>blablable</p>
-    <canvas id="canvasConcret3"></canvas>
+    
+    
+    
+    <p>canvasConcret2 : on enlève le clearColor. ça ne change pas la couleur du point.<br>
+     Sans blending, cette couleur est composée avec celle du canvas.<br>
+     La couleur du point est la même que précédemment<br>
+    </p>
+    <canvas id="canvasConcret2" class="canvasConcret"></canvas>
+    
+    
+    
+    
+    <p>
+      canvasConcret3<br>
+      gl.clearColor(0.2,0.4,0.5,0.8)<br>
+      gl.drawArrays(gl.POINTS, 0, 2);<br>
+      couleur 1er point : 0.8  0.2  0.698  0.5 <br>
+      couleur 2e point  : 0.6  0.4  0.2    0.6<br>
+      source      : couleur 2e point :  0.6   0.4   0.2    0.6<br>
+      destination : couleur canvas      0.608 0.608 0.608  0.20<br>
+      co = [ 0.6 ,  0.4 ,  0.2, ][i]*0.6 + [0.61,0.61,0.61][i]*0.20*(1-0.6);<br>
+      co = [0.41, 0.29, 0.17]<br>
+      ao = 0.6 + 0.2 * ( 1- 0.6);   <br>
+      ao = 0.68;<br>
+      composition avec le fond blanc<br>
+      co_fond =   [0.41, 0.29, 0.17][i] + [1,1,1][i]*1*(1-0.68);<br>
+      co_fond = 0.73  0.61  0.49<br>
+      quand il n'y a pas de blending, le dernier point est composé avec le fond<br>
+    </p>
+    <canvas id="canvasConcret3" class="canvasConcret"></canvas>
+   
+   
+   
+
+    <p>
+     canvasConcret4<br>
+     background-color: rgba(0, 0, 0, 1.0);<br>
+     gl.blendFuncSeparate(gl.ONE,gl.ZERO,gl.ONE,gl.ZERO);<br>
+     fragcolor  0.80  0.20  0.69 0.50<br>
+     gl.clearColor(0.0, 0.0, 0.0, 1.0);<br>
+     gl.drawArrays(gl.POINTS, 0, 1);<br>
+    </p>
+    <canvas id="canvasConcret4" class="canvasConcret"></canvas>   
+   
    
     <script>
    
@@ -183,15 +246,10 @@ gl.useProgram(program);
 
 gl.viewport(0,0,3,3);
 
-gl.clearColor(0.2,0.4,0.5,0.8);
-gl.clearColor(51/255,102/255,127/255,0.8);
-//#clearcolor	    background-color: rgba(51, 102, 127,0.8);
-gl.clear(gl.COLOR_BUFFER_BIT);
-
-
 let colors=[
-  204/255,	51/255,	178/255,	0.5,
-  0.6,	0.4,	0.8,	0.6,
+  204/255,	51/255,	178/255,	0.5, // 0.8, 0.2, 0.698 , 0.5 
+  0.6,	0.4,	0.2,	0.6,
+  //0,   1,   0,   1,
   1,	1,		1,		1
 ];
 let aColor = gl.getAttribLocation(program,"aColor");
@@ -229,209 +287,88 @@ if (false) {
 
 }
 
-/*
-blendFuncSeparate(srcRGB, dstRGB , srcAlpha , dstAlpha)
-RGB=  sourceColor * srcRGB + destinationColor * dstRGB
-A  =  sourceAlpha * srcAlpha + destinationAlpha* dstAlpha
-*/
-
-
-//gl.enable(gl.BLEND);
-///gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
-/*
-11fev
-=====
-clearcolor = gl.clearColor(0.2,0.4,0.5,1.0);
-Cb = [0.2, 0.4, 0.5][i]; ab=1.0;  Cs=[0.6, 0.4 , 0.8][i]; as=0.6;co=Cs*as+Cb*ab*(1-as);
-source 
-g_fragcolor = 0.6, 0.4 , 0.8, 0.6,
-destination
-clearColor = (0.2,0.4,0.5,1.0);
-RGB = [0.6, 0.4 , 0.8][i] * 0.6  + [0.2,0.4,0.5][i] * (1-0.6);
-A = 0.6 + 1.0 * (1-0.6) = 1
-
-
-
-1er point
-========
-la source : couleur du point
-g_fragcolor = 0.6, 0.4 , 0.8, 0.6,
-la destination : couleur du clearcolor
-gl.clearColor = 0.2,  0.4,  0.5  0.2
-** gl.clearColor = 0.0 0.0 0.0 0.0
-gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
-RGB = sourceColor * SRC_ALPHA  + destinationColor * ONE_MINUS_SRC_ALPHA
-RGB = [0.6 ,  0.4 ,  0.8][i] * 0.6  + [ 0.2 ,  0.4 , 0.5][i]*(1-0.6);
-RGB = [ 0.44 , 0.4 ,0.68]
-** RGB = [0.6 ,  0.4 ,  0.8][i] * 0.6  
-** RGB= [ 0.36 , 0.24  0.48]
-A   = sourceAlpha * ONE + destinatinAlpha * ONE_MINUS_SRC_ALPHA
-A   = 0.6 + 0.2 * (1-0.6)
-A   = 0.68
-** A = 0.6
-résultant blending du 1er point :
-RGB=[0.44, 0.4 , 0.68]
-A=0.68
-** résultant blending sans clearcolor
-** RGB = [ 0.36 , 0.24  0.48]  A=0.6
-
-compositing avec le fond
-
- Cb = [0.67, 0.67, 1][i];
- ab= 1;
- Cs = [0.44, 0.4 , 0.68][i];
- as= 0.68;
- ** Cs= [ 0.36 , 0.24 , 0.48][i]; as =0.6; Cb = [0.67, 0.67, 1][i]; co = Cs*as+Cb*(1-as)
- co = Cs*as+Cb*ab*(1-as);
- co = [ 0.51 0.48 0.78 ]
- PAREIL QUE COPIE ECRAN
- 
- fragcolor =======
- clearcolor ======
- couleur canvas
- 
-2e point
-=======
-la source  : couleur 2e point
-0.3, 0.7 , 0.5, 0.5,
-la destination : résultat blending 1er point
-0.32  0.08  0.16  0.2
-gl.blendFuncSeparate(gl.DST_ALPHA,gl.ONE,gl.ZERO,gl.ONE);
-========================================================
-  RGB = sourceColor * DST_ALPHA + destinationColor * ONE
-  RGB = [0.3, 0.7 , 0.5][i]*  0.2 + [0.32  0.08  0.16 ][i]
-  RGB = 0.38  0.22 0.26
-    A = 0.2
-
-compositing avec le fond 
- Cb = [0.67, 0.67, 1]
- ab= 1
- Cs = [0.38,0.22,0.26][i]
- as= 0.2
- 
- co = Cs as + Cb ab (1-as)
- co = [0.38,0.22,0.26][i] * 0.2 + [0.67, 0.67, 1][i]*0.8
- co=  0.612  0.58  0.852
- PAREIL QUE CAPTURE ECRAN
-  
-  
-
-*/
-
-
-/*
+// UN
+gl.clearColor(0.2,0.4,0.5,0.8);
+gl.clear(gl.COLOR_BUFFER_BIT);
 gl.drawArrays(gl.POINTS, 0, 1);
-
 {
-let canvasReelPour2D= document.getElementById("canvasConcret");
-canvasReelPour2D.width=2;
-canvasReelPour2D.height=2;
-let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
-//canvasReelPour2DCtx.canvas.width=2;
-//canvasReelPour2DCtx.canvas.height=2;
-canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
+  let canvasReelPour2D= document.getElementById("canvasConcret1");
+  canvasReelPour2D.width=3;
+  canvasReelPour2D.height=3;
+  let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
+  canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
 }
 
-canvas        background-color: rgba(155, 155, 155, 0.2);
-                                      0.61 0.61 0.61 0.2
-clearColor=  (0.2,0.4,0.5,0.8);
-
-fragcolors=[
-  0.8,	0.2,	0.7,	0.5,
-  0.6,	0.4,	0.8,	0.6,
-
-sans blendfunc
-=============
-valeur  hors du point
-0.34 0.51 0.58
-calcul:
-
-clearColor=  (0.2,0.4,0.5,0.8);
-canvas = 0.61 0.61 0.61 0.2
-co = Cs*as+Cb*ab*(1-as)
-co = [0.2,0.4,0.5][i]*0.8+[0.61,0.61,0.61][i]*0.2*(1-0.8);
-co = 0.18 0.34 0.42
-ao=as+ab*(1-as)
-ao= 0.84
-on compose avec le fond
-[0.18 ,0.34 ,0.42][i]+1-0.84
-=0.34 0.50 0.58
-PAREIL QUE CAPTURE ECRAN
-
-on reprend le calcul , mais dans l'autre sens 
-calcul couleur clearcolor sur canvas composé
-canvas composé :
-source  = 0.61 0.61 0.61 0.2
-destination= 1 1 1 1 
-co = [0.61 , 0.61 , 0.61 ][i]*0.2+1-0.2
-co = 0.92 0.92 0.92 
-maintenant le dernier résultat est la destination
-la source est le clearcolor
-[0.2,0.4,0.5][i]*0.8+0.92*0.2
-0.34 0.50 0.58
-
-cool pareil !!!!
-
-valeur sur le point
-0.86 0.56 0.81
-calcul
-il n'y a pas de blending, testons le compositing
-source
-le fragcolor:
-Cs  0.8,	0.2,	0.7  	as 0.5,
-destination
-le canvas
-Cb  0.61 0.61 0.61   ab 0.2
-co=[0.8,0.2,0.7][i]*0.5+[0.61,0.61,0.61][i]*0.2*(1-0.5)
-co= 0.461  0.161 0.411
-ao = as + ab * (1-as)
-ao = 0.5 + 0.2 * 0.5
-ao = 0.6
-on compose avec le fond blanc
-co = [0.461 , 0.161 , 0.411][i]+1-0.6
-co = 0.86 0.56 0.81
-pareil que capture ecran !!!
-
-*/
-gl.drawArrays(gl.POINTS, 0, 1);
-
-{
-let canvasReelPour2D= document.getElementById("canvasConcret");
-canvasReelPour2D.width=3;
-canvasReelPour2D.height=3;
-let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
-//canvasReelPour2DCtx.canvas.width=2;
-//canvasReelPour2DCtx.canvas.height=2;
-canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
-}
-
-
+// DEUX
 gl.clearColor(0,0,0,0);
 gl.clear(gl.COLOR_BUFFER_BIT);
 gl.drawArrays(gl.POINTS, 0, 1);
-
 {
-let canvasReelPour2D= document.getElementById("canvasConcret2");
-canvasReelPour2D.width=3;
-canvasReelPour2D.height=3;
-let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
-//canvasReelPour2DCtx.canvas.width=2;
-//canvasReelPour2DCtx.canvas.height=2;
-canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
+  let canvasReelPour2D= document.getElementById("canvasConcret2");
+  canvasReelPour2D.width=3;
+  canvasReelPour2D.height=3;
+  let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
+  canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
 }
 
-gl.clearColor(51/255,102/255,127/255,0.8);
+//TROIS
+gl.clearColor(0.2,0.4,0.5,0.8);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.POINTS, 0, 2);
+{
+  let canvasReelPour2D= document.getElementById("canvasConcret3");
+  canvasReelPour2D.width=3;
+  canvasReelPour2D.height=3;
+  let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
+  canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
+}
+
+
+/*
+MODELE NUMERO QUATRE
+
+RGB = sourceColor * SRC_ALPHA + destinationColor  * (1-SRC_ALPHA)
+A   = sourceAlpha * ONE       + destinationAlpha  * (1-SRC_ALPHA)
+
+  source 0.8,   0.2,    0.67  , 0.5 
+         0.6,	0.4,	0.8,	0.6,
+*/
+
+gl.enable(gl.BLEND);
+gl.blendFuncSeparate(gl.ONE,gl.ZERO,gl.ONE,gl.ZERO);
+gl.clearColor(0.0, 0.0, 0.0, 1.0);
 gl.clear(gl.COLOR_BUFFER_BIT);
 gl.drawArrays(gl.POINTS, 0, 1);
+/*
+Cs = RGB = sourceColor = 0.8 0.2 0.67
+as = A   = sourceAlpha = 0.5
+Cb = [0,0,0]
+ab = 1
+co = Cs*as + Cb*ab*(1-as)
+   = [0.8,0.2,0.67][i]*0.5 
+   = [ 0.4 , 0.1 , 0.335]
+ao = as + ab * (1-as)
+   = 0.5 + 1 * (1-0.5) = 0.5 + 0.5 = 1
+
+   
+ 
+
+*/
+
 {
-let canvasReelPour2D= document.getElementById("canvasConcret3");
-canvasReelPour2D.width=3;
-canvasReelPour2D.height=3;
-let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
-//canvasReelPour2DCtx.canvas.width=2;
-//canvasReelPour2DCtx.canvas.height=2;
-canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
+  let canvasReelPour2D= document.getElementById("canvasConcret4");
+  canvasReelPour2D.width=3;
+  canvasReelPour2D.height=3;
+  let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
+  canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
 }
+
+
+
+
+
+
+
 
 let pixels = new Uint8Array(3*3*4);
 gl.readPixels(0,0,3,3,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
