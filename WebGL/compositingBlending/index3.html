@@ -10,16 +10,17 @@
         image-rendering: pixelated;
       }
       
-      #canvasConcret1 , #canvasConcret2 , #canvasConcret3 {
+      #canvasConcret1 , #canvasConcret2 , #canvasConcret3  {
         background-color: rgba(155, 155, 155, 0.2);
-      }    
-  
- 
-       #canvasConcret4 {
-        background-color: rgba(0, 0, 0, 1.0);
-      }   
+      }  
+        
+      #canvasConcret4 , #canvaConcret5 , #canvaConcret6, #canvaConcret7, #canvaConcret8 {
+        background-color: rgba(255, 255, 255, 1);
+      }
+      #canvasConcret_ {
+        background-color: rgba(155, 155, 155, 0.2);
+      }
       
-             
       .canvas { 
         background-color: rgba(155, 155, 155, 0.2);
         width: 150px;
@@ -46,7 +47,9 @@ canvas     0.61  0.61  0.61 0.20
     
   </head>
   <body>
-  
+  <p>vraie canvas</p>
+  <canvas id="uncanvas"></canvas>
+  <br>
   	<p>3 éléments superposés avec des couleurs</p>
   	<div class="canvas">
   	  <div class="clearcolor">
@@ -64,8 +67,8 @@ canvas     0.61  0.61  0.61 0.20
   	
   	
   	
-  	
-  	<p>canvasConcret1 : clearcolor et fragcolor, mais le blending n'est pas activé</p>
+  	<h4>canvasConcret1</h4>
+  	<p>clearcolor et fragcolor, mais le blending n'est pas activé</p>
   	<pre>capture écran = 0.86 0.56 0.81
 source : fragcolor = 0.80 0.20 0.698 0.50
 destination : canvas 0.608 0.608 0.608 0.20
@@ -84,8 +87,8 @@ parce que le blending n'est pas activé.
     
     
     
-    
-    <p>canvasConcret2 : on enlève le clearColor. ça ne change pas la couleur du point.<br>
+    <h4>canvasConcret2</h4>
+    <p>on enlève le clearColor. ça ne change pas la couleur du point.<br>
      Sans blending, cette couleur est composée avec celle du canvas.<br>
      La couleur du point est la même que précédemment<br>
     </p>
@@ -93,9 +96,8 @@ parce que le blending n'est pas activé.
     
     
     
-    
+    <h4>canvasConcret3</h4>
     <p>
-      canvasConcret3<br>
       gl.clearColor(0.2,0.4,0.5,0.8)<br>
       gl.drawArrays(gl.POINTS, 0, 2);<br>
       couleur 1er point : 0.8  0.2  0.698  0.5 <br>
@@ -115,18 +117,165 @@ parce que le blending n'est pas activé.
    
    
    
-
+    <h4>canvasConcret4</h4>
     <p>
-     canvasConcret4<br>
-     background-color: rgba(0, 0, 0, 1.0);<br>
-     gl.blendFuncSeparate(gl.ONE,gl.ZERO,gl.ONE,gl.ZERO);<br>
-     fragcolor  0.80  0.20  0.69 0.50<br>
-     gl.clearColor(0.0, 0.0, 0.0, 1.0);<br>
-     gl.drawArrays(gl.POINTS, 0, 1);<br>
+gl.blendFuncSeparate(gl.ONE,gl.ZERO,gl.ZERO,gl.ONE);<br>
+gl.clearColor(0.0,1.0,0.0,0.7);<br>
+gl.fragColor 0.8, 0.2, 0.698 , 0.5 
+gl.drawArrays(gl.POINTS, 0, 1);
+copie ecran<br>
+0.86 0.44 0.79<br>
+Cs = [0.8 , 0.2 , 0.7][i];<br>
+as = 0.5;<br>
+Cb= [ 0,1,0];<br>
+ab=0.7;<br>
+blending :<br>
+RGB = Cs * ONE + Cb * ZERO<br>
+    = Cs<br>
+A   = as * ZERO + ab * ONE<br>
+    = ab<br>
+Cs <= (1-ab)*Cs + ab*B<br>
+   <= (1-ab)*Cs + ab*Cs<br>
+(Cs,ab) sur ( 1 1 1 1)<br>
+co=[0.8, 0.2, 0.698 ][i]*0.7+[1,1,1][i]*1.0*(1-0.7) <br>
+co = 0.86 0.44 0.786<br>
+pareil que copieecran  <br>
     </p>
-    <canvas id="canvasConcret4" class="canvasConcret"></canvas>   
+    <canvas id="canvasConcret4" class="canvasConcret"></canvas>
+ 
+ 
+ 
+    
+    <h4>canvasConcret5</h4>
+    <p>
+gl.blendFuncSeparate(gl.ONE,gl.ONE,gl.ZERO,gl.ONE);
+gl.clearColor(0.0, 0.4, 0.0, 0.7);
+gl.fragColor 0.8, 0.2, 0.698 , 0.5
+gl.drawArrays(gl.POINTS, 0, 1);
+copiie ecran
+0.86 0.72 0.79
+Cs = [0.8, 0.2, 0.7][i]
+as = 0.5;
+Cb = [0, 0.4, 0][i]
+ab = 0.7
+blending
+RGB = Cs + Cb
+    = [0.8, 0.6, 0.7][i]
+  A = ab 
+    = 0.7
+([0.8, 0.6, 0.7][i], 0.7) sur (1,1,1,1)
+co = [0.8, 0.6, 0.7][i]*0.7 + [1,1,1][i]*1.0*(1-0.7)
+co = 0.86 0.72 0.79
+
+     
+     
+    </p>
+    <canvas id="canvasConcret5" class="canvasConcret"></canvas>   
+    
+    
+    <h4>canvasConcret6</h4>
+    <p>
+gl.blendFuncSeparate(gl.DST_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ZERO,gl.ONE);<br>
+gl.clearColor(0.0, 0.4, 0.0, 0.7);<br>
+gl.fragColor 0.8, 0.2, 0.698 , 0.5<br>
+gl.drawArrays(gl.POINTS, 0, 1);<br>
+copiie ecran<br>
+0.694 0.541 0.643<br>
+Cs = [0.8, 0.2, 0.7][i]<br>
+as = 0.5;<br>
+Cb = [0, 0.4, 0][i]<br>
+ab = 0.7<br>
+blending<br>
+RGB = (sourceColor * srcRGB) + (destinationColor * dstRGB)<br>
+RGB = Cs * ab + Cb*(1-as)<br>
+    = [0.8, 0.2, 0.7][i] *0.7 + [0, 0.4, 0][i]*(1-0.5)<br>
+    = [0.56, 0.34, 0.49][i]<br>
+  A = (sourceAlpha * srcAlpha) + (destinationAlpha * dstAlpha)<br>
+  A = ab <br>
+    = 0.7<br>
+( [0.56, 0.34, 0.49][i], 0.7) sur (1,1,1,1)<br>
+co =  [0.56, 0.34, 0.49][i]*0.7 + [1,1,1][i]*1*(1-0.7)<br>
+   = 0.69  0.538  0.643<br>
+
+     
+     
+    </p>
+    <canvas id="canvasConcret6" class="canvasConcret"></canvas> 
+    
+    
+    <h4> exemple 7</h4>
+    <p>
+    gl.blendFuncSeparate(gl.DST_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ZERO,gl.SRC_ALPHA);<br>
+    gl.clearColor(0.0, 0.4, 0.0, 0.7);<br>
+gl.fragColor 0.8, 0.2, 0.698 , 0.5<br>
+gl.drawArrays(gl.POINTS, 0, 1);<br>
+copiie ecran<br>
+0.847  0.773  0.824<br>
+on vérifie avec la théorie<br>
+Cs = [0.8, 0.2, 0.7];//<br>
+as = 0.5;//<br>
+Cb = [0, 0.4, 0];//<br>
+ab = 0.7;//<br>
+//RGB = (sourceColor * srcRGB) + (destinationColor * dstRGB)<br>
+//RGB = sourceColor * DST_ALPHA + destinationColor * ONE_MINUS_SRC_ALPHA<br>
+
+RGB = Cs[i] * ab + Cb[i] * (1-as);//<br>
+RGB = [0.56, 0.34 , 0.49];<br>
+//  A = (sourceAlpha * srcAlpha) + (destinationAlpha * dstAlpha)<br>
+//  A = destinationAlpha * SRC_ALPHA<br>
+A = ab * as<br>
+A = 0.7 * 0.5<br>
+A = 0.35<br>
+enfin, on compose (RGB,A) sur le fond blanc
+co = RGB * A + 1-A
+co = [0.56, 0.34 , 0.49][i]*0.35 + 1-0.35
+co = [0.846, 0.769, 0.8215]
+// PAREIL QUE COPIE ECRAN YEEEEES
+<br>
+en dehors du point  à gauche en bas, la couleur est "simple alpha composited"<br>
+la source étant le clearColor, la destination, la couleur CSS du canvas<br>
+    </p>
+    <canvas id="canvasConcret7" class="canvasConcret"></canvas>
+    
    
    
+    <h4> exemple 8</h4>
+    <p>
+gl.blendFuncSeparate(
+  gl.SRC_ALPHA,
+  gl.ONE_MINUS_SRC_ALPHA,
+  gl.ONE,
+  gl.ONE_MINUS_SRC_ALPHA);
+ <br>
+    gl.clearColor(0.0, 0.4, 0.0, 0.7);<br>
+gl.fragColor 0.8, 0.2, 0.698 , 0.5<br>
+gl.drawArrays(gl.POINTS, 0, 1);<br>
+copiie ecran<br>
+....<br>
+on vérifie avec la théorie<br>
+Cs = [0.8, 0.2, 0.7];//<br>
+as = 0.5;//<br>
+Cb = [0, 0.4, 0];//<br>
+ab = 0.7;//<br>
+//RGB = (sourceColor * srcRGB) + (destinationColor * dstRGB)<br>
+//RGB = sourceColor * SRC_ALPHA + destinationColor * ONE_MINUS_SRC_ALPHA<br>
+RGB = Cs[i] * as + Cb[i] * (1-as);//<br>
+RGB = [0.4, 0.3 , 0.35];<br>
+//  A = sourceAlpha * ONE + destinationAlpha * (1-AS)<br>
+A = as + ab * (1-as)<br>
+A = 0.5 + 0.7 * 0.5<br>
+A = 0.85<br>
+enfin, on compose (RGB,A) sur le fond blanc
+co = RGB * A + 1-A
+co = [0.4, 0.3, 0.35][i]*0.85 + 1-0.85
+co = [0.49, 0.405, 0.4475]
+// PAREIL QUE COPIE ECRAN YEEEEES
+<br>
+en dehors du point  à gauche en bas, la couleur est "simple alpha composited"<br>
+la source étant le clearColor, la destination, la couleur CSS du canvas<br>
+    </p>
+    <canvas id="canvasConcret8" class="canvasConcret"></canvas> 
+    
     <script>
    
    
@@ -324,37 +473,41 @@ gl.drawArrays(gl.POINTS, 0, 2);
 }
 
 
-/*
-MODELE NUMERO QUATRE
 
-RGB = sourceColor * SRC_ALPHA + destinationColor  * (1-SRC_ALPHA)
-A   = sourceAlpha * ONE       + destinationAlpha  * (1-SRC_ALPHA)
-
-  source 0.8,   0.2,    0.67  , 0.5 
-         0.6,	0.4,	0.8,	0.6,
-*/
-
+//QUATRE
 gl.enable(gl.BLEND);
-gl.blendFuncSeparate(gl.ONE,gl.ZERO,gl.ONE,gl.ZERO);
-gl.clearColor(0.0, 0.0, 0.0, 1.0);
+gl.blendFuncSeparate(gl.ONE,gl.ZERO,gl.ZERO,gl.ONE);
+gl.clearColor(0.0, 1.0, 0.0, 0.7);
 gl.clear(gl.COLOR_BUFFER_BIT);
 gl.drawArrays(gl.POINTS, 0, 1);
 /*
-Cs = RGB = sourceColor = 0.8 0.2 0.67
-as = A   = sourceAlpha = 0.5
-Cb = [0,0,0]
-ab = 1
-co = Cs*as + Cb*ab*(1-as)
-   = [0.8,0.2,0.67][i]*0.5 
-   = [ 0.4 , 0.1 , 0.335]
-ao = as + ab * (1-as)
-   = 0.5 + 1 * (1-0.5) = 0.5 + 0.5 = 1
+gl.enable(gl.BLEND);
+gl.blendFuncSeparate(gl.ONE,gl.ZERO,gl.ZERO,gl.ONE);
+gl.clearColor(0.0,1.0,0.0,0.7);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.POINTS, 0, 1);
+copie ecran
+0.86 0.44 0.79
+Cs = [0.8 , 0.2 , 0.7][i];
+as = 0.5;
+Cb= [ 0,1,0];
+ab=0.7;
+blending :
+RGB = Cs * ONE + Cb * ZERO
+    = Cs
+A   = as * ZERO + ab * ONE
+    = ab
+Cs <= (1-ab)*Cs + ab*B
+   <= (1-ab)*Cs + ab*Cs
+(Cs,ab) sur ( 1 1 1 1)
+co=[0.8, 0.2, 0.698 ][i]*0.7+[1,1,1][i]*1.0*(1-0.7) 
+co = 0.86 0.44 0.786
+pareil que copieecran
 
-   
+
+ */
  
-
-*/
-
+ 
 {
   let canvasReelPour2D= document.getElementById("canvasConcret4");
   canvasReelPour2D.width=3;
@@ -365,14 +518,79 @@ ao = as + ab * (1-as)
 
 
 
+//CINQ
+gl.enable(gl.BLEND);
+gl.blendFuncSeparate(gl.ONE, gl.ONE, gl.ZERO, gl.ONE);
+gl.clearColor(0.0, 0.4, 0.0, 0.7);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.POINTS, 0, 1);
+
+{
+  let canvasReelPour2D= document.getElementById("canvasConcret5");
+  canvasReelPour2D.width=3;
+  canvasReelPour2D.height=3;
+  let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
+  canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
+}
+
+
+//SIX
+gl.enable(gl.BLEND);
+gl.blendFuncSeparate(gl.DST_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ZERO,gl.ONE);
+gl.clearColor(0.0, 0.4, 0.0, 0.7);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.POINTS, 0, 1);
+
+{
+  let canvasReelPour2D= document.getElementById("canvasConcret6");
+  canvasReelPour2D.width=3;
+  canvasReelPour2D.height=3;
+  let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
+  canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
+}
 
 
 
 
 
-let pixels = new Uint8Array(3*3*4);
-gl.readPixels(0,0,3,3,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
-console.log(pixels);
+// SEPT
+gl.enable(gl.BLEND);
+gl.blendFuncSeparate(gl.DST_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ZERO,gl.SRC_ALPHA);
+gl.clearColor(0.0, 0.4, 0.0, 0.7);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.POINTS, 0, 1);
+
+{
+  let canvasReelPour2D= document.getElementById("canvasConcret7");
+  canvasReelPour2D.width=3;
+  canvasReelPour2D.height=3;
+  let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
+  canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
+}
+
+
+// HUIT
+gl.enable(gl.BLEND);
+gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+gl.clearColor(0.0, 0.4, 0.0, 0.7);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.POINTS, 0, 1);
+
+{
+  let canvasReelPour2D= document.getElementById("canvasConcret8");
+  canvasReelPour2D.width=3;
+  canvasReelPour2D.height=3;
+  let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
+  canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
+}
+
+
+
+{
+  let pixels = new Uint8Array(3*3*4);
+  gl.readPixels(0,0,3,3,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+  console.log(pixels);
+}
     </script>
   </body>
 
