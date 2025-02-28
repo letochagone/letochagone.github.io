@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      .canvasConcret {
+        display: block;
+        width:150px;
+        height:150px;
+        image-rendering: pixelated;
+      }
+      #canvasConcret1 {
+        background-color: rgba(255, 255, 255, 1);
+      }
+      .canvas { 
+        background-color: rgba(255, 255, 255, 1);
+        width: 150px;
+        height: 150px;
+      }
+      .clearcolor {
+      background-color: rgba(204, 51, 178, 0.5);
+      width: 100px;
+      height: 100px;
+      }
+      .fragcolor {
+        width: 50px;
+        height: 50px;
+        background-color: rgba(25, 102, 140, 0.7); 
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvasConcret1" class="canvasConcret"></canvas>
+
+    <script>
+      const canvasVirtuelPourWebGL = document.createElement("canvas");
+      const gl = canvasVirtuelPourWebGL.getContext("webgl", {premultipliedAlpha: true});
+      gl.canvas.width=3;
+      gl.canvas.height=3;
+
+      const VERTEX_SHADER = `
+        attribute vec4 aColor;
+        varying vec4 vColor;
+        void main() {
+          vColor = aColor;
+          gl_Position= vec4(-1.0+1.0/3.0, -1.0+1.0/3.0,0.0,1.0);
+          gl_PointSize=1.0;
+        }
+      `;
+      const FRAGMENT_SHADER = `
+        precision mediump float;
+        varying vec4 vColor;
+        void main() {  
+          gl_FragColor = vColor;  
+          gl_FragColor.rgb *= vColor.a;
+        }
+      `;
+      const vshader = gl.createShader(gl.VERTEX_SHADER);
+      const fshader = gl.createShader(gl.FRAGMENT_SHADER);
+      const program = gl.createProgram();
+      gl.shaderSource(vshader, VERTEX_SHADER);
+      gl.shaderSource(fshader, FRAGMENT_SHADER);
+      gl.compileShader(vshader);
+      gl.compileShader(fshader);
+      gl.attachShader(program, vshader);
+      gl.attachShader(program, fshader);
+      gl.linkProgram(program);
+      gl.useProgram(program);
+
+      gl.viewport(0,0,3,3);
+
+      let fb= gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
+      let tex=gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D,tex);
+      let targetTextureWidth = 3;
+      let targetTextureHeight = 3;
+      const level = 0;
+      const internalFormat = gl.RGBA;
+      const border = 0;
+      const format = gl.RGBA;
+      const type = gl.UNSIGNED_BYTE;
+      const data = null;
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        level,
+        internalFormat,
+        targetTextureWidth,
+        targetTextureHeight,
+        border,
+        format,
+        type,
+        data
+      );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+      
+      gl.clearColor(0.3*0.6, 0.7*0.6, 0.4*0.6, 0.6);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      let colors=[
+        0.8,  0.2,  0.7,  0.5,
+        0.1,  0.4,   0.55,  0.7,
+      ];
+
+      let aColor = gl.getAttribLocation(program,"aColor");
+      let colorBuffer= gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,colorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER,
+        new Float32Array(colors),gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(aColor);
+      gl.vertexAttribPointer(aColor,4,gl.FLOAT,false,0,0);
+
+      gl.drawArrays(gl.POINTS, 0, 2);
+
+      let canvasReelPour2D= document.getElementById("canvasConcret1");
+      canvasReelPour2D.width=3;
+      canvasReelPour2D.height=3;
+      let canvasReelPour2DCtx=canvasReelPour2D.getContext("2d");
+      canvasReelPour2DCtx.drawImage(canvasVirtuelPourWebGL,0,0);
+
+      let pixels = new Uint8Array(3*3*4);
+      gl.readPixels(0,0,3,3,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+      console.log(pixels);
+
+    </script>
+
+    <p>3 éléments superposés avec des couleurs</p>
+    <div class="canvas">
+      <div class="clearcolor">
+        <div class="fragcolor"></div>
+      </div>
+    </div>
+  </body>
+</html>
