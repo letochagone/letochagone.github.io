@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <title>
+    comprendre le viewport et viewbox du SVG
+    </title>
+    <meta charset="utf-8">
+    <style>
+      svg {
+        background-color: gray;
+      }
+  
+    </style>
+  </head>
+  <body>
+  
+   <h1>avec viewBox 0 0 100 100, pareil que viewport</h1>
+   
+    <svg
+      
+      width="100"
+      height="100"
+      viewBos="0 0 100 100">  
+      
+      <circle r="50"  />
+    </svg> 
+    
+    <h1>avec viewBox 0 0 50 100</h1>
+    
+    <svg
+      width="100"
+      height="100"
+      viewBox="0 0 50 100" >  
+      
+      <circle r="50"  />
+    </svg>
+    
+    <h1>équivalent avec transform</h1>
+    
+   <svg
+    width="100"  
+    height="100" >  
+      <circle r="50" transform="translate(25 0) scale(1 1)" />  
+    </svg>
+    
+    <h1>avec viewBox 0 0 50 140</h1>
+    
+    <svg
+      width="100"
+      height="100"
+      viewBox="0 0 50 140" >  
+   
+      <circle r="50"  />
+    </svg>
+    
+   <h1> equivalent avec transfomr</h1>
+   <svg
+      width="100"  
+      height="100" >  
+      <circle r="50" transform="translate(32 0.02) scale(0.714 0.714)" />  
+    </svg>
+    
+    <h1>avec viewBox 20 20 40 80</h1>
+    <svg
+      width="100"
+      height="100"
+      viewBox="20 20 40 80" >  
+   
+      <circle r="50"  />
+    </svg>
+    
+      <h1>equivalent avec translate(0 -25) scale( 1.25 1.25)</h1>
+   <svg
+      width="100"  
+      height="100" >  
+      <circle r="50" transform="translate(0 -25) scale( 1.25 1.25)" />  
+    </svg>
+   
+   <h1></h1>
+    <svg
+      width="100"
+      height="100"  viewBox="0 0 100 50">
+      <circle r="50"   />
+    </svg>
+   
+  </body>
+
+  <pre>
+          width="100"
+      height="100"
+      viewBox="0 0 50 140" 
+      
+      
+https://www.w3.org/TR/SVG/coords.html#ComputingAViewportsTransform
+
+1/
+      vb-x=0
+      vb-y=0
+      vb-width=50
+      vb-height=140
+2/
+e-x=0
+e-y=0
+e-width=100
+e-height=100
+
+3/
+ 
+align=xMidYMid // car preserveAspectRatio n'est pas défini
+4/
+meetOrSlice=meet   //car  preserveAspectRatio n'est pas défini
+
+5/
+scale-x = e-width / vb-width
+        = 100 / 50 = 2
+6/
+scale-y = e-height / vb-height
+        = 100 / 140 = 10/14 = 5/7 = 0.714
+7/ set the larger of scale-x and scale-y to the smaller
+larger=2
+scale-x =0.714
+scale-y = 0.714
+9/
+translate-x = e-x-(vb-x * scale-x)
+            =  0
+10/
+translate-y = e_y - (vb-y * scale-y)
+            = 0
+11/
+translate-x =  (e-width - vb-width * scale-x) / 2 
+            = ( 100 - 50 * 0.714)/2
+            =  32
+13/
+erreur : If align contains 'yMid', add (e-height - vb-height * scale-y) / 2 to translate-y.
+ça devrait etre 
+   If align contains 'YMid', add (e-height - vb-height * scale-y) / 2 to translate-y.
+translate-y = (100 - 140 * 0.714) / 2
+            = 0.02
+
+translate(32  0.02) scale(0.714 0.714)
+
+
+      width="100"
+      height="100"
+      viewBox="20 20 40 80
+      
+1/
+vb-x =      20
+vb-y =      20
+vb-width =  40
+vb-height = 80
+
+2/
+e-x=        0
+e-y=        0
+e-width=    100
+e-height=   100
+
+3/
+align=xMidYMid
+4/
+meetOrSlice=meet
+
+5/
+scale-x = e-width/vb-width
+        = 100/40 = 10/4 = 5/2 = 2.5
+6/
+scale-y = e-height / vb-height
+        = 100 / 80 = 10/8=5/4 = 1.25
+7/
+set the larger of scale-x and scale-y to the smaller
+scale-x=1.25
+scale-y=1.25
+9/
+translate-x = e-x - (vb-x * scale-x)
+            = 0 - ( 20 * 1.25)
+            = -25
+
+10/
+translate-y = e-y -( vb-y * scale-y)
+            = 0   -( 20   * 1.25)  
+            = -25
+11/
+translate-x = -25 + (e-width - vb-width * scale-x) / 2
+            = -25 + ( 100 - 40 * 1.25)/2
+            = 0
+13/
+translate-y = -25 + (e-height - vb-height * scale-y) / 2 
+            = -25 + ( 100 - 80 * 1.25)/2
+            = -25
+            
+translate(0 -25) scale( 1.25 1.25)
+
+  </pre>
+</html>
