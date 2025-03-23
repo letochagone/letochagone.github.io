@@ -1,0 +1,102 @@
+
+<svg xmlns="http://www.w3.org/2000/svg"
+  id="scaleSVG"
+  viewBox="0 0 250 250"
+  width="250"
+  height="250"
+  >
+  <style>
+    #scaleSVG {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+
+  <circle
+    cx="125" cy="125" r="105" vector-effect="non-scaling-stroke" stroke-width="1px" fill="white" stroke="black"/>
+
+  <path
+    d="M25,125 A100,100 0 0 1 225,125 A100,100 0 0 1 25,125"
+    pathLength="144" 
+    stroke="black"
+    fill="none"
+    stroke-dasharray="3 6"
+    stroke-dashoffset="0"
+    stroke-width="10"
+  />
+  <path
+    d="M35,125 A90,90 0 0 1 215,125 A90,90 0 0 1 35,125"
+    pathLength="144" 
+    stroke="black"
+    fill="none"
+    stroke-dasharray="3 6"
+    stroke-dashoffset="6"
+    stroke-width="10"
+  />
+
+  <path
+    d="M45,125 A80,80 0 0 0 205,125 A80,80 0 0 0 45,125"
+    pathLength="144" 
+    stroke="black"
+    fill="none"
+    stroke-dasharray="3 6"
+    stroke-dashoffset="9"
+    stroke-width="10"
+  />
+  <path
+    d="M55,125 A70,70 0 0 0 195,125 A70,70 0 0 0 55,125"
+    pathLength="144" stroke="black" fill="none"
+    stroke-dasharray="3 6"
+    stroke-dashoffset="12"
+    stroke-width="10"
+  />
+
+  <path
+    d="M65,125 A60,60 0 0 0 185,125 A60,60 0 0 0 65,125"
+    pathLength="144" stroke="black" fill="none"
+    stroke-dasharray="3 6"
+    stroke-dashoffset="15"
+    stroke-width="10"
+  />
+  <path
+    d="M75,125 A50,50 0 0 0 175,125 A50,50 0 0 0 75,125"
+    pathLength="144" stroke="black" fill="none"
+    stroke-dasharray="3 6"
+    stroke-dashoffset="18"
+    stroke-width="10"
+  />
+  <path
+    d="M85,125 A40,40 0 0 0 165,125 A40,40 0 0 0 85,125"
+    pathLength="144" stroke="black" fill="none" 
+    stroke-width="10"
+    stroke-dasharray="3 6"
+    stroke-dashoffset="21"
+  />
+
+  <path
+    d="M95,125 A30,30 0 0 0 155,125 A30,30 0 0 0 95,125"
+    pathLength="144" stroke="black" fill="none" 
+    stroke-width="10"
+    stroke-dasharray="3 6"
+    stroke-dashoffset="24"
+  />
+  <path
+    d="M105,125 A20,20 0 0 0 145,125 A20,20 0 0 0 105,125"
+    pathLength="144" stroke="black" fill="none" 
+    stroke-width="10"
+    stroke-dasharray="3 6"
+    stroke-dashoffset="27"
+  />
+
+  <path
+    d="M115,125 A10,10 0 0 0 135,125 A10,10 0 0 0 115,125"
+    pathLength="144" stroke="black" fill="none" 
+    stroke-width="10"
+    stroke-dasharray="3 6"
+    stroke-dashoffset="30"
+  />
+
+
+
+</svg>
+
