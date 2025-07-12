@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>brouillon</title>
+    <style>
+      canvas {
+        background-color: gray;
+        width:  100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+
+    <canvas id="c"></canvas>
+
+    <canvas
+      id="c3"
+      style="
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
+      "></canvas>    
+
+    <script>
+{
+      let canvas=document.getElementById("c");
+      canvas.width=4;
+      canvas.height=4;
+
+      let gl=canvas.getContext("webgl");
+      
+    
+
+      let vs=`
+        //attribute vec2 bufferPos;
+        void main() {
+          //gl_Position=bufferPos;
+          gl_Position=vec4( 0.0, 0.0, 0.0, 1.0 );
+          gl_PointSize=1.0;
+          
+        }
+      `;
+
+      let fs=`
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+          precision highp float;
+        #else
+          precision mediump float;
+        #endif
+
+        uniform sampler2D texInput;
+
+        void main() {
+          //vec4 dataFromTexInput= texture2D(texInput, vec2(0,0));
+          //gl_FragColor=vec4(dataFromTexInput.r,0,0,1);
+          gl_FragColor=vec4(1.0, 0.0, 0.0, 1.0 );
+        }
+      `;
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader, vs);
+      gl.compileShader(vertexShader);
+      if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(vertexShader))
+      };
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader, fs);
+      gl.compileShader(fragmentShader);
+      if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(fragmentShader))
+      };
+      const prg = gl.createProgram();
+      gl.attachShader(prg, vertexShader);
+      gl.attachShader(prg, fragmentShader);
+      gl.linkProgram(prg);
+      if (!gl.getProgramParameter(prg, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(prg))
+      };
+
+      gl.useProgram(prg);
+
+
+      let fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
+
+      let fbTexture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D,fbTexture);
+      /*
+      texture units:
+         0: tex
+         1: --
+         2: --
+         ...
+      */
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,                // mip level
+        gl.RGBA,     // internal format
+        4,                // width
+        4,                // height
+        0,                // border
+        gl.RGBA,     // format
+        gl.UNSIGNED_BYTE, // type
+        new Uint8Array([  // data
+          7, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+          0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+          0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+          0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+        ])
+      );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+      //      maintenant il faut attacher une texture au framebuffer
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbTexture, 0);
+
+      let tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D,tex);
+      /*
+      texture units:
+         0: tex
+         1: --
+         2: --
+         ...
+      */
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,                // mip level
+        gl.LUMINANCE,     // internal format
+        4,                // width
+        4,                // height
+        0,                // border
+        gl.LUMINANCE,     // format
+        gl.UNSIGNED_BYTE, // type
+        new Uint8Array([  // data
+          11, 22, 33, 44,
+          55, 66, 77, 88,
+          99, 111, 122, 133,
+          144, 155, 166, 177,
+        ])
+      );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+
+
+      //gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+      gl.drawArrays(gl.POINTS,0,1);
+
+      const pixels = new Uint8Array(
+        gl.drawingBufferWidth * gl.drawingBufferHeight * 4,
+      );
+      gl.readPixels(
+        0,
+        0,
+        gl.drawingBufferWidth,
+        gl.drawingBufferHeight,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        pixels,
+      );
+      console.log(pixels); // Uint8Array
+/*
+     7 0 0 0   0 0 0 0  0 0 0 0    0 0 0 0 
+     0 0 0 0   1 0 0 1  1 0 0 1    0 0 0 0
+     0 0 0 0   1 0 0 1  1 0 0 1    0 0 0 0 
+     0 0 0 0   0 0 0 0  0 0 0 0    0 0 0 0 
+*/
+
+}
+
+//DEUX//
+{
+      let canvas=document.getElementById("c");
+      canvas.width=5;
+      canvas.height=4;
+
+      let gl=canvas.getContext("webgl");
+      
+    
+
+      let vs=`
+        //attribute vec2 bufferPos;
+        void main() {
+          //gl_Position=bufferPos;
+          gl_Position=vec4( 0.0, 0.0, 0.0, 1.0 );
+          gl_PointSize=1.0;
+          
+        }
+      `;
+
+      let fs=`
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+          precision highp float;
+        #else
+          precision mediump float;
+        #endif
+
+        uniform sampler2D texInput;
+
+        void main() {
+          vec4 dataFromTexInput=
+            texture2D(
+              texInput, 
+              vec2(
+                (4.0+0.5)/5.0,
+                (2.0+0.5)/4.0
+                
+              )
+            );
+          gl_FragColor=vec4(dataFromTexInput);
+
+        }
+      `;
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader, vs);
+      gl.compileShader(vertexShader);
+      if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(vertexShader))
+      };
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader, fs);
+      gl.compileShader(fragmentShader);
+      if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(fragmentShader))
+      };
+      const prg = gl.createProgram();
+      gl.attachShader(prg, vertexShader);
+      gl.attachShader(prg, fragmentShader);
+      gl.linkProgram(prg);
+      if (!gl.getProgramParameter(prg, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(prg))
+      };
+
+      gl.useProgram(prg);
+
+      let fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
+
+      let fbTexture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D,fbTexture);
+      /*
+      texture units:
+         0: tex
+         1: --
+         2: --
+         ...
+       largeur = 10
+       texCoord = pixcoord/9  
+                =? (pixCoord + 0.5)/10
+                 =    
+      */
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,                // mip level
+        gl.RGBA,     // internal format
+        5,                // width
+        4,                // height
+        0,                // border
+        gl.RGBA,     // format
+        gl.UNSIGNED_BYTE, // type
+        new Uint8Array([  // data
+          7, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+          0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+          0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+          0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+        ])
+      );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+      //      maintenant il faut attacher une texture au framebuffer
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbTexture, 0);
+
+      let tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D,tex);
+      /*
+      texture units:
+         0: tex
+         1: --
+         2: --
+         ...
+      */
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,                // mip level
+        gl.RGBA,     // internal format
+        5,                // width
+        4,                // height
+        0,                // border
+        gl.RGBA,     // format
+        gl.UNSIGNED_BYTE, // type
+        new Uint8Array([  // data
+          11, 11, 11, 11,  21,21,21,21,   31,31,31,31,  41,41,41,41,   51,51,51,51,
+          12, 12, 12, 12,  22,22,22,22,   32,32,32,32,  42,42,42,42,   52,52,52,52,
+          13, 13, 13, 13,  23,23,23,23,   33,33,33,33,  43,43,43,43,   53,53,53,53,
+          14, 14, 14, 14,  24,24,24,24,   34,34,34,34,  44,44,44,44,   54,54,54,54,
+          
+        
+        ])
+      );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+
+      gl.drawArrays(gl.POINTS,0,1);
+
+      const pixels = new Uint8Array(
+        gl.drawingBufferWidth * gl.drawingBufferHeight * 4,
+      );
+      gl.readPixels(
+        0,
+        0,
+        gl.drawingBufferWidth,
+        gl.drawingBufferHeight,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        pixels,
+      );
+let ind=0;
+let aff;
+for (let i=0;i<(80);i=i+4) {
+  console.log(pixels[i]+" "+ pixels[i+1] + " " +pixels[i+2]+ " " + pixels[i+3]);
+}
+      console.log(pixels); // Uint8Array
+/*
+7 0 0 0  0 0 0 0        0 0 0 0        0 0 0 0
+0 0 0 0  11 11 11 255   11 11 11 255   0 0 0 0
+0 0 0 0  11 11 11 255   11 11 11 255   0 0 0 0
+0 0 0 0  0  0  0  0     0  0  0  0     0 0 0 0 
+
+*/
+
+}
+
+
+//TROIS//
+{
+      let canvas=document.getElementById("c3");
+      canvas.width=5;
+      canvas.height=4;
+
+      let gl=canvas.getContext("webgl");
+      
+    
+
+      let vs=`
+        attribute vec4 bufferPos;
+        void main() {
+          gl_Position=bufferPos;
+
+          gl_PointSize=1.0;
+          
+        }
+      `;
+
+      let fs=`
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+          precision highp float;
+        #else
+          precision mediump float;
+        #endif
+
+        void main() {
+ 
+          gl_FragColor=vec4(1,0,0,1);
+
+        }
+      `;
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader, vs);
+      gl.compileShader(vertexShader);
+      if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(vertexShader))
+      };
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader, fs);
+      gl.compileShader(fragmentShader);
+      if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(fragmentShader))
+      };
+      const prg = gl.createProgram();
+      gl.attachShader(prg, vertexShader);
+      gl.attachShader(prg, fragmentShader);
+      gl.linkProgram(prg);
+      if (!gl.getProgramParameter(prg, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(prg))
+      };
+
+      gl.useProgram(prg);
+
+      let positionLoc= gl.getAttribLocation(prg,"bufferPos");
+      
+      const vertexPositions= new Float32Array(
+        [
+          -1 + 1/5, -1 + 1/4,
+          -1 + 1/5, -1 + 1/4,
+          -1 + 5/5, -1 + 1/4,
+          -1 + 7/5, -1 + 1/4,
+          -1 + 9/5, -1 + 1/4,
+
+          -1 + 1/5, -1 + 3/4,
+          -1 + 3/5, -1 + 3/4,
+          -1 + 5/5, -1 + 3/4,
+          -1 + 7/5, -1 + 3/4,
+          -1 + 9/5, -1 + 3/4,
+
+          -1 + 1/5, -1 + 5/4,
+          -1 + 3/5, -1 + 5/4,
+          -1 + 5/5, -1 + 5/4,
+          -1 + 7/5, -1 + 5/4,
+          -1 + 9/5, -1 + 5/4,
+
+          -1 + 1/5, -1 + 7/4,
+          -1 + 3/5, -1 + 7/4,
+          -1 + 5/5, -1 + 7/4,
+          -1 + 7/5, -1 + 7/4,
+          -1 + 9/5, -1 + 7/4,
+        ]
+
+      );
+      let buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+      gl.bufferData(gl.ARRAY_BUFFER,vertexPositions,gl.STATIC_DRAW);
+
+      gl.enableVertexAttribArray(positionLoc);
+      gl.vertexAttribPointer(
+        positionLoc,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0,
+      );
+
+
+
+  
+
+      gl.drawArrays(gl.POINTS,0,20);
+
+
+
+}
+
+    </script>
+
+
+  </body>
+</html>
