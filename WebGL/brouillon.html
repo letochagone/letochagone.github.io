@@ -23,6 +23,15 @@
         image-rendering: pixelated;
       "></canvas>    
 
+
+    <canvas
+      id="c4"
+      style="
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
+      "></canvas> 
+
+
     <script>
 {
       let canvas=document.getElementById("c");
@@ -451,6 +460,106 @@ for (let i=0;i<(80);i=i+4) {
 
 
 }
+
+
+
+//QUATRE//
+{
+      let canvas=document.getElementById("c4");
+
+      let taille=100;
+
+      canvas.width=taille;
+      canvas.height=taille;
+
+      let gl=canvas.getContext("webgl");
+      
+    
+
+      let vs=`
+        attribute vec4 bufferPos;
+        void main() {
+          gl_Position=bufferPos;
+
+          gl_PointSize=1.0;
+          
+        }
+      `;
+
+      let fs=`
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+          precision highp float;
+        #else
+          precision mediump float;
+        #endif
+
+        void main() {
+ 
+          gl_FragColor=vec4(1,0,0,1);
+
+        }
+      `;
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader, vs);
+      gl.compileShader(vertexShader);
+      if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(vertexShader))
+      };
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader, fs);
+      gl.compileShader(fragmentShader);
+      if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(fragmentShader))
+      };
+      const prg = gl.createProgram();
+      gl.attachShader(prg, vertexShader);
+      gl.attachShader(prg, fragmentShader);
+      gl.linkProgram(prg);
+      if (!gl.getProgramParameter(prg, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(prg))
+      };
+
+      gl.useProgram(prg);
+
+      let positionLoc= gl.getAttribLocation(prg,"bufferPos");
+
+      let tableau=[];
+
+
+      for (let i=0; i <taille; i++)
+        for (let j=0; j<taille; j++) {
+          tableau.push(
+            -1 + (2*i+1)/taille,
+            -1 + (2*j+1)/taille
+            
+          );
+        }
+
+      let vertexPositions = new Float32Array(tableau);
+      let buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+      gl.bufferData(gl.ARRAY_BUFFER,vertexPositions,gl.STATIC_DRAW);
+
+      gl.enableVertexAttribArray(positionLoc);
+      gl.vertexAttribPointer(
+        positionLoc,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0,
+      );
+
+
+
+  
+
+      gl.drawArrays(gl.POINTS,0,100*100);
+
+
+
+}
+
 
     </script>
 
