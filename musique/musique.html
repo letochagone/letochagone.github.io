@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>brouillon</title>
+  </head>
+
+  <body>
+
+    <audio
+      id = "audioPlayer"
+      controls = ""></audio>
+
+    <script>
+//https://devtails.xyz/@adam/how-to-write-a-wav-file-in-javascript
+"use strict";
+
+/*
+mixing :
+https://www.vttoth.com/CMS/technical-notes/?view=article&id=68
+*/
+/*
+https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
+
+
+un fichier WAV est au format RIFF
+
+le format RIFF est composé d'élément appelé CHUNK
+
+un CHUNK est composé de 3 parties
+ID  4 caracters
+Size 32 unsigned byte
+*/
+/*
+RIFF = Resource Interchange File Format
+
+
+The basic building block of a RIFF file is called a chunk. Using C syntax, a chunk can be defined
+as follows:
+
+  typedef unsigned long DWORD;
+  typedef unsigned char BYTE;
+
+  typedef DWORD FOURCC; // Four-character code
+
+  typedef FOURCC CKID; // Four-character-code chunk identifier
+  typedef DWORD CKSIZE; // 32-bit unsigned size value
+
+  typedef struct { // Chunk structure
+  CKID ckID; // Chunk type identifier
+  CKSIZE ckSize; // Chunk size field (size of ckData)
+  BYTE ckData[ckSize]; // Chunk data
+} CK;
+*/
+
+
+let BitsPerSample = 16;
+let NbrChannels   = 2;
+let NbrEchantillons = 44100*30;
+let DataSize = NbrChannels * BitsPerSample/8 * NbrEchantillons
+
+// le format du son
+let tailleRIFFChunk = 36;
+let nbreOctetsALire=44100;
+let tailleData = nbreOctetsALire*NbrChannels;
+let tailleBuffer=tailleRIFFChunk+tailleData+8;
+
+
+let SamplesPerSec     = 44100;
+let BytePerBloc = NbrChannels * BitsPerSample / 8;
+let BytePerSec= SamplesPerSec * BytePerBloc;
+
+
+
+let buffer = new ArrayBuffer(DataSize + 44);
+const view1 = new DataView(buffer);
+let positionCourante=0;
+
+
+
+//the RIFF Header Chunk
+// le mot RIFF codé en ASCII = (en hexadécimal) 52 49 46 46
+{
+  //RIFF
+  let ckID = 0x52494646; // four-character-code chunk identifier
+  view1.setUint32(positionCourante, ckID);
+  positionCourante += 4;
+}
+
+//taille du chunk RIFF
+view1.setUint32(positionCourante,36+DataSize,true);         
+positionCourante += 4;
+
+{
+  //WAVE
+  let ckID = 0x57415645;
+  view1.setUint32(positionCourante,ckID );
+  positionCourante += 4;
+}
+
+{
+  //fmt
+  let ckID = 0x666D7420;
+  view1.setUint32(positionCourante, ckID);
+  positionCourante += 4;
+}
+
+//fmt chunk size
+view1.setUint32(positionCourante,16,true);
+positionCourante += 4;
+
+// WAVE_FORMAT_PCM (0x0001) Microsoft Pulse Code Modulation (PCM) format
+let WAVE_FORMAT_PCM = 0x0001;
+view1.setUint16(positionCourante,WAVE_FORMAT_PCM,true);
+positionCourante += 2;
+
+ //NUMBER of channels
+view1.setUint16(positionCourante,NbrChannels,true);    
+positionCourante += 2;
+
+//frequency
+//dwSamplesPerSec  The sampling rate (in samples per second) at which each channel
+//                 should be played.
+view1.setUint32(positionCourante,SamplesPerSec,true); 
+positionCourante += 4;
+
+
+
+//BytePerSec
+//dwAvgBytesPerSec  The average number of bytes per second at which the waveform data
+//                  should be transferred. Playback software can estimate the buffer size
+//                  using this value
+/*
+    round_up_to_the_next_whole_number(wChannels x wBitsPerSecond x wBitsPerSample / 8)
+*/
+view1.setUint32(positionCourante,BytePerSec,true); 
+positionCourante += 4;
+
+
+//BytePerBloc
+/*
+wBlockAlign
+The block alignment (in bytes) of the waveform data. Playback
+software needs to process a multiple of wBlockAlign bytes of data at
+a time, so the value of wBlockAlign can be used for buffer
+alignment
+*/
+view1.setUint16(positionCourante,BytePerBloc,true); 
+positionCourante += 2;
+
+
+//BitsPerSample
+/*
+The wBitsPerSample field specifies the number of bits of data used to represent each sample of
+each channel. If there are multiple channels, the sample size is the same for each channel
+*/
+view1.setUint16(positionCourante,BitsPerSample,true); 
+positionCourante += 2;
+
+
+  //the data Chunk
+view1.setUint32(positionCourante,0x64617461);
+positionCourante += 4;
+
+//data Size
+view1.setUint32(positionCourante,DataSize,true);
+positionCourante += 4;
+
+
+
+
+
+  for (let i=0; i < DataSize/4 ;i++) {
+    const t = i/SamplesPerSec;
+
+ const t4= i%60000;
+    let myVol4 = Math.ceil(t4/50000)%2 ;
+
+  const t3= i%50000;
+    let myVol3 = Math.ceil(t3/30000)%2 ;
+
+    const t2= i%20000;
+    let myVol2 = Math.ceil(t2/10000)%2 ;
+
+
+    const t1= i%30000;
+    let myVol1 = Math.ceil(t1/20000)%2 ;
+
+    /*
+      20000 de sons
+      30000-20000 silence
+
+            10000       
+       XXXXXX|XXXXXX     |      
+      0---------20000----|---30000--
+    */
+    //const frequence = 440;
+    //let volume= 0.7;
+    //let val1 = Math.sin(2 * Math.PI * frequence * t) * volume * myVol1;
+
+    //la formule suivante contraint la valeur 'valeur' a rester dans l'intervalle [-32768,+32767]
+    //let valeur =  Math.round(val1 * 32768);
+    //valeur = Math.max(-32768, Math.min(valeur, 32767));
+
+
+
+    let y1= Math.sin(2 * Math.PI * 440 * t)* myVol1;
+    let y2=Math.sin(2 * Math.PI * 349.23  * t)* myVol2;
+    let y3=Math.sin(2 * Math.PI * 493.88  * t)* myVol3;
+        let y4=Math.sin(2 * Math.PI * 277.18  * t)* myVol4;
+
+
+    let out = (y1+y2+y3+y4)/4;
+    view1.setInt16(positionCourante+i*4  ,   out*30000,true);
+    view1.setInt16(positionCourante+i*4+2,   out*30000,true);
+  }
+
+
+
+
+let ia = new Uint8Array(view1.buffer);
+let file = new File([ia], "hexfile.bin", {type: "application/octet-stream"});
+document.location = URL.createObjectURL(file);
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+</body>
+</html>
+
