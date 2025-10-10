@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>WAV !</title>
+  </head>
+
+  <body>
+
+    <audio
+      id = "audioPlayer"
+      controls = ""></audio>
+
+    <script>
+//https://devtails.xyz/@adam/how-to-write-a-wav-file-in-javascript
+"use strict";
+
+/*
+mixing :
+https://www.vttoth.com/CMS/technical-notes/?view=article&id=68
+*/
+/*
+https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
+
+*/
+let SamplesPerSec     = 44100;
+//SamplesPerSec= 11025;
+
+let BitsPerSample = 16;
+let NbrChannels   = 2;
+
+// durée totale du morceau wav ( en secondes)
+let dureeMorceau=1/3;
+let NbrEchantillons = SamplesPerSec * dureeMorceau;
+
+NbrEchantillons=50000;
+
+let DataSize = NbrChannels * BitsPerSample/8 * NbrEchantillons ;
+let BytePerBloc = NbrChannels * BitsPerSample / 8;
+let BytePerSec= SamplesPerSec * BytePerBloc;
+
+let buffer = new ArrayBuffer(DataSize + 44);
+const view = new DataView(buffer);
+let positionCourante=0;
+
+
+
+//the RIFF Header Chunk
+// le mot RIFF codé en ASCII = (en hexadécimal) 52 49 46 46
+{
+  //RIFF
+  let ckID = 0x52494646; // four-character-code chunk identifier
+  view.setUint32(positionCourante, ckID);
+  positionCourante += 4;
+}
+
+//taille du chunk RIFF
+view.setUint32(positionCourante,36+DataSize,true);         
+positionCourante += 4;
+
+{
+  //WAVE
+  let ckID = 0x57415645;
+  view.setUint32(positionCourante,ckID );
+  positionCourante += 4;
+}
+
+{
+  //fmt
+  let ckID = 0x666D7420;
+  view.setUint32(positionCourante, ckID);
+  positionCourante += 4;
+}
+
+//fmt chunk size
+view.setUint32(positionCourante,16,true);
+positionCourante += 4;
+
+// WAVE_FORMAT_PCM (0x0001) Microsoft Pulse Code Modulation (PCM) format
+let WAVE_FORMAT_PCM = 0x0001;
+view.setUint16(positionCourante,WAVE_FORMAT_PCM,true);
+positionCourante += 2;
+
+ //NUMBER of channels
+view.setUint16(positionCourante,NbrChannels,true);    
+positionCourante += 2;
+
+//SamplesPerSec == Sample Rate
+view.setUint32(positionCourante,SamplesPerSec,true); 
+positionCourante += 4;
+
+/*
+BytePerSec == Byte Rate
+(Sample Rate) * (Number of Channels) * (Bits per sample)
+*/
+view.setUint32(positionCourante,BytePerSec,true); 
+positionCourante += 4;
+
+view.setUint16(positionCourante,BytePerBloc,true); 
+positionCourante += 2;
+
+view.setUint16(positionCourante,BitsPerSample,true); 
+positionCourante += 2;
+
+  //the data Chunk
+view.setUint32(positionCourante,0x64617461);
+positionCourante += 4;
+
+view.setUint32(positionCourante,DataSize,true);
+positionCourante += 4;
+
+//let tailleBlock = 2*NbrChannels
+
+for (let i=0; i < NbrEchantillons; i++) {
+
+//for (let i=0; i < DataSize;i=i+2*NbrChannels) {
+
+  //let  t=i/(SamplesPerSec*NbrChannels*2 );
+  let t=i/SamplesPerSec;
+
+
+
+
+/*
+ const t4= i%60000;1/176400 
+    let myVol4 = Math.ceil(t4/50000)%2 ;
+
+  const t3= i%50000;
+    let myVol3 = Math.ceil(t3/30000)%2 ;
+
+    const t2= i%20000;
+    let myVol2 = Math.ceil(t2/10000)%2 ;
+
+
+    const t1= i%30000;
+    let v1 = Math.ceil(t1/15000)%2 ;
+
+  let m=1;
+  let p=0.5;
+  let k4=30000;
+  let k3=28000;
+  let k2=5000;
+  let k1=2000;
+
+  let ya= m/k1 * t1;
+  let yb= (p-m)/(k2-k1)* t1 + p - (p-m)/(k2-k1)*k2;
+  let yc= p;
+  let yd= -p/(k4-k3) * t1 + p/(k4-k3)*k4 ;
+
+  v1= (t1<=k1)?ya:0;
+  v1=( (t1>k1) && (t1<=k2))?yb:v1;
+  v1= ( (t1>k2) && (t1<=k3) )?yc:v1;
+  v1= (  (t1>k3) && (t1<=k4)       )?yd:v1;
+
+
+*/
+    //myVol1=Math.exp(-t1*t1/30000 * 0.002)*t1*0.00053;
+//myVol1 = myVol1 * Math.exp
+    /*
+      20000 de sons
+      30000-20000 silence
+
+            10000       
+       XXXXXX|XXXXXX     |      
+      0---------20000----|---30000--
+    */
+    //const frequence = 440;
+    //let volume= 0.7;
+    //let val1 = Math.sin(2 * Math.PI * frequence * t) * volume * myVol1;
+
+    //la formule suivante contraint la valeur 'valeur' a rester dans l'intervalle [-32768,+32767]
+    //let valeur =  Math.round(val1 * 32768);
+    //valeur = Math.max(-32768, Math.min(valeur, 32767));
+
+/*
+posons valeur=234
+valeur = max ( -32768, min( 234, 32767))
+
+
+
+
+*/
+
+/*
+    let y1= Math.sin(2 * Math.PI * 440 * t)* v1;
+
+
+    let y2=Math.sin(2 * Math.PI * 349.23  * t)* myVol2;
+    let y3=Math.sin(2 * Math.PI * 493.88  * t)* myVol3;
+    let y4=Math.sin(2 * Math.PI * 277.18  * t)* myVol4;
+
+
+let i1=Math.ceil(i/4)%4;
+let fefe=(Math.ceil(i1/1000)%2)*2-1;
+let dada = (fefe>0.5)?32767:-32768;
+
+dada=(indice%2)?32767:-32768;
+let compteurEchantillons= (Math.floor(i/4));
+let compteurPaquetsDe5Echantillons = Math.floor(compteurEchantillons/5);
+//console.log(compteurPaquetsDe5Echantillons);
+dada =   (Math.floor(i/4)%2)?32767:-32768;
+
+dada= (compteurPaquetsDe5Echantillons%2)?32767:-32768;
+
+
+dada=Math.sin(2 * Math.PI * 440 * t)*30000;
+
+404 octets est la longueur d'une période en octets
+le morceau dure 1 seconde
+il y a 176400 octets
+chaque octets est lu en 1/176400 seconde
+donc la période dure 404* 1/176400
+la fréquence est l'inverse de la période
+donc la fréquence est 
+176400/404
+*/
+
+let frequenceNote=1440;
+
+let data;
+//onde carrée
+data = Math.pow(-1, Math.floor(   frequenceNote*2*t     ));
+data=(data==1)?32767:-32768;
+
+//onde sinus
+data=Math.sin(2 * Math.PI * frequenceNote * t)*30000;
+
+
+
+//hp gauche, codée en 16 bits signé little endian format (dernier parametre=true)
+    view.setInt16(positionCourante, data,true);
+    positionCourante += 2;
+
+if (NbrChannels>1) {
+  //hp droit
+  data=Math.sin(2 * Math.PI * 440 * t)*30000;
+
+  view.setInt16(positionCourante, data,true);
+  positionCourante += 2; 
+}
+
+
+
+  }
+
+
+
+
+let ia = new Uint8Array(view.buffer);
+let file = new File([ia], "f1.bin", {type: "application/octet-stream"});
+document.location = URL.createObjectURL(file);
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+</body>
+</html>
+
