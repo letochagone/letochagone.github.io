@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>WAV !</title>
+</head>
+
+<body>
+
+<audio
+  id = "audioPlayer"
+  controls = "">
+</audio>
+
+<script src="wavFormat.js"></script>
+<script>
+
+
+//https://devtails.xyz/@adam/how-to-write-a-wav-file-in-javascript
+"use strict";
+
+/*
+mixing :
+https://www.vttoth.com/CMS/technical-notes/?view=article&id=68
+*/
+/*
+https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
+
+*/
+
+
+let gamme={
+  do:   264.00,
+  dod:  275.00,
+  re:   297.00,
+  mib:  316.80,
+  mi:   330.00,
+  fa:   352.00,
+  fad:  371.25,
+  sol:  396.00,
+  sold: 412.50,
+  la:   440.00,
+  sib:  475.20,
+  si:   495.00
+
+   };
+let gammeChromatique={
+  Do3: 261.62,
+  C4:  261.62,
+
+  Dod3: 277.18,
+  Reb3: 277.18,
+  Cd4:  277.18,
+  Db4:  277.18,
+
+  Re3: 293.66,
+  D4:  293.66,
+
+
+  Red3: 311.12,
+  Mib3: 311.12,
+  Dd4:  311.12,
+  Eb4:  311.12,
+
+
+  Mi3: 329.62,
+  E3:  329.62,
+
+
+  Fa3: 349.22,
+  F3: 349.22,
+
+  Fad3: 369.99,
+  Solb3: 369.99,
+  Fd3: 369.99,
+  Gb3: 369.99,
+
+  Sol3: 391.99,
+  G4:   391.99,
+
+  Sold3: 415.30,
+  Lab3:  415.30,
+  Gd4:   415.30,
+  Ab4:   415.30,
+
+  La3: 440,
+  A4:  440,
+
+  Lad3: 466.16,
+  Sib3: 466.16, 
+  Ad4:  466.16,
+  Bb3:  466.16,
+
+  Si3:  493.88,
+  B4:   493.88,
+
+  Do4:  523.25,
+  C5:    523.25
+
+
+};
+
+
+
+
+let vPiano = function(i,forme) {
+  let k0=forme.k1;
+  let k1=forme.k2;
+  let k2=forme.k3;
+  let k3=forme.k4;
+  let m=forme.m;
+  let p=forme.p;
+
+  let b0=0.005;
+  let b1=0.005;
+  let b3=0.002;
+
+  let ya= i<=k0 ?
+      -m * 1/(1-Math.exp(-b0*k0)) * (Math.exp(-b0*i)-1)
+    : 0;
+
+  let yb= i>k0 && i<=(k0+k1)           ?
+    m + (m-p) * ( Math.exp(-b1*i)-Math.exp(-b1*k0)) / (Math.exp(-b1*k0)*(1-Math.exp(-b1*k1)))
+    : 0;
+
+  let yc= i>(k0+k1)  &&  i<=(k0+k1+k2) ?
+    p 
+    : 0;
+
+  let yd = i>(k0+k1+k2) && i<=(k0+k1+k2+k3) ?
+    p + p * 
+         ( Math.exp(-b3*i)-Math.exp(-b3*(k0+k1+k2))) / 
+        (Math.exp(-b3*(k0+k1+k2))* (1-Math.exp(-b3*k3)) )
+
+   :0;
+
+  return ya + yb + yc + yd;
+
+
+}
+let v = function(i,forme) {
+    let k1=forme.k1;
+    let k2=forme.k2;
+    let k3=forme.k3;
+    let k4=forme.k4;
+    let m=forme.m;
+    let p=forme.p;
+
+    let ya= i<=k1                        ? m/k1*i            : 0;
+
+    let yb= i>k1 && i<=(k1+k2)           ? (p-m)/k2*(i-k1)+m : 0;
+
+    let yc= i>(k1+k2)  &&  i<=(k1+k2+k3) ? p : 0;
+
+    let yd = i>(k1+k2+k3) && i<=(k1+k2+k3+k4) ?p-p/k4*(i-k1-k2-k3):0;
+
+    return ya + yb + yc + yd;
+}
+
+let vExp = function(i,forme) {
+    /*
+      cette function retourne une forme entre i =0 et i=40
+    */
+    let k1=forme.k1;
+    let k2=forme.k2;
+    let k3=forme.k3;
+    let k4=forme.k4;
+    let m=forme.m;
+    let p=forme.p;
+    let a1= 0.3;
+    let a2=  m / (1-Math.exp(-a1*k1));
+    let reA=(1-Math.exp(-a1*i))*a2;
+    let C=0.14;
+    let B=(m-p)/(Math.exp(-C*k1) - Math.exp(-C*(k1+k2)));
+    let A= m - B * Math.exp(-C*k1);
+    let reB = A + B * Math.exp(-C * i);
+    let reC = p;
+    let l=7;
+    let reD= -1/k4 * p * (i - (k1+k2+k3+k4))* Math.exp(-1/l * (i-(k1+k2+k3)) );
+
+    let ya= i<=k1                        ? reA         : 0;
+    let yb= i>k1 && i<=(k1+k2)           ? reB         : 0;
+    let yc= i>(k1+k2)  &&  i<=(k1+k2+k3) ? reC         : 0;
+    let yd = i>(k1+k2+k3) && i<=(k1+k2+k3+k4) ? reD    :0;
+
+    return ya + yb + yc + yd;
+}
+
+
+
+  let finale= function(i,silence,depart,forme,fonction) {
+    let resultat;
+    let dureeNote = forme.k1 + forme.k2 +  forme.k3 + forme.k4;
+    if (i<depart) resultat=0;
+    if (i>= depart) {
+      let i0=(i-depart)%(dureeNote+silence);
+      resultat= (i0<dureeNote)?fonction(i0,forme):0;
+    }
+    return resultat;
+  }
+
+
+
+let dt=1/SamplesPerSec;
+let t=0;
+/////////////////////////////////////////
+///
+///  BOUCLE DE CREATION DU WAV
+///
+/////////////////////////////////////////
+
+for (let i=0; i < NbrEchantillons; i++) {
+
+  //   onde carrée
+  //
+  //let note1=Math.pow(-1, Math.floor(   440    * 2 * t     ));
+  //let note2=Math.pow(-1, Math.floor(   349.23 * 2 * t     ));
+  
+  /*
+  (i%SamplesPerSec) = 1 seconde
+  regle de trois :
+         i             temps (seconde)
+     SamplesPerSec         1
+    t*SamplesPerSec        t
+  */
+
+  let twoPi = Math.PI*2;
+
+  //////////////
+  // UNE NOTE //
+  //////////////
+  let note1;
+  {
+    let depart = 2*SamplesPerSec; // durée = 2 secondes
+    depart=0;
+    let duree=1/4 ; //
+    let forme={                  //  durée = 1 seconde
+      k1: duree*SamplesPerSec,
+      k2: duree*SamplesPerSec,
+      k3: duree*SamplesPerSec,
+      k4: duree*SamplesPerSec,
+      m: 1,
+      p: 0.5
+    };
+    let silence=  2*SamplesPerSec;  // 2secondes
+    silence=0;
+    note1= finale(i,silence,depart,forme,v) *  Math.sin( 1 * twoPi * gamme.mi * t);
+   //  note1= finale2(i,silence,depart,forme,v);
+  }
+
+
+  //////////////
+  // UNE NOTE //
+  //////////////
+  let notePiano;
+  {
+    let depart = 2*SamplesPerSec; // durée = 2 secondes
+    depart=0;
+    let forme={            
+      k1: 1/16*SamplesPerSec,
+      k2: 1/8*SamplesPerSec,
+      k3: 1/8*SamplesPerSec,
+      k4: 1/8*SamplesPerSec,
+      m: 1,
+      p: 0.5
+    };
+    let silence=  2*SamplesPerSec;  // 2secondes
+    silence=0;
+    notePiano= finale(i,silence,depart,forme,vPiano) *  Math.sin( 1 * twoPi * gamme.mi * t);
+    //notePiano= finale2(i,silence,depart,forme,vPiano) ;
+
+  }
+
+
+
+
+
+  if (BitsPerSample==16) {
+    let dataFinaleDroit,dataFinaleGauche;
+    {
+      let notes=note1;
+      notes = notePiano;
+      let data = Math.round(notes * 32768);
+      data = Math.max(-32768, Math.min(data, 32767));	
+      dataFinaleGauche=  data;
+    }
+    {
+      let notes=note1;
+      notes = notePiano;
+      let data = Math.round(notes * 32768);
+      data = Math.max(-32768, Math.min(data, 32767)); 
+      dataFinaleDroit=  data;
+    }
+
+    //canal gauche
+    view.setInt16(positionCourante, (dataFinaleGauche),true);
+    positionCourante += 2;
+
+    if (NbrChannels==2) {
+  	  //canal droit
+      view.setInt16(positionCourante, (dataFinaleDroit),true);
+      positionCourante += 2;
+    }
+  }
+
+  if (BitsPerSample==8) {
+    let notes=note1;
+  	let data = Math.max(0,Math.min(notes*128+128,255));
+    let dataFinaleGauche=  data;
+    let dataFinaleDroit=   data;
+  	//canal gauche
+    view.setUint8(positionCourante,dataFinaleGauche);
+    positionCourante += 1;
+    if (NbrChannels==2) {
+      //canal droit
+      view.setUint8(positionCourante,dataFinaleDroit);
+      positionCourante += 1;
+  	}	
+  }
+
+  t += dt;
+
+}
+
+let ia = new Uint8Array(view.buffer);
+let file = new File([ia], "f15.wav", {type: "application/octet-stream"});
+document.location = URL.createObjectURL(file);
+
+</script>
+</body>
+</html>
+
