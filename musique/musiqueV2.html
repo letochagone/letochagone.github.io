@@ -13,12 +13,109 @@
   controls = "">
 </audio>
 
-<script src="wavFormat.js"></script>
 <script>
 
 
 //https://devtails.xyz/@adam/how-to-write-a-wav-file-in-javascript
 "use strict";
+
+
+
+
+let format={
+  stereo: true,
+  SamplesPerSec: 44100,
+  BitsPerSample: 16,
+  duree: 130
+}
+
+
+let SamplesPerSec     = 11025;
+SamplesPerSec     = 44100;
+
+let BitsPerSample = 8;
+BitsPerSample = 16;
+
+let NbrChannels   = 1;
+NbrChannels=1;
+
+let NbrEchantillons; 
+NbrEchantillons=SamplesPerSec*10;  // 130secondes = 2*60+10 = 2 minutes et 10 secondes
+//NbrEchantillons=50;
+
+let DataSize = NbrChannels * BitsPerSample/8 * NbrEchantillons ;
+let BytePerBloc = NbrChannels * BitsPerSample / 8;
+let BytePerSec= SamplesPerSec * BytePerBloc;
+
+let buffer = new ArrayBuffer(DataSize + 44);
+const view = new DataView(buffer);
+let positionCourante=0;
+
+//the RIFF Header Chunk
+// le mot RIFF codé en ASCII = (en hexadécimal) 52 49 46 46
+{
+  //RIFF
+  let ckID = 0x52494646; // four-character-code chunk identifier
+  view.setUint32(positionCourante, ckID);
+  positionCourante += 4;
+}
+
+//taille du chunk RIFF
+view.setUint32(positionCourante,36+DataSize,true);         
+positionCourante += 4;
+
+{
+  //WAVE
+  let ckID = 0x57415645;
+  view.setUint32(positionCourante,ckID );
+  positionCourante += 4;
+}
+
+{
+  //fmt
+  let ckID = 0x666D7420;
+  view.setUint32(positionCourante, ckID);
+  positionCourante += 4;
+}
+
+//fmt chunk size
+view.setUint32(positionCourante,16,true);
+positionCourante += 4;
+
+// WAVE_FORMAT_PCM (0x0001) Microsoft Pulse Code Modulation (PCM) format
+let WAVE_FORMAT_PCM = 0x0001;
+view.setUint16(positionCourante,WAVE_FORMAT_PCM,true);
+positionCourante += 2;
+
+ //NUMBER of channels
+view.setUint16(positionCourante,NbrChannels,true);    
+positionCourante += 2;
+
+//SamplesPerSec == Sample Rate
+view.setUint32(positionCourante,SamplesPerSec,true); 
+positionCourante += 4;
+
+/*
+BytePerSec == Byte Rate
+(Sample Rate) * (Number of Channels) * (Bits per sample)/8
+*/
+view.setUint32(positionCourante,BytePerSec,true); 
+positionCourante += 4;
+
+view.setUint16(positionCourante,BytePerBloc,true); 
+positionCourante += 2;
+
+view.setUint16(positionCourante,BitsPerSample,true); 
+positionCourante += 2;
+
+  //the data Chunk
+view.setUint32(positionCourante,0x64617461);
+positionCourante += 4;
+
+view.setUint32(positionCourante,DataSize,true);
+positionCourante += 4;
+
+
 
 /*
 mixing :
@@ -29,6 +126,7 @@ https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
 
 */
 
+  let twoPi = Math.PI*2;
 
 let gamme={
   do:   264.00,
@@ -187,7 +285,56 @@ let vExp = function(i,forme) {
     return ya + yb + yc + yd;
 }
 
+/*
+FONCTION PERIODIQUE EN FORME DE SCIE
+   /|\
+  / | \
+ /  |  \
+/---|---\--|--/---------> i
+|   |    \ | / |
+|   |     \|/  |
+| a |  b   | a |
 
+
+--------------------------------------------------> i
+--------------------------------------------------> t = i / SamplesPerSec
+
+*/
+
+let periodSawRealTime= function(t,p1,p2) {
+  let i = Math.round(t*SamplesPerSec);
+  let a = Math.round(p1*SamplesPerSec);
+  let b = Math.round(p2*SamplesPerSec);
+ 
+  return periodSaw(i,a,b);
+}
+
+
+
+let periodSaw= function(i,delta) {
+  let frequence=440;
+  let periode= Math.round(SamplesPerSec/frequence);
+  //on va séparer periode en a+b+a
+  let p2a = Math.floor(periode * delta);
+  //si p2a est impaire on lui ajoute 1
+  // 
+  if (p2a%2) p2a++;
+  let b=periode-p2a;
+  let a=p2a/2;
+
+  let i0 = i%(2*a+b);
+  let y1 = (    i0<=a                       )? 1 / a * i0                    : 0;
+  let y2 = (    a<=i0 && i0<=(a+b)          )? (-2 / b) * i0 + 1 + 2 * a / b : 0;
+  let y3 = (   (a+b)<=i0 && i0<=(a+b+a)     )? 1 / a * i0 - 1 - (a + b) / a  : 0;
+  
+  let resultat = y1+y2+y3;
+  return resultat;
+}
+
+
+let duree=function(tempsEnSeconde) { 
+  return tempsEnSeconde*SamplesPerSec;
+}
 
   let finale= function(i,silence,depart,forme,fonction) {
     let resultat;
@@ -199,16 +346,38 @@ let vExp = function(i,forme) {
     }
     return resultat;
   }
+/*
+une note 
+            <---- dureeNote------------------><--- silence -----------><---- dureeNote------------------><--- silence -----------><---- dureeNote------------------><--- silence ----------->
+            <--k1-->||<--k2--><--k3--><--k4-->                         <--k1-->||<--k2--><--k3--><--k4-->                         <--k1-->||<--k2--><--k3--><--k4-->
+ |---------|--------||------------------------------------------------|                                                                   ||
+i        depart     ||                                                                                                                    ||
+                    ||                                                                                                                    ||
+                    ||                                                                                                                    ||
+une autre note      ||                                                                                                                    ||
+        <-----------||--- dureeNote---------------------><-------------------------------------------------------- silence -->
+        <------k1-->||<-----k2--><------k3--><--k4-->
+ |------|---------------------------------------------------|
+i      depart                                         dureeNote
+                                                            +
+                                                        silence
 
+________------X----------.....------X----------.....------X----------.....------X----------.....------X----------.....------X----------.....
+______--------X-----------------.......
+*/
 
 
 let dt=1/SamplesPerSec;
 let t=0;
+
+let t2=0;
 /////////////////////////////////////////
 ///
 ///  BOUCLE DE CREATION DU WAV
 ///
 /////////////////////////////////////////
+
+let periode=0;
 
 for (let i=0; i < NbrEchantillons; i++) {
 
@@ -225,52 +394,118 @@ for (let i=0; i < NbrEchantillons; i++) {
     t*SamplesPerSec        t
   */
 
-  let twoPi = Math.PI*2;
 
-  //////////////
+
+
+    //////////////
   // UNE NOTE //
   //////////////
-  let note1;
-  {
-    let depart = 2*SamplesPerSec; // durée = 2 secondes
-    depart=0;
-    let duree=1/4 ; //
-    let forme={                  //  durée = 1 seconde
-      k1: duree*SamplesPerSec,
-      k2: duree*SamplesPerSec,
-      k3: duree*SamplesPerSec,
-      k4: duree*SamplesPerSec,
-      m: 1,
-      p: 0.5
-    };
-    let silence=  2*SamplesPerSec;  // 2secondes
-    silence=0;
-    note1= finale(i,silence,depart,forme,v) *  Math.sin( 1 * twoPi * gamme.mi * t);
-   //  note1= finale2(i,silence,depart,forme,v);
+
+  /*
+                      <------ enveloppe -------->
+  ----- depart -----||--k1--|--k2--|--k3--|--k4--||----- silence----||
+                      <------------- ce motif est répété------------->
+  */
+
+/*
+finale : depart enveloppe silence
+             ____
+         ___/    \
+......../         \--------------
+ depart   enveloppe    silence
+*/
+/*
+let enveloppe=function(t) {
+  let tMax=0.5;
+  let resultat;
+  if (t<tMax) {
+    resultat = t/tMax;
+  } else {
+    resultat = 
   }
 
+}
+*/
+  /*
+  let note4;
+  {
+    let depart = duree(1);
+    let silence=  duree(2);
+    let fourier=0;
+    for (let n=1; n<=10 ; n++) {
+      fourier +=  1/(n*n)* Math.sin( (n*n) * twoPi * gamme.do * t);
+    }
+    fourier = fourier / 10;
 
-  //////////////
-  // UNE NOTE //
-  //////////////
+    let enveloppe;
+
+    enveloppe=fourier;
+
+    note4= finale(i,silence,depart,forme,v4) *  enveloppe;
+
+  }
+*/
+
+
+
+let note440;
+{
+
+  note440=periodSaw(i,0.5);
+  //note440 = Math.sin(twoPi * t * 440);
+  let sf=0;
+  for (let k=1;k<40;k++) {
+    sf = sf + 1/k* ((k%2)?1:-1) * Math.sin(2*Math.PI*440*k*t);
+  }
+  sf = sf * 0.8 * 2 / Math.PI;
+  //note440 = sf;
+}
+
+
+
+
   let notePiano;
   {
-    let depart = 2*SamplesPerSec; // durée = 2 secondes
-    depart=0;
+    let depart = duree(1);
     let forme={            
-      k1: 1/16*SamplesPerSec,
-      k2: 1/8*SamplesPerSec,
-      k3: 1/8*SamplesPerSec,
-      k4: 1/8*SamplesPerSec,
+      k1: duree(1/16),
+      k2: duree(1/8),
+      k3: duree(1/8),
+      k4: duree(1/8),
       m: 1,
       p: 0.5
     };
-    let silence=  2*SamplesPerSec;  // 2secondes
-    silence=0;
-    notePiano= finale(i,silence,depart,forme,vPiano) *  Math.sin( 1 * twoPi * gamme.mi * t);
-    //notePiano= finale2(i,silence,depart,forme,vPiano) ;
-
+    let silence=  duree(2);
+    //notePiano= finale(i,silence,depart,forme,vPiano) *  Math.sin( 1 * twoPi * gamme.mi * t);
+    let fourier=0;
+    for (let n=1; n<10 ; n++) {
+      fourier +=  1/(n*n)* Math.sin( (n*n) * twoPi * gamme.mi * t);
+    }
+    fourier = fourier / 10;
+    notePiano= finale(i,silence,depart,forme,v) *  fourier;
   }
+
+  let notePiano2;
+  {
+    let depart = duree(   (16+1+6+32  )/16       );
+    let forme={            
+      k1: duree(1/16),
+      k2: duree(10/16),
+      k3: duree(10/16),
+      k4: duree(10/16),
+      m: 1,
+      p: 0.5
+    };
+    let silence=  duree(    86/16    );
+    let fourier=0;
+    for (let n=1; n<10 ; n++) {
+      fourier +=  1/(n*n)* Math.sin( (n*n) * twoPi * gamme.sol * t);
+    }
+    fourier = fourier / 10;
+    notePiano2= finale(i,silence,depart,forme,vPiano) *  fourier
+  }
+
+
 
 
 
@@ -279,15 +514,15 @@ for (let i=0; i < NbrEchantillons; i++) {
   if (BitsPerSample==16) {
     let dataFinaleDroit,dataFinaleGauche;
     {
-      let notes=note1;
-      notes = notePiano;
+      let notes;
+      notes= note440;
       let data = Math.round(notes * 32768);
       data = Math.max(-32768, Math.min(data, 32767));	
       dataFinaleGauche=  data;
     }
     {
-      let notes=note1;
-      notes = notePiano;
+      let notes;
+      notes= note440;
       let data = Math.round(notes * 32768);
       data = Math.max(-32768, Math.min(data, 32767)); 
       dataFinaleDroit=  data;
